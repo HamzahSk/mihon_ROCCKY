@@ -99,10 +99,13 @@ fun RelatedMangasList(
                         count = relatedManga.mangaList.size,
                     ) { index ->
                         val manga by getManga(relatedManga.mangaList[index])
-                        BrowseSourceListItem(
-                            manga = manga,
+                        MangaListItem(
+                            coverData = manga.asMangaCover(),
+                            title = manga.title,
                             onClick = { onMangaClick(manga) },
                             onLongClick = { onMangaLongClick(manga) },
+                            isSelected = selection.fastAny { selected -> selected.id == manga.id },
+                            badge = {},
                         )
                     }
                 }
