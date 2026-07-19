@@ -284,13 +284,22 @@ fun ExpandableMangaDescription(
         val desc =
             description.takeIf { !it.isNullOrBlank() } ?: stringResource(MR.strings.description_placeholder)
 
+        // 1. Menambahkan Judul "Sinopsis" (Setara H2) di atas deskripsi
+        Text(
+            text = "Sinopsis",
+            style = MaterialTheme.typography.titleMedium, // Style H2 di Material Design 3
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(top = 12.dp, bottom = 4.dp),
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
         MangaSummary(
             description = desc,
             expanded = expanded,
             notes = notes,
             onEditNotesClicked = onEditNotes,
             modifier = Modifier
-                .padding(top = 8.dp)
                 .padding(horizontal = 16.dp)
                 .clickableNoIndication { onExpanded(!expanded) },
         )
@@ -324,10 +333,14 @@ fun ExpandableMangaDescription(
                         },
                     )
                 }
+                
+                // 2. Mengatur posisi susunan genre ketika sinopsis dibuka (expanded)
                 if (expanded) {
                     FlowRow(
                         modifier = Modifier.padding(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+                        // Jika expanded = true, susunan tag berpindah ke tengah layar (Center)
+                        horizontalArrangement = Arrangement.Center, 
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall)
                     ) {
                         tags.forEach {
                             TagsChip(
