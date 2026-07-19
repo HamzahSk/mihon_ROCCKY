@@ -142,6 +142,13 @@ class MangaScreen(
                     viewModel.source,
                 )
             }.takeIf { isHttpSource },
+            onCopyUrlClicked = {
+                copyMangaUrl(
+                    context,
+                    viewModel.manga,
+                    viewModel.source,
+                )
+            }.takeIf { isHttpSource },
             onTrackingClicked = {
                 if (!successState.hasLoggedInTrackers) {
                     navigator.push(SettingsScreen(SettingsScreen.Destination.Tracking))
