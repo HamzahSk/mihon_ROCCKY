@@ -40,7 +40,8 @@ fun RelatedMangasCompactGrid(
 ) {
     FastScrollLazyVerticalGrid(
         columns = columns,
-        contentPadding = contentPadding + PaddingValues(horizontal = MaterialTheme.padding.small), // padding for scrollbar
+        contentPadding = contentPadding + 
+            PaddingValues(horizontal = MaterialTheme.padding.small),
         topContentPadding = contentPadding.calculateTopPadding(),
         verticalArrangement = Arrangement.spacedBy(CommonMangaItemDefaults.GridVerticalSpacer),
         horizontalArrangement = Arrangement.spacedBy(CommonMangaItemDefaults.GridHorizontalSpacer),
