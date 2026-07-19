@@ -180,6 +180,10 @@ fun MangaScreen(
             onChapterSelected = onChapterSelected,
             onAllChapterSelected = onAllChapterSelected,
             onInvertSelection = onInvertSelection,
+            getMangaState = getMangaState,
+            onRelatedMangasScreenClick = onRelatedMangasScreenClick,
+            onRelatedMangaClick = onRelatedMangaClick,
+            onRelatedMangaLongClick = onRelatedMangaLongClick,
         )
     } else {
         MangaScreenLargeImpl(
@@ -217,6 +221,10 @@ fun MangaScreen(
             onChapterSelected = onChapterSelected,
             onAllChapterSelected = onAllChapterSelected,
             onInvertSelection = onInvertSelection,
+            getMangaState = getMangaState,
+            onRelatedMangasScreenClick = onRelatedMangasScreenClick,
+            onRelatedMangaClick = onRelatedMangaClick,
+            onRelatedMangaLongClick = onRelatedMangaLongClick,
         )
     }
 }
