@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import eu.kanade.tachiyomi.data.download.model.Download
 import me.saket.swipe.SwipeableActionsBox
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -92,6 +93,10 @@ fun MangaChapterListItem(
         swipeThreshold = swipeActionThreshold,
         backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.surfaceContainerLowest,
     ) {
+    
+        val isScanlatorImageUrl = scanlator != null && 
+                (scanlator.startsWith("http://") || scanlator.startsWith("https://"))
+                
         Row(
             modifier = modifier
                 .selectedBackground(selected)
@@ -99,8 +104,23 @@ fun MangaChapterListItem(
                     onClick = onClick,
                     onLongClick = onLongClick,
                 )
-                .padding(start = 16.dp, top = 12.dp, end = 8.dp, bottom = 12.dp),
+                // padding disesuaikan agar seimbang dengan adanya gambar di kiri
+                .padding(start = 12.dp, top = 12.dp, end = 8.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            // --- BAGIAN BARU: Menampilkan Preview Gambar di Kiri ---
+            if (isScanlatorImageUrl) {
+                AsyncImage(
+                    model = scanlator,
+                    contentDescription = "Chapter Preview",
+                    modifier = Modifier
+                        .padding(end = 12.dp)
+                        .sizeIn(maxWidth = 48.dp, maxHeight = 64.dp) // Ukuran preview kecil & proporsional
+                        .androidx.compose.ui.draw.clip(MaterialTheme.shapes.small), // Sudut melengkung halus
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                )
+            }
+
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -152,7 +172,10 @@ fun MangaChapterListItem(
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                             )
-                            if (readProgress != null || scanlator != null) DotSeparatorText()
+                            // Jika scanlator adalah URL gambar, kita tidak perlu menampilkan teks URL-nya
+                            if (readProgress != null || (!isScanlatorImageUrl && scanlator != null)) {
+                                DotSeparatorText()
+                            }
                         }
                         if (readProgress != null) {
                             Text(
@@ -161,9 +184,10 @@ fun MangaChapterListItem(
                                 overflow = TextOverflow.Ellipsis,
                                 color = LocalContentColor.current.copy(alpha = DISABLED_ALPHA),
                             )
-                            if (scanlator != null) DotSeparatorText()
+                            if (!isScanlatorImageUrl && scanlator != null) DotSeparatorText()
                         }
-                        if (scanlator != null) {
+                        // Teks scanlator hanya muncul jika isinya BUKAN url gambar
+                        if (scanlator != null && !isScanlatorImageUrl) {
                             Text(
                                 text = scanlator,
                                 maxLines = 1,
@@ -173,15 +197,20 @@ fun MangaChapterListItem(
                     }
                 }
             }
+            
+            // Tombol Copy tetap aman di sini
             if (onCopyUrlClick != null) {
                 IconButton(
                     onClick = onCopyUrlClick,
-                    modifier = Modifier.align(Alignment.CenterVertically)
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically) // Diubah ke tengah agar sejajar dengan tinggi baris baru
+                        .padding(end = 4.dp)
+                        .sizeIn(maxHeight = 24.dp, maxWidth = 24.dp) 
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.ContentCopy,
                         contentDescription = "Copy Chapter URL",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = LocalContentColor.current.copy(alpha = SECONDARY_ALPHA)
                     )
                 }
             }
