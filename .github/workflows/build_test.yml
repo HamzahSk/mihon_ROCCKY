@@ -65,23 +65,22 @@ jobs:
       - name: Verify SQLDelight migrations
         run: ./gradlew verifySqlDelightMigration
 
-      # STEP BARU: Menyiapkan file Keystore dari GitHub Secrets jika rahasia tersebut ada
-      - name: Prepare signing key
-        if: env.HAS_SIGNING_KEY == 'true'
-        env:
-          HAS_SIGNING_KEY: ${{ secrets.SIGNING_KEY != '' }}
-          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
-        run: |
-          echo "$SIGNING_KEY" | base64 -d > signingkey.jks
-          chmod 600 signingkey.jks
-
-      # STEP MODIFIKASI: Menambahkan environment variables untuk proses signing Gradle
+      # PERBAIKAN: Menyesuaikan Environment Variables langsung saat Build agar dibaca Gradle
       - name: Build app
+        if: ${{ secrets.SIGNING_KEY != '' }}
         env:
-          ALIAS: ${{ secrets.ALIAS }}
-          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          MIHON_GITHUB_RELEASE: "true"
+          RUNNER_TEMP: ${{ runner.temp }}
+          storeFileBase64: ${{ secrets.SIGNING_KEY }}
+          storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyAlias: ${{ secrets.ALIAS }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
         run: ./gradlew assembleRelease -Pinclude-telemetry -Penable-updater
+
+      # JIKA SECRET KOSONG (Fallback): Build biasa tanpa tanda tangan (unsigned)
+      - name: Build app (Unsigned Fallback)
+        if: ${{ secrets.SIGNING_KEY == '' }}
+        run: ./gradlew assembleRelease -Penable-updater
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -94,8 +93,3 @@ jobs:
         with:
           name: mapping-${{ github.sha }}
           path: app/build/outputs/mapping/release
-
-      # STEP BARU: Menghapus file Keystore setelah build selesai demi keamanan
-      - name: Clean up CI files
-        if: always()
-        run: rm -f signingkey.jks
