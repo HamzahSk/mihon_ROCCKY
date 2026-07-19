@@ -188,7 +188,6 @@ fun MangaActionRow(
 ) {
     val defaultActionButtonColor = MaterialTheme.colorScheme.onSurface.copy(alpha = DISABLED_ALPHA)
 
-    // TODO: show something better when using custom interval
     val nextUpdateDays = remember(nextUpdate) {
         return@remember if (nextUpdate != null) {
             val now = Instant.now()
@@ -198,58 +197,71 @@ fun MangaActionRow(
         }
     }
 
-    Row(modifier = modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp)) {
-        MangaActionButton(
-            title = if (favorite) {
-                stringResource(MR.strings.in_library)
-            } else {
-                stringResource(MR.strings.add_to_library)
-            },
-            icon = if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-            color = if (favorite) MaterialTheme.colorScheme.primary else defaultActionButtonColor,
-            onClick = onAddToLibraryClicked,
-            onLongClick = onEditCategory,
+    // Kontainer luar pembungkus seluruh tombol
+    androidx.compose.material3.Surface(
+        modifier = modifier
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
         )
-        MangaActionButton(
-            title = when (nextUpdateDays) {
-                null -> stringResource(MR.strings.not_applicable)
-                0 -> stringResource(MR.strings.manga_interval_expected_update_soon)
-                else -> pluralStringResource(
-                    MR.plurals.day,
-                    count = nextUpdateDays,
-                    nextUpdateDays,
+    ) {
+        Row(
+            modifier = Modifier.padding(vertical = 10.dp, horizontal = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp) // Memberi sela antar tombol kotak
+        ) {
+            // Tombol 1: Favorit
+            MangaActionButton(
+                title = if (favorite) stringResource(MR.strings.in_library) else stringResource(MR.strings.add_to_library),
+                icon = if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                color = if (favorite) MaterialTheme.colorScheme.primary else defaultActionButtonColor,
+                onClick = onAddToLibraryClicked,
+                onLongClick = onEditCategory
+            )
+
+            // Tombol 2: Update Interval
+            MangaActionButton(
+                title = when (nextUpdateDays) {
+                    null -> stringResource(MR.strings.not_applicable)
+                    0 -> stringResource(MR.strings.manga_interval_expected_update_soon)
+                    else -> pluralStringResource(MR.plurals.day, count = nextUpdateDays, nextUpdateDays)
+                },
+                icon = Icons.Default.HourglassEmpty,
+                color = if (isUserIntervalMode) MaterialTheme.colorScheme.primary else defaultActionButtonColor,
+                onClick = { onEditIntervalClicked?.invoke() }
+            )
+
+            // Tombol 3: Tracking
+            MangaActionButton(
+                title = if (trackingCount == 0) stringResource(MR.strings.manga_tracking_tab) else pluralStringResource(MR.plurals.num_trackers, count = trackingCount, trackingCount),
+                icon = if (trackingCount == 0) Icons.Outlined.Sync else Icons.Outlined.Done,
+                color = if (trackingCount == 0) defaultActionButtonColor else MaterialTheme.colorScheme.primary,
+                onClick = onTrackingClicked
+            )
+
+            // Tombol 4: WebView
+            if (onWebViewClicked != null) {
+                MangaActionButton(
+                    title = stringResource(MR.strings.action_web_view),
+                    icon = Icons.Outlined.Public,
+                    color = defaultActionButtonColor,
+                    onClick = onWebViewClicked,
+                    onLongClick = onWebViewLongClicked
                 )
-            },
-            icon = Icons.Default.HourglassEmpty,
-            color = if (isUserIntervalMode) MaterialTheme.colorScheme.primary else defaultActionButtonColor,
-            onClick = { onEditIntervalClicked?.invoke() },
-        )
-        MangaActionButton(
-            title = if (trackingCount == 0) {
-                stringResource(MR.strings.manga_tracking_tab)
-            } else {
-                pluralStringResource(MR.plurals.num_trackers, count = trackingCount, trackingCount)
-            },
-            icon = if (trackingCount == 0) Icons.Outlined.Sync else Icons.Outlined.Done,
-            color = if (trackingCount == 0) defaultActionButtonColor else MaterialTheme.colorScheme.primary,
-            onClick = onTrackingClicked,
-        )
-        if (onWebViewClicked != null) {
-            MangaActionButton(
-                title = stringResource(MR.strings.action_web_view),
-                icon = Icons.Outlined.Public,
-                color = defaultActionButtonColor,
-                onClick = onWebViewClicked,
-                onLongClick = onWebViewLongClicked,
-            )
-        }
-        if (onCopyUrlClicked != null) {
-            MangaActionButton(
-                title = "Copy URL",
-                icon = androidx.compose.material.icons.Icons.Outlined.ContentCopy, 
-                color = defaultActionButtonColor,
-                onClick = onCopyUrlClicked,
-            )
+            }
+
+            // Tombol 5: Copy URL
+            if (onCopyUrlClicked != null) {
+                MangaActionButton(
+                    title = "Copy URL",
+                    icon = androidx.compose.material.icons.Icons.Outlined.ContentCopy, 
+                    color = defaultActionButtonColor,
+                    onClick = onCopyUrlClicked
+                )
+            }
         }
     }
 }
@@ -736,18 +748,30 @@ private fun RowScope.MangaActionButton(
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
 ) {
-    TextButton(
+    // Tombol menonjol menggunakan OutlinedButton dengan elevasi bayangan
+    androidx.compose.material3.OutlinedButton(
         onClick = onClick,
         modifier = Modifier.weight(1f),
-        onLongClick = onLongClick,
+        shape = MaterialTheme.shapes.small,
+        colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+            containerColor = MaterialTheme.colorScheme.surface, // Warna solid agar bayangan kontras
+            contentColor = color
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = color.copy(alpha = 0.25f)
+        ),
+        elevation = androidx.compose.material3.ButtonDefaults.buttonElevation(
+            defaultElevation = 3.dp, // Membuat tombol terasa naik menonjol
+            pressedElevation = 1.dp
+        ),
+        contentPadding = PaddingValues(vertical = 10.dp)
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = color,
-                modifier = Modifier.size(24.dp),
-            )
-        }
+        Icon(
+            imageVector = icon,
+            contentDescription = title, // Teks title dipindahkan ke deskripsi aksesibilitas sistem
+            tint = color,
+            modifier = Modifier.size(22.dp),
+        )
     }
 }
