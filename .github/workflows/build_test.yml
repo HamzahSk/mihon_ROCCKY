@@ -29,7 +29,6 @@ jobs:
     runs-on: 'ubuntu-24.04'
 
     steps:
-      # Menggunakan v4 stabil agar bisa di-run tanpa masalah validasi SHA
       - name: Checkout
         uses: actions/checkout@v4 
 
@@ -56,7 +55,6 @@ jobs:
         id: unit_tests
         run: ./gradlew testDebugUnitTest
 
-      # Menggunakan v4 stabil untuk upload laporan jika unit test gagal
       - name: Upload test report
         if: steps.unit_tests.outcome == 'failure'
         uses: actions/upload-artifact@v4
@@ -67,15 +65,28 @@ jobs:
       - name: Verify SQLDelight migrations
         run: ./gradlew verifySqlDelightMigration
 
+      # STEP BARU: Menyiapkan file Keystore dari GitHub Secrets jika rahasia tersebut ada
+      - name: Prepare signing key
+        if: env.HAS_SIGNING_KEY == 'true'
+        env:
+          HAS_SIGNING_KEY: ${{ secrets.SIGNING_KEY != '' }}
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+        run: |
+          echo "$SIGNING_KEY" | base64 -d > signingkey.jks
+          chmod 600 signingkey.jks
+
+      # STEP MODIFIKASI: Menambahkan environment variables untuk proses signing Gradle
       - name: Build app
+        env:
+          ALIAS: ${{ secrets.ALIAS }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: ./gradlew assembleRelease -Pinclude-telemetry -Penable-updater
 
-      # Menggunakan v4 stabil untuk upload APK hasil build
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: arm64-v8a-${{ github.sha }}
-          # TIPS: Jika eror file tidak ditemukan, pastikan nama file APK-mu di folder ini sudah sesuai
           path: app/build/outputs/apk/release/app-arm64-v8a-release.apk
 
       - name: Upload mapping
@@ -83,4 +94,8 @@ jobs:
         with:
           name: mapping-${{ github.sha }}
           path: app/build/outputs/mapping/release
-          
+
+      # STEP BARU: Menghapus file Keystore setelah build selesai demi keamanan
+      - name: Clean up CI files
+        if: always()
+        run: rm -f signingkey.jks
