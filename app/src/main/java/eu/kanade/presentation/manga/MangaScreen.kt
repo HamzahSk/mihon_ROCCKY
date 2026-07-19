@@ -91,6 +91,7 @@ fun MangaScreen(
     onAddToLibraryClicked: () -> Unit,
     onWebViewClicked: (() -> Unit)?,
     onWebViewLongClicked: (() -> Unit)?,
+    onCopyUrlClicked: (() -> Unit)?,
     onTrackingClicked: () -> Unit,
 
     // For tags menu

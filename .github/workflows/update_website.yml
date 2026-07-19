@@ -1,12 +1,8 @@
 name: Update website
 
 on:
-  release:
-    types: 
-      - published
-      - deleted
-      - edited
-
+  workflow_dispatch:
+  
 jobs:
   update_website:
     runs-on: 'ubuntu-24.04'
