@@ -62,6 +62,7 @@ fun MangaChapterListItem(
     onLongClick: () -> Unit,
     onClick: () -> Unit,
     onDownloadClick: ((ChapterDownloadAction) -> Unit)?,
+    onCopyUrlClick: (() -> Unit)? = null,
     onChapterSwipe: (LibraryPreferences.ChapterSwipeAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -170,7 +171,18 @@ fun MangaChapterListItem(
                     }
                 }
             }
-
+            if (onCopyUrlClick != null) {
+                androidx.compose.material3.IconButton(
+                    onClick = onCopyUrlClick,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                ) {
+                    Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Outlined.ContentCopy,
+                        contentDescription = "Copy Chapter URL",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
             ChapterDownloadIndicator(
                 enabled = downloadIndicatorEnabled,
                 modifier = Modifier.padding(start = 4.dp),

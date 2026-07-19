@@ -446,6 +446,7 @@ private fun MangaScreenSmallImpl(
                         chapterSwipeEndAction = chapterSwipeEndAction,
                         onChapterClicked = onChapterClicked,
                         onDownloadChapter = onDownloadChapter,
+                        onCopyUrlClicked = onCopyUrlClicked,
                         onChapterSelected = onChapterSelected,
                         onChapterSwipe = onChapterSwipe,
                     )
@@ -685,6 +686,7 @@ fun MangaScreenLargeImpl(
                                 chapterSwipeEndAction = chapterSwipeEndAction,
                                 onChapterClicked = onChapterClicked,
                                 onDownloadChapter = onDownloadChapter,
+                                onCopyUrlClicked = onCopyUrlClicked,
                                 onChapterSelected = onChapterSelected,
                                 onChapterSwipe = onChapterSwipe,
                             )
@@ -746,6 +748,7 @@ private fun LazyListScope.sharedChapterItems(
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
     onChapterClicked: (Chapter) -> Unit,
     onDownloadChapter: ((List<ChapterList.Item>, ChapterDownloadAction) -> Unit)?,
+    onCopyUrlClicked: (() -> Unit)?,
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onChapterSwipe: (ChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
 ) {
@@ -809,6 +812,10 @@ private fun LazyListScope.sharedChapterItems(
                         { onDownloadChapter(listOf(item), it) }
                     } else {
                         null
+                    },
+                    onCopyUrlClick = onCopyUrlClicked,
+                    onChapterSwipe = {
+                        onChapterSwipe(item, it)
                     },
                     onChapterSwipe = {
                         onChapterSwipe(item, it)
