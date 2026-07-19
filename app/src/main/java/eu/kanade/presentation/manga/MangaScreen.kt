@@ -817,9 +817,6 @@ private fun LazyListScope.sharedChapterItems(
                     onChapterSwipe = {
                         onChapterSwipe(item, it)
                     },
-                    onChapterSwipe = {
-                        onChapterSwipe(item, it)
-                    },
                 )
             }
         }

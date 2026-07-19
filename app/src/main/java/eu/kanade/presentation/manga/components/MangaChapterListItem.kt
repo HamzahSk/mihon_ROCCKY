@@ -17,6 +17,8 @@ import androidx.compose.material.icons.outlined.Done
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.FileDownloadOff
 import androidx.compose.material.icons.outlined.RemoveDone
+import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -172,12 +174,12 @@ fun MangaChapterListItem(
                 }
             }
             if (onCopyUrlClick != null) {
-                androidx.compose.material3.IconButton(
+                IconButton(
                     onClick = onCopyUrlClick,
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) {
                     Icon(
-                        imageVector = androidx.compose.material.icons.Icons.Outlined.ContentCopy,
+                        imageVector = Icons.Outlined.ContentCopy,
                         contentDescription = "Copy Chapter URL",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
