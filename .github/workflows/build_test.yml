@@ -65,9 +65,9 @@ jobs:
       - name: Verify SQLDelight migrations
         run: ./gradlew verifySqlDelightMigration
 
-      # PERBAIKAN: Menyesuaikan Environment Variables langsung saat Build agar dibaca Gradle
+      # PERBAIKAN: Menghapus ${{ }} pada kondisi IF
       - name: Build app
-        if: ${{ secrets.SIGNING_KEY != '' }}
+        if: secrets.SIGNING_KEY != ''
         env:
           MIHON_GITHUB_RELEASE: "true"
           RUNNER_TEMP: ${{ runner.temp }}
@@ -77,9 +77,9 @@ jobs:
           keyPassword: ${{ secrets.KEY_PASSWORD }}
         run: ./gradlew assembleRelease -Pinclude-telemetry -Penable-updater
 
-      # JIKA SECRET KOSONG (Fallback): Build biasa tanpa tanda tangan (unsigned)
+      # PERBAIKAN: Menghapus ${{ }} pada kondisi IF
       - name: Build app (Unsigned Fallback)
-        if: ${{ secrets.SIGNING_KEY == '' }}
+        if: secrets.SIGNING_KEY == ''
         run: ./gradlew assembleRelease -Penable-updater
 
       - name: Upload APK
