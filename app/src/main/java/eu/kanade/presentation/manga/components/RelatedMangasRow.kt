@@ -17,14 +17,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-// PASTIKAN IMPORT BERIKUT BENAR SESUAI PROJECT KAMU:
-import eu.kanade.presentation.browse.components.BrowseSourceCompactGridItem // Mengganti MangaItem yang private
+import eu.kanade.presentation.browse.components.BrowseSourceCompactGridItem
 import eu.kanade.presentation.browse.components.GlobalSearchLoadingResultItem
-import eu.kanade.presentation.manga.components.MangaCover // Pastikan import MangaCover.Book.ratio ada
+import eu.kanade.presentation.manga.components.MangaCover
 import eu.kanade.tachiyomi.ui.manga.RelatedManga
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.manga.model.asMangaCover
 import tachiyomi.presentation.core.components.material.padding
+
+// CATATAN DEVELOPER:
+// - Mengganti MangaItem yang private dengan BrowseSourceCompactGridItem
+// - Pastikan import MangaCover.Book.ratio ada jika diperlukan di file lain
 
 @Composable
 fun RelatedMangasRow(
