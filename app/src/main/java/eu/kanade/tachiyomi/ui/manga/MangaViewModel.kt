@@ -1130,8 +1130,8 @@ class MangaViewModel(
                     ?: ""
                 
                 if (catalogueSource != null && authorQuery.isNotBlank()) {
-                    // Tembak pencarian bawaan (tanpa utak-atik filter bawaannya)
-                    val searchPage = catalogueSource.fetchSearchManga(1, authorQuery, catalogueSource.getFilterList())
+                    // PERBAIKAN: Gunakan getSearchManga() agar langsung mengembalikan data MangasPage
+                    val searchPage = catalogueSource.getSearchManga(1, authorQuery, catalogueSource.getFilterList())
                     
                     // 1. Siapkan daftar genre komik yang lagi dibuka (ubah ke huruf kecil semua)
                     val currentGenres = state.manga.genre?.map { it.trim().lowercase() } ?: emptyList()
