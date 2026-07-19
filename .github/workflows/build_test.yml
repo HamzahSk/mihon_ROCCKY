@@ -1,0 +1,80 @@
+name: Build & Test
+on:
+  pull_request:
+    paths:
+      - '**'
+      - '!**.md'
+      - '!fastlane/**'
+      - '!i18n/src/commonMain/moko-resources/**/strings.xml'
+      - '!i18n/src/commonMain/moko-resources/**/plurals.xml'
+      - 'i18n/src/commonMain/moko-resources/base/strings.xml'
+      - 'i18n/src/commonMain/moko-resources/base/plurals.xml'
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build & Test App
+    runs-on: 'ubuntu-24.04'
+
+    steps:
+      # Menggunakan v4 stabil agar bisa di-run tanpa masalah validasi SHA
+      - name: Checkout
+        uses: actions/checkout@v4 
+
+      - name: Dependency Review
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Check code format
+        run: ./gradlew spotlessCheck
+
+      - name: Run unit tests
+        id: unit_tests
+        run: ./gradlew testDebugUnitTest
+
+      # Menggunakan v4 stabil untuk upload laporan jika unit test gagal
+      - name: Upload test report
+        if: steps.unit_tests.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report-${{ github.sha }}
+          path: app/build/reports/tests/testDebugUnitTest
+
+      - name: Verify SQLDelight migrations
+        run: ./gradlew verifySqlDelightMigration
+
+      - name: Build app
+        run: ./gradlew assembleRelease -Pinclude-telemetry -Penable-updater
+
+      # Menggunakan v4 stabil untuk upload APK hasil build
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: arm64-v8a-${{ github.sha }}
+          # TIPS: Jika eror file tidak ditemukan, pastikan nama file APK-mu di folder ini sudah sesuai
+          path: app/build/outputs/apk/release/app-arm64-v8a-release.apk
+
+      - name: Upload mapping
+        uses: actions/upload-artifact@v4
+        with:
+          name: mapping-${{ github.sha }}
+          path: app/build/outputs/mapping/release
+          
