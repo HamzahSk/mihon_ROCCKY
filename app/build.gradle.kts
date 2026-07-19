@@ -30,7 +30,7 @@ android {
     namespace = "eu.kanade.tachiyomi"
 
     defaultConfig {
-        applicationId = "app.mihon"
+        applicationId = "app.komikku.roccky"
 
         versionCode = 26
         versionName = "0.20.1"

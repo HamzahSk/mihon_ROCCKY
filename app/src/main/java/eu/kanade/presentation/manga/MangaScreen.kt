@@ -146,6 +146,7 @@ fun MangaScreen(
             onAddToLibraryClicked = onAddToLibraryClicked,
             onWebViewClicked = onWebViewClicked,
             onWebViewLongClicked = onWebViewLongClicked,
+            onCopyUrlClicked = onCopyUrlClicked,
             onTrackingClicked = onTrackingClicked,
             onTagSearch = onTagSearch,
             onCopyTagToClipboard = onCopyTagToClipboard,
@@ -182,6 +183,7 @@ fun MangaScreen(
             onAddToLibraryClicked = onAddToLibraryClicked,
             onWebViewClicked = onWebViewClicked,
             onWebViewLongClicked = onWebViewLongClicked,
+            onCopyUrlClicked = onCopyUrlClicked,
             onTrackingClicked = onTrackingClicked,
             onTagSearch = onTagSearch,
             onCopyTagToClipboard = onCopyTagToClipboard,
@@ -221,6 +223,7 @@ private fun MangaScreenSmallImpl(
     onAddToLibraryClicked: () -> Unit,
     onWebViewClicked: (() -> Unit)?,
     onWebViewLongClicked: (() -> Unit)?,
+    onCopyUrlClicked: (() -> Unit)?,
     onTrackingClicked: () -> Unit,
 
     // For tags menu
@@ -397,6 +400,7 @@ private fun MangaScreenSmallImpl(
                             onAddToLibraryClicked = onAddToLibraryClicked,
                             onWebViewClicked = onWebViewClicked,
                             onWebViewLongClicked = onWebViewLongClicked,
+                            onCopyUrlClicked = onCopyUrlClicked,
                             onTrackingClicked = onTrackingClicked,
                             onEditIntervalClicked = onEditIntervalClicked,
                             onEditCategory = onEditCategoryClicked,
@@ -463,6 +467,7 @@ fun MangaScreenLargeImpl(
     onAddToLibraryClicked: () -> Unit,
     onWebViewClicked: (() -> Unit)?,
     onWebViewLongClicked: (() -> Unit)?,
+    onCopyUrlClicked: (() -> Unit)?,
     onTrackingClicked: () -> Unit,
 
     // For tags menu
@@ -627,6 +632,7 @@ fun MangaScreenLargeImpl(
                             onAddToLibraryClicked = onAddToLibraryClicked,
                             onWebViewClicked = onWebViewClicked,
                             onWebViewLongClicked = onWebViewLongClicked,
+                            onCopyUrlClicked = onCopyUrlClicked,
                             onTrackingClicked = onTrackingClicked,
                             onEditIntervalClicked = onEditIntervalClicked,
                             onEditCategory = onEditCategoryClicked,
