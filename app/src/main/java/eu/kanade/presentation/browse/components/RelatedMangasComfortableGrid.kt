@@ -18,7 +18,9 @@ import eu.kanade.presentation.browse.RelatedMangaTitle
 import eu.kanade.presentation.browse.RelatedMangasLoadingItem
 import eu.kanade.presentation.browse.header
 import eu.kanade.presentation.library.components.CommonMangaItemDefaults
+import eu.kanade.presentation.library.components.MangaComfortableGridItem
 import eu.kanade.tachiyomi.ui.manga.RelatedManga
+import tachiyomi.domain.manga.model.asMangaCover
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.FastScrollLazyVerticalGrid
@@ -108,13 +110,12 @@ fun RelatedMangasComfortableGrid(
                         count = relatedManga.mangaList.size,
                     ) { index ->
                         val manga by getManga(relatedManga.mangaList[index])
-                        BrowseSourceComfortableGridItem(
-                            manga = manga,
+                        MangaComfortableGridItem(
+                            coverData = manga.asMangaCover(),
+                            title = manga.title,
                             onClick = { onMangaClick(manga) },
                             onLongClick = { onMangaLongClick(manga) },
                             isSelected = selection.fastAny { selected -> selected.id == manga.id },
-                            metadata = null,
-                            usePanoramaCover = usePanoramaCover,
                         )
                     }
                 }
