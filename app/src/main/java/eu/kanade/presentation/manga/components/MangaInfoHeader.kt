@@ -286,7 +286,7 @@ fun ExpandableMangaDescription(
 
         // 1. Menambahkan Judul "Sinopsis" (Setara H2) di atas deskripsi
         Text(
-            text = "Sinopsis",
+            text = stringResource(MR.strings.synopsis_placeholder),
             style = MaterialTheme.typography.titleMedium, // Style H2 di Material Design 3
             modifier = Modifier
                 .padding(horizontal = 16.dp)
