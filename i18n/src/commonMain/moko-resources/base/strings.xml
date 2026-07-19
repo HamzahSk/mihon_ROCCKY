@@ -543,6 +543,13 @@
     <string name="track_activity_name">Tracker login</string>
 
       <!-- Browse section -->
+    <!-- Browse settings -->
+    <string name="pref_source_related_mangas">Suggestions</string>
+    <string name="pref_source_related_mangas_summary">Show source-website's Suggestions while viewing entry</string>
+    <string name="related_mangas_website_suggestions">Website Suggestions</string>
+    <string name="related_mangas_more">More like these...</string>
+    <string name="saved_searches_add_feed">Saved Searches (Hold to add to Feed)</string>
+    <string name="saved_searches_delete">Saved Searches (Hold to delete)</string>
     <string name="pref_hide_in_library_items">Hide entries already in library</string>
 
       <!-- Data and storage section -->

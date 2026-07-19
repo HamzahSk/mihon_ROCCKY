@@ -28,6 +28,7 @@ import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -35,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -56,6 +58,8 @@ import eu.kanade.presentation.manga.components.MangaChapterListItem
 import eu.kanade.presentation.manga.components.MangaInfoBox
 import eu.kanade.presentation.manga.components.MangaToolbar
 import eu.kanade.presentation.manga.components.MissingChapterCountListItem
+import eu.kanade.presentation.browse.RelatedMangaTitle
+import eu.kanade.presentation.manga.components.RelatedMangasRow
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.source.getNameForMangaInfo
@@ -126,6 +130,12 @@ fun MangaScreen(
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
+    
+    // Rekomendation
+    getMangaState: @Composable (Manga) -> State<Manga>,
+    onRelatedMangasScreenClick: () -> Unit,
+    onRelatedMangaClick: (Manga) -> Unit,
+    onRelatedMangaLongClick: (Manga) -> Unit,
 ) {
     val context = LocalContext.current
     val onCopyTagToClipboard: (tag: String) -> Unit = {
@@ -260,6 +270,11 @@ private fun MangaScreenSmallImpl(
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
+    
+    getMangaState: @Composable ((Manga) -> State<Manga>),
+    onRelatedMangasScreenClick: () -> Unit,
+    onRelatedMangaClick: (Manga) -> Unit,
+    onRelatedMangaLongClick: (Manga) -> Unit,
 ) {
     val chapterListState = rememberLazyListState()
 
@@ -423,6 +438,31 @@ private fun MangaScreenSmallImpl(
                         )
                     }
 
+                    if (state.relatedMangasSorted?.isNotEmpty() != false) {
+                        item { HorizontalDivider() }
+                        item(
+                            key = MangaScreenItem.RELATED_MANGAS,
+                            contentType = MangaScreenItem.RELATED_MANGAS,
+                        ) {
+                            Column {
+                                RelatedMangaTitle(
+                                    title = stringResource(MR.strings.pref_source_related_mangas),
+                                    subtitle = null,
+                                    onClick = onRelatedMangasScreenClick,
+                                    onLongClick = null,
+                                    modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
+                                )
+                                RelatedMangasRow(
+                                    relatedMangas = state.relatedMangasSorted,
+                                    getMangaState = getMangaState,
+                                    onMangaClick = onRelatedMangaClick,
+                                    onMangaLongClick = onRelatedMangaLongClick,
+                                )
+                            }
+                        }
+                        item { HorizontalDivider() }
+                    }
+                    
                     item(
                         key = MangaScreenItem.CHAPTER_HEADER,
                         contentType = MangaScreenItem.CHAPTER_HEADER,
@@ -505,6 +545,11 @@ fun MangaScreenLargeImpl(
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
+    
+    getMangaState: @Composable ((Manga) -> State<Manga>),
+    onRelatedMangasScreenClick: () -> Unit,
+    onRelatedMangaClick: (Manga) -> Unit,
+    onRelatedMangaLongClick: (Manga) -> Unit,
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
@@ -655,6 +700,7 @@ fun MangaScreenLargeImpl(
                         listState = chapterListState,
                         topContentPadding = contentPadding.calculateTopPadding(),
                     ) {
+                    
                         LazyColumn(
                             modifier = Modifier.fillMaxHeight(),
                             state = chapterListState,
@@ -663,6 +709,31 @@ fun MangaScreenLargeImpl(
                                 bottom = contentPadding.calculateBottomPadding(),
                             ),
                         ) {
+                        
+                            if (state.relatedMangasSorted?.isNotEmpty() != false) {
+                                item(
+                                    key = MangaScreenItem.RELATED_MANGAS,
+                                    contentType = MangaScreenItem.RELATED_MANGAS,
+                                ) {
+                                    Column {
+                                        RelatedMangaTitle(
+                                            title = stringResource(MR.strings.pref_source_related_mangas).uppercase(),
+                                            subtitle = null,
+                                            onClick = onRelatedMangasScreenClick,
+                                            onLongClick = null,
+                                            modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
+                                        )
+                                        RelatedMangasRow(
+                                            relatedMangas = state.relatedMangasSorted,
+                                            getMangaState = getMangaState,
+                                            onMangaClick = onRelatedMangaClick,
+                                            onMangaLongClick = onRelatedMangaLongClick,
+                                        )
+                                    }
+                                }
+                                item { HorizontalDivider() }
+                            }
+                            
                             item(
                                 key = MangaScreenItem.CHAPTER_HEADER,
                                 contentType = MangaScreenItem.CHAPTER_HEADER,
