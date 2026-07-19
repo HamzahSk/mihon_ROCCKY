@@ -35,6 +35,7 @@ import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.data.track.EnhancedTracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
+import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import eu.kanade.tachiyomi.util.chapter.getNextUnread
@@ -256,6 +257,9 @@ class MangaViewModel(
 
             // Initial loading finished
             updateSuccessState { it.copy(isRefreshingData = false) }
+            
+            fetchRecommendationsFromSource()
+            
         }
     }
 
@@ -1107,6 +1111,66 @@ class MangaViewModel(
             setExcludedScanlators.await(mangaId, excludedScanlators)
         }
     }
+    
+    fun fetchRecommendationsFromSource() {
+        val state = successState ?: return
+        
+        // Jangan fetch ulang kalau sudah ada atau sedang loading
+        if (state.recommendations.isNotEmpty() || state.isFetchingRecommendations) return
+
+        viewModelScope.launchIO {
+            updateSuccessState { it.copy(isFetchingRecommendations = true) }
+            
+            try {
+                val catalogueSource = state.source as? CatalogueSource
+                
+                // Gunakan nama author, atau ambil kata pertama dari judul sebagai keyword pencarian luas
+                val authorQuery = state.manga.author?.takeIf { it.isNotBlank() } 
+                    ?: state.manga.title.split(" ").firstOrNull() 
+                    ?: ""
+                
+                if (catalogueSource != null && authorQuery.isNotBlank()) {
+                    // Tembak pencarian bawaan (tanpa utak-atik filter bawaannya)
+                    val searchPage = catalogueSource.fetchSearchManga(1, authorQuery, catalogueSource.getFilterList())
+                    
+                    // 1. Siapkan daftar genre komik yang lagi dibuka (ubah ke huruf kecil semua)
+                    val currentGenres = state.manga.genre?.map { it.trim().lowercase() } ?: emptyList()
+                    
+                    // 2. Olah hasilnya dengan algoritma kecocokan genre
+                    val recs = searchPage.mangas
+                        .filter { it.url != state.manga.url } // Buang komik yang lagi dibaca
+                        .sortedByDescending { sManga ->
+                            // Hitung seberapa banyak genre yang sama
+                            val resultGenres = sManga.genre?.split(",")?.map { it.trim().lowercase() } ?: emptyList()
+                            
+                            // .intersect() akan mencari irisan (genre yang sama persis)
+                            val matchingScore = resultGenres.intersect(currentGenres.toSet()).size
+                            
+                            // Komik dengan skor tertinggi (genre paling mirip) akan naik ke atas
+                            matchingScore 
+                        }
+                        .take(12) // Ambil 12 rekomendasi terbaik
+                        .map { sManga ->
+                            SourceRecommendation(
+                                title = sManga.title,
+                                url = sManga.url,
+                                thumbnailUrl = sManga.thumbnail_url
+                            )
+                        }
+
+                    updateSuccessState { 
+                        it.copy(recommendations = recs, isFetchingRecommendations = false) 
+                    }
+                } else {
+                    updateSuccessState { it.copy(isFetchingRecommendations = false) }
+                }
+            } catch (e: Exception) {
+                logcat(LogPriority.ERROR, e) { "Gagal mengambil rekomendasi dari source" }
+                updateSuccessState { it.copy(isFetchingRecommendations = false) }
+            }
+        }
+    }
+    
 
     sealed interface State {
         @Immutable
@@ -1126,6 +1190,8 @@ class MangaViewModel(
             val dialog: Dialog? = null,
             val hasPromptedToAddBefore: Boolean = false,
             val hideMissingChapters: Boolean = false,
+            val recommendations: List<SourceRecommendation> = emptyList(),
+            val isFetchingRecommendations: Boolean = false,
         ) : State {
             val processedChapters by lazy {
                 chapters.applyFilters(manga).toList()
@@ -1210,3 +1276,11 @@ sealed class ChapterList {
         val isDownloaded = downloadState == Download.State.DOWNLOADED
     }
 }
+
+
+@Immutable
+data class SourceRecommendation(
+    val title: String,
+    val url: String,
+    val thumbnailUrl: String?
+)
