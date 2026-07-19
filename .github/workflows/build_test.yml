@@ -1,16 +1,17 @@
 name: Build & Test App
+
 on:
   workflow_dispatch:
 
   pull_request:
     paths:
-      - '**'
-      - '!**.md'
-      - '!fastlane/**'
-      - '!i18n/src/commonMain/moko-resources/**/strings.xml'
-      - '!i18n/src/commonMain/moko-resources/**/plurals.xml'
-      - 'i18n/src/commonMain/moko-resources/base/strings.xml'
-      - 'i18n/src/commonMain/moko-resources/base/plurals.xml'
+      - "**"
+      - "!**.md"
+      - "!fastlane/**"
+      - "!i18n/src/commonMain/moko-resources/**/strings.xml"
+      - "!i18n/src/commonMain/moko-resources/**/plurals.xml"
+      - "i18n/src/commonMain/moko-resources/base/strings.xml"
+      - "i18n/src/commonMain/moko-resources/base/plurals.xml"
 
   push:
     branches:
@@ -26,11 +27,11 @@ permissions:
 jobs:
   build:
     name: Build & Test App
-    runs-on: 'ubuntu-24.04'
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4 
+        uses: actions/checkout@v4
 
       - name: Dependency Review
         if: github.event_name == 'pull_request'
@@ -65,9 +66,7 @@ jobs:
       - name: Verify SQLDelight migrations
         run: ./gradlew verifySqlDelightMigration
 
-      # PERBAIKAN: Menghapus ${{ }} pada kondisi IF
       - name: Build app
-        if: secrets.SIGNING_KEY != ''
         env:
           MIHON_GITHUB_RELEASE: "true"
           RUNNER_TEMP: ${{ runner.temp }}
@@ -75,11 +74,6 @@ jobs:
           storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyAlias: ${{ secrets.ALIAS }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew assembleRelease -Pinclude-telemetry -Penable-updater
-
-      # PERBAIKAN: Menghapus ${{ }} pada kondisi IF
-      - name: Build app (Unsigned Fallback)
-        if: secrets.SIGNING_KEY == ''
         run: ./gradlew assembleRelease -Penable-updater
 
       - name: Upload APK
