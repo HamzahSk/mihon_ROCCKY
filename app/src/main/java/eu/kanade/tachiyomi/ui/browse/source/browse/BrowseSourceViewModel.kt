@@ -361,7 +361,7 @@ class BrowseSourceViewModel(
     @OptIn(ExperimentalCoroutinesApi::class)
     val carouselMangaFlow = carouselListingFlow
         .filterNotNull()
-        .flatMapLatest { listing ->
+        .map { listing ->
             Pager(PagingConfig(pageSize = 10)) {
                 getRemoteManga(sourceId, listing.query ?: "", listing.filters)
             }.flow.map { pagingData ->
