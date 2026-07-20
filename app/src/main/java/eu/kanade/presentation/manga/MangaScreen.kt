@@ -422,6 +422,16 @@ private fun MangaScreenSmallImpl(
                             onEditNotes = onEditNotesClicked,
                         )
                     }
+                    
+                    item(
+                        key = "RECOMMENDATIONS", 
+                        contentType = "RECOMMENDATIONS",
+                    ) {
+                        MangaRecommendationsRow(
+                            recommendations = state.recommendations,
+                            isLoading = state.isFetchingRecommendations
+                        )
+                    }
 
                     item(
                         key = MangaScreenItem.CHAPTER_HEADER,
@@ -647,6 +657,10 @@ fun MangaScreenLargeImpl(
                             onTagSearch = onTagSearch,
                             onCopyTagToClipboard = onCopyTagToClipboard,
                             onEditNotes = onEditNotesClicked,
+                        )
+                        MangaRecommendationsRow(
+                            recommendations = state.recommendations,
+                            isLoading = state.isFetchingRecommendations
                         )
                     }
                 },
