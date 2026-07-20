@@ -1245,7 +1245,7 @@ class MangaViewModel(
             )
             
             // Simpan ke database dan kembalikan ID yang baru saja dibuat
-            val insertedManga = networkToLocalManga.await(newManga)
+            val insertedManga = networkToLocalManga(newManga)
             insertedManga.id
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Gagal memproses rekomendasi manga" }
