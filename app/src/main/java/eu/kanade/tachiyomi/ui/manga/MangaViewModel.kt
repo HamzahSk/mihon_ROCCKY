@@ -36,6 +36,7 @@ import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.data.track.EnhancedTracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.source.CatalogueSource
+import eu.kanade.tachiyomi.source.model.Filter as SourceModelFilter
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import eu.kanade.tachiyomi.util.chapter.getNextUnread
@@ -1135,20 +1136,20 @@ class MangaViewModel(
 
                     // 2. Terapkan logika "searchGenre" dari BrowseSourceViewModel
                     filter@ for (sourceFilter in filterList) {
-                        if (sourceFilter is eu.kanade.tachiyomi.source.model.Filter.Group<*>) {
+                        if (sourceFilter is SourceModelFilter.Group<*>) {
                             for (filter in sourceFilter.state) {
-                                if (filter is eu.kanade.tachiyomi.source.model.Filter<*> && 
+                                if (filter is SourceModelFilter<*> && 
                                     filter.name.equals(targetGenre, true)) {
                                     when (filter) {
-                                        is eu.kanade.tachiyomi.source.model.Filter.TriState -> filter.state = 1
-                                        is eu.kanade.tachiyomi.source.model.Filter.CheckBox -> filter.state = true
+                                        is SourceModelFilter.TriState -> filter.state = 1
+                                        is SourceModelFilter.CheckBox -> filter.state = true
                                         else -> {}
                                     }
                                     genreExists = true
                                     break@filter
                                 }
                             }
-                        } else if (sourceFilter is eu.kanade.tachiyomi.source.model.Filter.Select<*>) {
+                        } else if (sourceFilter is SourceModelFilter.Select<*>) {
                             val index = sourceFilter.values.filterIsInstance<String>()
                                 .indexOfFirst { it.equals(targetGenre, true) }
 
@@ -1188,7 +1189,7 @@ class MangaViewModel(
                         it.copy(recommendations = recs, isFetchingRecommendations = false) 
                     }
                 } else {
-                    // Fallback kalau tidak ada genre sama sekali (bisa kamu isi dengan search by author seperti sblmnya jika mau)
+                    // Fallback kalau tidak ada genre sama sekali
                     updateSuccessState { it.copy(isFetchingRecommendations = false) }
                 }
             } catch (e: Exception) {
@@ -1196,7 +1197,8 @@ class MangaViewModel(
                 updateSuccessState { it.copy(isFetchingRecommendations = false) }
             }
         }
-    }    
+    }
+
 
     sealed interface State {
         @Immutable
