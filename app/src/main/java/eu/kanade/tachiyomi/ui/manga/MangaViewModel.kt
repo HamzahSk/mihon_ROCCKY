@@ -1124,69 +1124,87 @@ class MangaViewModel(
             
             try {
                 val catalogueSource = state.source as? CatalogueSource
+                val currentGenres = state.manga.genre?.map { it.trim() }?.filter { it.isNotBlank() } ?: emptyList()
                 
-                // 1. Ambil genre pertama sebagai target pencarian utama
-                val currentGenres = state.manga.genre ?: emptyList()
-                val targetGenre = currentGenres.firstOrNull()?.trim()
-                
-                if (catalogueSource != null && targetGenre != null) {
+                if (catalogueSource != null && currentGenres.isNotEmpty()) {
                     
-                    val filterList = catalogueSource.getFilterList()
-                    var genreExists = false
+                    val currentGenresLower = currentGenres.map { it.lowercase() }.toSet()
+                    
+                    // Kita gunakan Pair untuk menyimpan <Rekomendasi, Skor Kemiripan Genre> 
+                    // dan Map dengan key URL agar tidak ada duplikat.
+                    val collectedRecs = mutableMapOf<String, Pair<SourceRecommendation, Int>>()
+                    
+                    var activeGenres = currentGenres.toList()
+                    val maxAttempts = currentGenres.size
+                    var attempts = 0
+                    
+                    // Looping selama genre masih ada dan jumlah rekomendasi terkumpul < 10
+                    while (activeGenres.isNotEmpty() && collectedRecs.size < 10 && attempts < maxAttempts) {
+                        attempts++
+                        val filterList = catalogueSource.getFilterList()
+                        var appliedFiltersCount = 0
 
-                    // 2. Terapkan logika "searchGenre" dari BrowseSourceViewModel
-                    filter@ for (sourceFilter in filterList) {
-                        if (sourceFilter is SourceModelFilter.Group<*>) {
-                            for (filter in sourceFilter.state) {
-                                if (filter is SourceModelFilter<*> && 
-                                    filter.name.equals(targetGenre, true)) {
-                                    when (filter) {
-                                        is SourceModelFilter.TriState -> filter.state = 1
-                                        is SourceModelFilter.CheckBox -> filter.state = true
-                                        else -> {}
+                        // 1. Terapkan semua genre yang aktif (activeGenres) ke dalam filter
+                        for (sourceFilter in filterList) {
+                            if (sourceFilter is SourceModelFilter.Group<*>) {
+                                for (filter in sourceFilter.state) {
+                                    if (filter is SourceModelFilter<*> && activeGenres.any { it.equals(filter.name, true) }) {
+                                        when (filter) {
+                                            is SourceModelFilter.TriState -> filter.state = 1
+                                            is SourceModelFilter.CheckBox -> filter.state = true
+                                            else -> {}
+                                        }
+                                        appliedFiltersCount++
                                     }
-                                    genreExists = true
-                                    break@filter
+                                }
+                            } else if (sourceFilter is SourceModelFilter.Select<*>) {
+                                val index = sourceFilter.values.filterIsInstance<String>()
+                                    .indexOfFirst { activeGenres.any { ag -> ag.equals(it, true) } }
+
+                                if (index != -1) {
+                                    sourceFilter.state = index
+                                    appliedFiltersCount++
                                 }
                             }
-                        } else if (sourceFilter is SourceModelFilter.Select<*>) {
-                            val index = sourceFilter.values.filterIsInstance<String>()
-                                .indexOfFirst { it.equals(targetGenre, true) }
+                        }
 
-                            if (index != -1) {
-                                sourceFilter.state = index
-                                genreExists = true
-                                break
+                        // 2. Tentukan query string (fallback) jika filter tidak mendukung dan hanya sisa 1 genre
+                        val textQuery = if (appliedFiltersCount == 0 && activeGenres.size == 1) activeGenres.first() else ""
+
+                        // 3. Eksekusi pencarian
+                        val searchPage = catalogueSource.getSearchManga(1, textQuery, filterList)
+                        
+                        // 4. Proses hasil dan saring dari duplikat (komik yang sama atau yang sudah masuk list)
+                        searchPage.mangas.forEach { sManga ->
+                            if (sManga.url != state.manga.url && !collectedRecs.containsKey(sManga.url)) {
+                                val resultGenres = sManga.genre?.split(",")?.map { it.trim().lowercase() } ?: emptyList()
+                                val matchScore = resultGenres.intersect(currentGenresLower).size
+                                
+                                val rec = SourceRecommendation(
+                                    title = sManga.title,
+                                    url = sManga.url,
+                                    thumbnailUrl = sManga.thumbnail_url
+                                )
+                                collectedRecs[sManga.url] = Pair(rec, matchScore)
                             }
+                        }
+
+                        // 5. Cek kuota. Kalau masih kurang dari 10, buang 1 genre terakhir lalu coba lagi
+                        if (collectedRecs.size < 10) {
+                            activeGenres = activeGenres.dropLast(1)
+                        } else {
+                            break // Keluar loop kalau sudah cukup
                         }
                     }
 
-                    // 3. Tentukan query string. Jika genre ketemu di filter, query kosong. Jika tidak, jadikan teks biasa.
-                    val textQuery = if (genreExists) "" else targetGenre
-
-                    // 4. Eksekusi pencarian
-                    val searchPage = catalogueSource.getSearchManga(1, textQuery, filterList)
-                    
-                    val currentGenresLower = currentGenres.map { it.trim().lowercase() }.toSet()
-                    
-                    // 5. Olah hasil: Sortir berdasarkan kemiripan semua genre
-                    val recs = searchPage.mangas
-                        .filter { it.url != state.manga.url } // Jangan masukkan komik yang sama
-                        .sortedByDescending { sManga ->
-                            val resultGenres = sManga.genre?.split(",")?.map { it.trim().lowercase() } ?: emptyList()
-                            resultGenres.intersect(currentGenresLower).size
-                        }
-                        .take(12)
-                        .map { sManga ->
-                            SourceRecommendation(
-                                title = sManga.title,
-                                url = sManga.url,
-                                thumbnailUrl = sManga.thumbnail_url
-                            )
-                        }
+                    // 6. Urutkan semua hasil berdasarkan skor kemiripan tertinggi dan ambil 10 teratas
+                    val finalRecs = collectedRecs.values
+                        .sortedByDescending { it.second }
+                        .take(10)
+                        .map { it.first }
 
                     updateSuccessState { 
-                        it.copy(recommendations = recs, isFetchingRecommendations = false) 
+                        it.copy(recommendations = finalRecs, isFetchingRecommendations = false) 
                     }
                 } else {
                     // Fallback kalau tidak ada genre sama sekali
@@ -1198,7 +1216,6 @@ class MangaViewModel(
             }
         }
     }
-
 
     sealed interface State {
         @Immutable
