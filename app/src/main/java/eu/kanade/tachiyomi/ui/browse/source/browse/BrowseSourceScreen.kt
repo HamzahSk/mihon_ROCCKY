@@ -7,6 +7,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.material3.Card
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Favorite
@@ -29,6 +38,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
@@ -111,6 +126,8 @@ data class BrowseSourceScreen(
         val haptic = LocalHapticFeedback.current
         val uriHandler = LocalUriHandler.current
         val snackbarHostState = remember { SnackbarHostState() }
+        
+        val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
         val onHelpClick = { uriHandler.openUri(LocalSource.HELP_URL) }
         val onWebViewClick = f@{
@@ -127,8 +144,11 @@ data class BrowseSourceScreen(
         LaunchedEffect(viewModel.source) {
             assistUrl = (viewModel.source as? HttpSource)?.getHomeUrl()
         }
+        
+        val mangaList = viewModel.mangaPagerFlowFlow.collectAsLazyPagingItems()
 
         Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 Column(
                     modifier = Modifier
@@ -147,11 +167,54 @@ data class BrowseSourceScreen(
                         onSettingsClick = { navigator.push(SourcePreferencesScreen(sourceId)) },
                         onSearch = viewModel::search,
                     )
+                    
+                    val isCollapsed = scrollBehavior.state.collapsedFraction > 0.5f 
+                    AnimatedVisibility(
+                        visible = !isCollapsed,
+                        enter = expandVertically(animationSpec = tween(300)),
+                        exit = shrinkVertically(animationSpec = tween(300))
+                    ) {
+                        // LazyRow untuk membuat Carousel Horizontal
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = MaterialTheme.padding.small),
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        ) {
+                            // Ambil data dari mangaList yang sudah kita deklarasikan di atas Scaffold
+                            items(mangaList.itemCount) { index ->
+                                val manga = mangaList[index]
+            
+                                if (manga != null) {
+                                    // Tampilan Card sementara buat testing
+                                    Card(
+                                        modifier = Modifier
+                                            .width(120.dp)
+                                            .height(160.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .padding(8.dp),
+                                            contentAlignment = Alignment.BottomStart
+                                        ) {
+                                            Text(
+                                                text = manga.title,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                maxLines = 3
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
 
                     Row(
                         modifier = Modifier
                             .horizontalScroll(rememberScrollState())
-                            .padding(horizontal = MaterialTheme.padding.small),
+                            .padding(horizontal = MaterialTheme.padding.small)
+                            .padding(vertical = MaterialTheme.padding.small),
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
                     ) {
                         FilterChip(
@@ -218,7 +281,6 @@ data class BrowseSourceScreen(
         ) { paddingValues ->
             BrowseSourceContent(
                 source = viewModel.source,
-                mangaList = viewModel.mangaPagerFlowFlow.collectAsLazyPagingItems(),
                 columns = viewModel.getColumnsPreference(LocalConfiguration.current.orientation),
                 displayMode = viewModel.displayMode,
                 snackbarHostState = snackbarHostState,
@@ -226,6 +288,7 @@ data class BrowseSourceScreen(
                 onWebViewClick = onWebViewClick,
                 onHelpClick = { uriHandler.openUri(Constants.URL_HELP) },
                 onLocalSourceHelpClick = onHelpClick,
+                contentPadding = paddingValues,
                 onMangaClick = { navigator.push((MangaScreen(it.id, true))) },
                 onMangaLongClick = { manga ->
                     scope.launchIO {
