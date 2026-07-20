@@ -368,7 +368,8 @@ class BrowseSourceViewModel(
                         .map { it ?: manga }
                         .stateIn(viewModelScope)
                 }
-            }.cachedIn(viewModelScope)
+            }
+                .cachedIn(viewModelScope)
         }
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyFlow())
 
@@ -426,10 +427,12 @@ class BrowseSourceViewModel(
         
         val genreCounts = mutableMapOf<String, Int>()
         
-        // Gunakan for-loop standar alih-alih .forEach{}
         for (historyItem in lastReadManga) {
             val manga = getManga.await(historyItem.mangaId)
-            val genres = manga?.genre?.split(",")?.map { it.trim() } ?: emptyList()
+            // PASTIKAN pakai nullable safe call (?.) atau null check yang benar
+            val genreString = manga?.genre ?: continue 
+            
+            val genres = genreString.split(",").map { it.trim() }
             for (genre in genres) {
                 if (genre.isNotEmpty()) {
                     genreCounts[genre] = genreCounts.getOrDefault(genre, 0) + 1
@@ -441,7 +444,6 @@ class BrowseSourceViewModel(
             .sortedByDescending { it.value }
             .map { it.key }
     }
-
 
 
     @Immutable
