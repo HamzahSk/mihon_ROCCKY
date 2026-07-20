@@ -22,7 +22,6 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.track.interactor.AddTracks
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.source.model.FilterList
-import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.util.removeCovers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -31,9 +30,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.asStateFlow
 import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.mapAsCheckboxState
@@ -90,10 +87,7 @@ class BrowseSourceViewModel(
     var displayMode by sourcePreferences.sourceDisplayMode.asState(viewModelScope)
 
     val source = sourceManager.getOrStub(sourceId)
-    
-    private val _recommendedManga = MutableStateFlow<List<SManga>>(emptyList())
-    val recommendedManga = _recommendedManga.asStateFlow()
-    
+
     init {
         mutableState.update {
             var query: String? = null
@@ -114,26 +108,8 @@ class BrowseSourceViewModel(
         if (!getIncognitoState.await(source.id)) {
             sourcePreferences.lastUsedSource.set(source.id)
         }
-        
-        loadRecommendations()
     }
-    
-    private fun loadRecommendations() {
-        viewModelScope.launchIO {
-            try {
-                val catalogueSource = source as? eu.kanade.tachiyomi.source.CatalogueSource
-                if (catalogueSource != null) {
-                    // Ambil langsung halaman 1 dari Populer
-                    val page = catalogueSource.getPopularManga(1)
-                    
-                    // Langsung masukin data mentahnya, nggak perlu konversi-konversi ribet!
-                    _recommendedManga.value = page.mangas
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
+
     /**
      * Flow of Pager flow tied to [State.listing]
      */
