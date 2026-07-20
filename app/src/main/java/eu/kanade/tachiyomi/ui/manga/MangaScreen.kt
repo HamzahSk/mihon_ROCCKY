@@ -180,6 +180,13 @@ class MangaScreen(
             onChapterSelected = viewModel::toggleSelection,
             onAllChapterSelected = viewModel::toggleAllSelection,
             onInvertSelection = viewModel::invertSelection,
+            
+            onRecommendationClicked = { recommendation ->
+                // Menggunakan navigator Voyager untuk pindah ke halaman manga yang diklik
+                navigator.push(MangaScreen(recommendation.mangaId, true)) 
+                // Catatan: Pastikan 'mangaId' adalah nama properti ID di dalam class SourceRecommendation kamu. 
+                // Kalau namanya cuma 'id', ganti jadi recommendation.id
+            }
         )
 
         var showScanlatorsDialog by remember { mutableStateOf(false) }
