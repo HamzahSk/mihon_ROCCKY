@@ -9,6 +9,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.animation.core.tween
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -150,22 +151,34 @@ data class BrowseSourceScreen(
 
         var isCarouselVisible by remember { mutableStateOf(true) }
         
+        // --- UPDATE KODE NESTED SCROLL CONNECTION ---
         val nestedScrollConnection = remember {
             object : NestedScrollConnection {
                 override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                     val delta = available.y
                     if (delta < -10f) {
-                        // Scroll ke bawah -> list naik -> sembunyikan carousel
+                        // Scroll ke bawah -> list naik -> langsung sembunyikan carousel
                         isCarouselVisible = false
-                    } else if (delta > 10f) {
-                        // Scroll ke atas -> list turun -> munculkan carousel
+                    }
+                    // Kita hapus kondisi "else if (delta > 10f)" dari sini
+                    return Offset.Zero
+                }
+
+                override fun onPostScroll(
+                    consumed: Offset,
+                    available: Offset,
+                    source: NestedScrollSource
+                ): Offset {
+                    // available.y > 0f artinya user mencoba scroll ke atas (tarik layar ke bawah),
+                    // tetapi list komik sudah tidak bisa bergerak lagi alias MENTOK di paling atas.
+                    if (available.y > 0f) {
                         isCarouselVisible = true
                     }
-                    // Return Offset.Zero karena kita cuma baca arahnya, bukan nahan scroll-nya
                     return Offset.Zero
                 }
             }
         }
+        // --------------------------------------------
 
         val onHelpClick = { uriHandler.openUri(LocalSource.HELP_URL) }
         val onWebViewClick = f@{
@@ -207,8 +220,12 @@ data class BrowseSourceScreen(
                     
                     AnimatedVisibility(
                         visible = isCarouselVisible,
-                        enter = expandVertically(),
-                        exit = shrinkVertically()
+                        enter = expandVertically(
+                            animationSpec = tween(durationMillis = 500)
+                        ),
+                        exit = shrinkVertically(
+                            animationSpec = tween(durationMillis = 500)
+                        )
                     ) {
                         MangaCarousel(
                             mangaList = mangaList,
