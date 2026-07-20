@@ -1,23 +1,28 @@
 package eu.kanade.tachiyomi.ui.browse.source.browse
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.NewReleases
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -32,16 +37,23 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.paging.compose.LazyPagingItems
+
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+
 import eu.kanade.core.util.ifSourcesLoaded
 import eu.kanade.presentation.browse.BrowseSourceContent
 import eu.kanade.presentation.browse.MissingSourceScreen
@@ -57,13 +69,18 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceViewModel.Listing
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
+
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
+
 import mihon.feature.migration.dialog.MigrateMangaDialog
 import mihon.presentation.core.util.collectAsLazyPagingItems
+
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.source.model.StubSource
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -335,62 +352,53 @@ data class BrowseSourceScreen(
 
 @Composable
 fun MangaCarousel(
-    mangaList: androidx.paging.compose.LazyPagingItems<tachiyomi.domain.manga.model.Manga>,
-    onMangaClick: (tachiyomi.domain.manga.model.Manga) -> Unit,
+    mangaList: LazyPagingItems<StateFlow<Manga>>,
+    onMangaClick: (Manga) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Kita ambil maksimal 5 komik teratas dari data populer untuk ditampilkan di Carousel
+    // Kita ambil maksimal 5 komik teratas dari data populer
     val itemCount = minOf(mangaList.itemCount, 5)
 
     if (itemCount > 0) {
-        val pagerState = androidx.compose.foundation.pager.rememberPagerState(pageCount = { itemCount })
+        val pagerState = rememberPagerState(pageCount = { itemCount })
 
-        androidx.compose.foundation.pager.HorizontalPager(
+        HorizontalPager(
             state = pagerState,
             modifier = modifier
                 .fillMaxWidth()
-                .height(200.dp) // Mengatur tinggi kotak carousel
+                .height(200.dp)
                 .padding(vertical = 8.dp),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 24.dp),
+            contentPadding = PaddingValues(horizontal = 24.dp),
             pageSpacing = 12.dp
         ) { page ->
-            val manga = mangaList[page]
+            // Ambil flow-nya, lalu jadikan state agar nilainya bisa dibaca
+            val mangaFlow = mangaList[page]
+            val manga = mangaFlow?.collectAsState()?.value
+
             if (manga != null) {
-                androidx.compose.material3.Card(
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .androidx.compose.foundation.clickable { onMangaClick(manga) },
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-                    colors = androidx.compose.material3.CardDefaults.cardColors(
+                        .clickable { onMangaClick(manga) },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
                         
-                        // 💡 TIPS: Aplikasi Mihon/Tachiyomi biasanya punya komponen cover sendiri 
-                        // seperti `MangaCover.Book` atau sejenisnya. Kamu bisa pakai itu di sini.
-                        // Jika ingin tes pakai Coil standar (AsyncImage), buka komen di bawah ini:
-                        /*
-                        coil.compose.AsyncImage(
-                            model = manga.thumbnailUrl, 
-                            contentDescription = manga.title,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                        )
-                        */
-
                         // Teks Judul Komik di dalam Carousel
                         Text(
                             text = manga.title,
                             modifier = Modifier
-                                .align(androidx.compose.ui.Alignment.BottomStart)
-                                .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.6f))
+                                .align(Alignment.BottomStart)
+                                .background(Color.Black.copy(alpha = 0.6f))
                                 .padding(horizontal = 12.dp, vertical = 8.dp)
                                 .fillMaxWidth(),
-                            color = androidx.compose.ui.graphics.Color.White,
+                            color = Color.White,
                             style = MaterialTheme.typography.titleMedium,
                             maxLines = 1,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -398,4 +406,3 @@ fun MangaCarousel(
         }
     }
 }
-
