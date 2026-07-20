@@ -8,6 +8,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FilterList
@@ -90,6 +96,8 @@ data class BrowseSourceScreen(
             },
         )
         val state by viewModel.state.collectAsState()
+        
+        val mangaList = viewModel.mangaPagerFlowFlow.collectAsLazyPagingItems()
 
         val navigator = LocalNavigator.currentOrThrow
         val navigateUp: () -> Unit = {
@@ -135,6 +143,11 @@ data class BrowseSourceScreen(
                         .background(MaterialTheme.colorScheme.surface)
                         .pointerInput(Unit) {},
                 ) {
+                    MangaCarousel(
+                        mangaList = mangaList,
+                        onMangaClick = { navigator.push(MangaScreen(it.id, true)) }
+                    )
+                    
                     BrowseSourceToolbar(
                         searchQuery = state.toolbarQuery,
                         onSearchQueryChange = viewModel::setToolbarQuery,
@@ -218,7 +231,7 @@ data class BrowseSourceScreen(
         ) { paddingValues ->
             BrowseSourceContent(
                 source = viewModel.source,
-                mangaList = viewModel.mangaPagerFlowFlow.collectAsLazyPagingItems(),
+                mangaList = mangaList,
                 columns = viewModel.getColumnsPreference(LocalConfiguration.current.orientation),
                 displayMode = viewModel.displayMode,
                 snackbarHostState = snackbarHostState,
@@ -319,3 +332,70 @@ data class BrowseSourceScreen(
         class Genre(txt: String) : SearchType(txt)
     }
 }
+
+@Composable
+fun MangaCarousel(
+    mangaList: androidx.paging.compose.LazyPagingItems<tachiyomi.domain.manga.model.Manga>,
+    onMangaClick: (tachiyomi.domain.manga.model.Manga) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    // Kita ambil maksimal 5 komik teratas dari data populer untuk ditampilkan di Carousel
+    val itemCount = minOf(mangaList.itemCount, 5)
+
+    if (itemCount > 0) {
+        val pagerState = androidx.compose.foundation.pager.rememberPagerState(pageCount = { itemCount })
+
+        androidx.compose.foundation.pager.HorizontalPager(
+            state = pagerState,
+            modifier = modifier
+                .fillMaxWidth()
+                .height(200.dp) // Mengatur tinggi kotak carousel
+                .padding(vertical = 8.dp),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 24.dp),
+            pageSpacing = 12.dp
+        ) { page ->
+            val manga = mangaList[page]
+            if (manga != null) {
+                androidx.compose.material3.Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .androidx.compose.foundation.clickable { onMangaClick(manga) },
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                    colors = androidx.compose.material3.CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        
+                        // 💡 TIPS: Aplikasi Mihon/Tachiyomi biasanya punya komponen cover sendiri 
+                        // seperti `MangaCover.Book` atau sejenisnya. Kamu bisa pakai itu di sini.
+                        // Jika ingin tes pakai Coil standar (AsyncImage), buka komen di bawah ini:
+                        /*
+                        coil.compose.AsyncImage(
+                            model = manga.thumbnailUrl, 
+                            contentDescription = manga.title,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                        )
+                        */
+
+                        // Teks Judul Komik di dalam Carousel
+                        Text(
+                            text = manga.title,
+                            modifier = Modifier
+                                .align(androidx.compose.ui.Alignment.BottomStart)
+                                .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.6f))
+                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                                .fillMaxWidth(),
+                            color = androidx.compose.ui.graphics.Color.White,
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
