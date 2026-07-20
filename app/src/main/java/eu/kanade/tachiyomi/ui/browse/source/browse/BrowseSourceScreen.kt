@@ -181,34 +181,33 @@ data class BrowseSourceScreen(
                             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
                             modifier = Modifier.padding(bottom = 8.dp)
                         ) {
-                        // Ambil data dari mangaList yang sudah kita deklarasikan di atas Scaffold
-                        items(mangaList.itemCount) { index ->
-                            // Lakukan casting eksplisit sebagai Manga
-                            val manga = mangaList[index] as? Manga
-        
-                            if (manga != null) {
-                                // Tampilan Card sementara buat testing
-                                Card(
-                                    modifier = Modifier
-                                        .width(120.dp)
-                                        .height(160.dp)
-                                ) {
-                                    Box(
+                            // Ambil data dari mangaList yang sudah kita deklarasikan di atas Scaffold
+                            items(mangaList.itemCount) { index ->
+                                val manga = mangaList[index] as? Manga
+            
+                                if (manga != null) {
+                                    // Tampilan Card sementara buat testing
+                                    Card(
                                         modifier = Modifier
-                                            .fillMaxSize()
-                                            .padding(8.dp),
-                                        contentAlignment = Alignment.BottomStart
+                                            .width(120.dp)
+                                            .height(160.dp)
                                     ) {
-                                        Text(
-                                            text = manga.title,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            maxLines = 3
-                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .padding(8.dp),
+                                            contentAlignment = Alignment.BottomStart
+                                        ) {
+                                            Text(
+                                                text = manga.title,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                maxLines = 3
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
-
                     }
 
 
