@@ -1,5 +1,15 @@
 package eu.kanade.tachiyomi.ui.browse.source.browse
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -138,6 +148,25 @@ data class BrowseSourceScreen(
         val uriHandler = LocalUriHandler.current
         val snackbarHostState = remember { SnackbarHostState() }
 
+        var isCarouselVisible by remember { mutableStateOf(true) }
+        
+        val nestedScrollConnection = remember {
+            object : NestedScrollConnection {
+                override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                    val delta = available.y
+                    if (delta < -10f) {
+                        // Scroll ke bawah -> list naik -> sembunyikan carousel
+                        isCarouselVisible = false
+                    } else if (delta > 10f) {
+                        // Scroll ke atas -> list turun -> munculkan carousel
+                        isCarouselVisible = true
+                    }
+                    // Return Offset.Zero karena kita cuma baca arahnya, bukan nahan scroll-nya
+                    return Offset.Zero
+                }
+            }
+        }
+
         val onHelpClick = { uriHandler.openUri(LocalSource.HELP_URL) }
         val onWebViewClick = f@{
             val source = viewModel.source as? HttpSource ?: return@f
@@ -155,6 +184,7 @@ data class BrowseSourceScreen(
         }
 
         Scaffold(
+            modifier = Modifier.nestedScroll(nestedScrollConnection),
             topBar = {
                 Column(
                     modifier = Modifier
@@ -175,10 +205,16 @@ data class BrowseSourceScreen(
                         onSearch = viewModel::search,
                     )
                     
-                    MangaCarousel(
-                        mangaList = mangaList,
-                        onMangaClick = { navigator.push(MangaScreen(it.id, true)) }
-                    )
+                    AnimatedVisibility(
+                        visible = isCarouselVisible,
+                        enter = expandVertically(),
+                        exit = shrinkVertically()
+                    ) {
+                        MangaCarousel(
+                            mangaList = mangaList,
+                            onMangaClick = { navigator.push(MangaScreen(it.id, true)) }
+                        )
+                    }
 
                     Row(
                         modifier = Modifier
