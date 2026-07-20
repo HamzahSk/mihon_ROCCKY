@@ -22,6 +22,7 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.track.interactor.AddTracks
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.source.model.FilterList
+import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.util.removeCovers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -32,6 +33,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.asStateFlow
 import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.mapAsCheckboxState
@@ -89,7 +91,7 @@ class BrowseSourceViewModel(
 
     val source = sourceManager.getOrStub(sourceId)
     
-    private val _recommendedManga = kotlinx.coroutines.flow.MutableStateFlow<List<eu.kanade.tachiyomi.source.model.SManga>>(emptyList())
+    private val _recommendedManga = MutableStateFlow<List<SManga>>(emptyList())
     val recommendedManga = _recommendedManga.asStateFlow()
     
     init {
