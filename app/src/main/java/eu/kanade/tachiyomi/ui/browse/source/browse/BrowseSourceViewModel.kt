@@ -51,6 +51,8 @@ import tachiyomi.domain.manga.model.MangaWithChapterCount
 import tachiyomi.domain.manga.model.toMangaUpdate
 import tachiyomi.domain.source.interactor.GetRemoteManga
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.history.interactor.GetHistory
+
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.time.Instant
@@ -368,6 +370,7 @@ class BrowseSourceViewModel(
                 }
             }.cachedIn(viewModelScope)
         }
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyFlow())
 
     fun fetchCarouselRecommendations() {
         viewModelScope.launchIO {
@@ -423,10 +426,11 @@ class BrowseSourceViewModel(
         
         val genreCounts = mutableMapOf<String, Int>()
         
-        lastReadManga.forEach { historyItem ->
+        // Gunakan for-loop standar alih-alih .forEach{}
+        for (historyItem in lastReadManga) {
             val manga = getManga.await(historyItem.mangaId)
             val genres = manga?.genre?.split(",")?.map { it.trim() } ?: emptyList()
-            genres.forEach { genre ->
+            for (genre in genres) {
                 if (genre.isNotEmpty()) {
                     genreCounts[genre] = genreCounts.getOrDefault(genre, 0) + 1
                 }
@@ -437,6 +441,7 @@ class BrowseSourceViewModel(
             .sortedByDescending { it.value }
             .map { it.key }
     }
+
 
 
     @Immutable
