@@ -76,6 +76,7 @@ import tachiyomi.domain.chapter.service.getChapterSort
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.manga.interactor.GetDuplicateLibraryManga
 import tachiyomi.domain.manga.interactor.GetMangaWithChapters
+import tachiyomi.domain.manga.interactor.NetworkToLocalManga
 import tachiyomi.domain.manga.interactor.SetMangaChapterFlags
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.manga.model.MangaWithChapterCount
@@ -1216,6 +1217,42 @@ class MangaViewModel(
             }
         }
     }
+    
+    suspend fun getRecommendationMangaId(recommendation: SourceRecommendation): Long? {
+        val state = successState ?: return null
+        
+        return try {
+            // 1. Cek apakah manga rekomendasi ini sudah ada di database lokal
+            val localManga = mangaRepository.getMangaByUrlAndSourceId(
+                url = recommendation.url, 
+                sourceId = state.source.id
+            )
+            
+            if (localManga != null) {
+                // Jika sudah ada, langsung kembalikan ID-nya
+                return localManga.id
+            }
+
+            // 2. Jika belum ada, kita minta bantuan NetworkToLocalManga untuk membuat data baru di database
+            val networkToLocalManga: NetworkToLocalManga = Injekt.get()
+            
+            // Buat objek manga baru berdasarkan data rekomendasi
+            val newManga = Manga.create().copy(
+                url = recommendation.url,
+                title = recommendation.title,
+                source = state.source.id,
+                thumbnailUrl = recommendation.thumbnailUrl
+            )
+            
+            // Simpan ke database dan kembalikan ID yang baru saja dibuat
+            val insertedManga = networkToLocalManga.await(newManga)
+            insertedManga.id
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, e) { "Gagal memproses rekomendasi manga" }
+            null
+        }
+    }
+    
 
     sealed interface State {
         @Immutable

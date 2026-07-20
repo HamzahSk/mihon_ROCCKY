@@ -182,11 +182,20 @@ class MangaScreen(
             onInvertSelection = viewModel::invertSelection,
             
             onRecommendationClicked = { recommendation ->
-                // Menggunakan navigator Voyager untuk pindah ke halaman manga yang diklik
-                navigator.push(MangaScreen(recommendation.mangaId, true)) 
-                // Catatan: Pastikan 'mangaId' adalah nama properti ID di dalam class SourceRecommendation kamu. 
-                // Kalau namanya cuma 'id', ganti jadi recommendation.id
-            }
+                // Menggunakan coroutine scope karena proses database berjalan di background
+                scope.launch {
+                    val recommendedMangaId = viewModel.getRecommendationMangaId(recommendation)
+                    
+                    if (recommendedMangaId != null) {
+                        // Pindah ke halaman manga rekomendasi
+                        navigator.push(MangaScreen(recommendedMangaId, true))
+                    } else {
+                        // Munculkan pesan error jika gagal
+                        context.toast("Gagal membuka manga")
+                    }
+                }
+            },
+
         )
 
         var showScanlatorsDialog by remember { mutableStateOf(false) }
