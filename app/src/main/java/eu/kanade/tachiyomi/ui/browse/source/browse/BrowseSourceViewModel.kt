@@ -87,6 +87,9 @@ class BrowseSourceViewModel(
     var displayMode by sourcePreferences.sourceDisplayMode.asState(viewModelScope)
 
     val source = sourceManager.getOrStub(sourceId)
+    
+    private val _recommendedManga = kotlinx.coroutines.flow.MutableStateFlow<List<Manga>>(emptyList())
+    val recommendedManga: kotlinx.coroutines.flow.StateFlow<List<Manga>> = kotlinx.coroutines.flow.asStateFlow(_recommendedManga)
 
     init {
         mutableState.update {
@@ -108,8 +111,53 @@ class BrowseSourceViewModel(
         if (!getIncognitoState.await(source.id)) {
             sourcePreferences.lastUsedSource.set(source.id)
         }
+        
+        loadRecommendations()
     }
-
+    
+    // 👇 --- TAMBAHKAN FUNGSI INI DI SINI --- 👇
+    private fun loadRecommendations() {
+        viewModelScope.launchIO {
+            try {
+                // Pastikan source adalah CatalogueSource agar bisa mengambil data populer
+                val catalogueSource = source as? eu.kanade.tachiyomi.source.CatalogueSource
+                if (catalogueSource != null) {
+                    // Mihon/Tachiyomi biasanya me-return SManga dari source, 
+                    // kita perlu ambil halaman 1 dari daftar populer
+                    val page = catalogueSource.getPopularManga(1)
+                    
+                    // Konversi SManga (Network) ke Manga (Domain UI)
+                    val domainMangas = page.mangas.map { sManga ->
+                        Manga(
+                            id = -1L,
+                            source = source.id,
+                            favorite = false,
+                            lastUpdate = 0L,
+                            dateAdded = 0L,
+                            viewerFlags = 0L,
+                            chapterFlags = 0L,
+                            coverLastModified = 0L,
+                            url = sManga.url,
+                            title = sManga.title,
+                            artist = sManga.artist,
+                            author = sManga.author,
+                            description = sManga.description,
+                            genre = sManga.genre?.split(", "),
+                            status = sManga.status.toLong(),
+                            thumbnailUrl = sManga.thumbnail_url,
+                            updateStrategy = tachiyomi.domain.manga.model.MangaUpdateStrategy.ALWAYS,
+                            initialized = sManga.initialized
+                        )
+                    }
+                    _recommendedManga.value = domainMangas
+                }
+            } catch (e: Exception) {
+                // Abaikan atau log error jika gagal memuat rekomendasi
+                e.printStackTrace()
+            }
+        }
+    }
+    
     /**
      * Flow of Pager flow tied to [State.listing]
      */

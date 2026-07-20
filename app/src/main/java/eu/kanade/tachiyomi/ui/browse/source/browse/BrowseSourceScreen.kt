@@ -106,6 +106,8 @@ data class BrowseSourceScreen(
             },
         )
         val state by viewModel.state.collectAsState()
+        
+        val recommendedManga by viewModel.recommendedManga.collectAsState()
 
         val navigator = LocalNavigator.currentOrThrow
         val navigateUp: () -> Unit = {
@@ -182,8 +184,8 @@ data class BrowseSourceScreen(
                             modifier = Modifier.padding(bottom = 8.dp)
                         ) {
                             // Ambil data dari mangaList yang sudah kita deklarasikan di atas Scaffold
-                            items(mangaList.itemCount) { index ->
-                                val manga = mangaList[index] as? Manga
+                            items(recommendedManga.size) { index ->
+                                val manga = recommendedManga[index]
             
                                 if (manga != null) {
                                     // Tampilan Card sementara buat testing
