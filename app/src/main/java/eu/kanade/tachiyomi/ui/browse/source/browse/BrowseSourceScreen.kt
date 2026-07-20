@@ -74,6 +74,7 @@ import mihon.presentation.core.util.collectAsLazyPagingItems
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.source.model.StubSource
+import tachiyomi.domain.manga.model.Manga
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
@@ -180,33 +181,34 @@ data class BrowseSourceScreen(
                             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
                             modifier = Modifier.padding(bottom = 8.dp)
                         ) {
-                            // Ambil data dari mangaList yang sudah kita deklarasikan di atas Scaffold
-                            items(mangaList.itemCount) { index ->
-                                val manga = mangaList[index]
-            
-                                if (manga != null) {
-                                    // Tampilan Card sementara buat testing
-                                    Card(
+                        // Ambil data dari mangaList yang sudah kita deklarasikan di atas Scaffold
+                        items(mangaList.itemCount) { index ->
+                            // Lakukan casting eksplisit sebagai Manga
+                            val manga = mangaList[index] as? Manga
+        
+                            if (manga != null) {
+                                // Tampilan Card sementara buat testing
+                                Card(
+                                    modifier = Modifier
+                                        .width(120.dp)
+                                        .height(160.dp)
+                                ) {
+                                    Box(
                                         modifier = Modifier
-                                            .width(120.dp)
-                                            .height(160.dp)
+                                            .fillMaxSize()
+                                            .padding(8.dp),
+                                        contentAlignment = Alignment.BottomStart
                                     ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .padding(8.dp),
-                                            contentAlignment = Alignment.BottomStart
-                                        ) {
-                                            Text(
-                                                text = manga.title,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                maxLines = 3
-                                            )
-                                        }
+                                        Text(
+                                            text = manga.title,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            maxLines = 3
+                                        )
                                     }
                                 }
                             }
                         }
+
                     }
 
 
@@ -281,6 +283,7 @@ data class BrowseSourceScreen(
         ) { paddingValues ->
             BrowseSourceContent(
                 source = viewModel.source,
+                mangaList = mangaList, 
                 columns = viewModel.getColumnsPreference(LocalConfiguration.current.orientation),
                 displayMode = viewModel.displayMode,
                 snackbarHostState = snackbarHostState,
