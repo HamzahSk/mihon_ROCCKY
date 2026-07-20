@@ -177,18 +177,16 @@ data class BrowseSourceScreen(
                         enter = expandVertically(animationSpec = tween(300)),
                         exit = shrinkVertically(animationSpec = tween(300))
                     ) {
-                        // LazyRow untuk membuat Carousel Horizontal
                         LazyRow(
                             contentPadding = PaddingValues(horizontal = MaterialTheme.padding.small),
                             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
                             modifier = Modifier.padding(bottom = 8.dp)
                         ) {
-                            // Ambil data dari mangaList yang sudah kita deklarasikan di atas Scaffold
                             items(recommendedManga.size) { index ->
+                                // Sekarang manga ini bertipe SManga
                                 val manga = recommendedManga[index]
             
                                 if (manga != null) {
-                                    // Tampilan Card sementara buat testing
                                     Card(
                                         modifier = Modifier
                                             .width(120.dp)
@@ -201,10 +199,12 @@ data class BrowseSourceScreen(
                                             contentAlignment = Alignment.BottomStart
                                         ) {
                                             Text(
-                                                text = manga.title,
+                                                // Ambil judul dari SManga
+                                                text = manga.title, 
                                                 style = MaterialTheme.typography.bodySmall,
                                                 maxLines = 3
                                             )
+                                            // Nanti kalau mau nambah gambar tinggal panggil manga.thumbnail_url
                                         }
                                     }
                                 }

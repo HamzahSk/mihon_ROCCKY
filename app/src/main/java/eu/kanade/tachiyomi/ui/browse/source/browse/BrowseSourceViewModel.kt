@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.preference.CheckboxState
@@ -88,9 +89,9 @@ class BrowseSourceViewModel(
 
     val source = sourceManager.getOrStub(sourceId)
     
-    private val _recommendedManga = kotlinx.coroutines.flow.MutableStateFlow<List<Manga>>(emptyList())
-    val recommendedManga: kotlinx.coroutines.flow.StateFlow<List<Manga>> = kotlinx.coroutines.flow.asStateFlow(_recommendedManga)
-
+    private val _recommendedManga = kotlinx.coroutines.flow.MutableStateFlow<List<eu.kanade.tachiyomi.source.model.SManga>>(emptyList())
+    val recommendedManga = _recommendedManga.asStateFlow()
+    
     init {
         mutableState.update {
             var query: String? = null
@@ -115,49 +116,22 @@ class BrowseSourceViewModel(
         loadRecommendations()
     }
     
-    // 👇 --- TAMBAHKAN FUNGSI INI DI SINI --- 👇
     private fun loadRecommendations() {
         viewModelScope.launchIO {
             try {
-                // Pastikan source adalah CatalogueSource agar bisa mengambil data populer
                 val catalogueSource = source as? eu.kanade.tachiyomi.source.CatalogueSource
                 if (catalogueSource != null) {
-                    // Mihon/Tachiyomi biasanya me-return SManga dari source, 
-                    // kita perlu ambil halaman 1 dari daftar populer
+                    // Ambil langsung halaman 1 dari Populer
                     val page = catalogueSource.getPopularManga(1)
                     
-                    // Konversi SManga (Network) ke Manga (Domain UI)
-                    val domainMangas = page.mangas.map { sManga ->
-                        Manga(
-                            id = -1L,
-                            source = source.id,
-                            favorite = false,
-                            lastUpdate = 0L,
-                            dateAdded = 0L,
-                            viewerFlags = 0L,
-                            chapterFlags = 0L,
-                            coverLastModified = 0L,
-                            url = sManga.url,
-                            title = sManga.title,
-                            artist = sManga.artist,
-                            author = sManga.author,
-                            description = sManga.description,
-                            genre = sManga.genre?.split(", "),
-                            status = sManga.status.toLong(),
-                            thumbnailUrl = sManga.thumbnail_url,
-                            updateStrategy = tachiyomi.domain.manga.model.MangaUpdateStrategy.ALWAYS,
-                            initialized = sManga.initialized
-                        )
-                    }
-                    _recommendedManga.value = domainMangas
+                    // Langsung masukin data mentahnya, nggak perlu konversi-konversi ribet!
+                    _recommendedManga.value = page.mangas
                 }
             } catch (e: Exception) {
-                // Abaikan atau log error jika gagal memuat rekomendasi
                 e.printStackTrace()
             }
         }
     }
-    
     /**
      * Flow of Pager flow tied to [State.listing]
      */
