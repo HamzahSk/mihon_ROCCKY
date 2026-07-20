@@ -161,11 +161,7 @@ data class BrowseSourceScreen(
                         .background(MaterialTheme.colorScheme.surface)
                         .pointerInput(Unit) {},
                 ) {
-                    MangaCarousel(
-                        mangaList = mangaList,
-                        onMangaClick = { navigator.push(MangaScreen(it.id, true)) }
-                    )
-                    
+                                
                     BrowseSourceToolbar(
                         searchQuery = state.toolbarQuery,
                         onSearchQueryChange = viewModel::setToolbarQuery,
@@ -177,6 +173,11 @@ data class BrowseSourceScreen(
                         onHelpClick = onHelpClick,
                         onSettingsClick = { navigator.push(SourcePreferencesScreen(sourceId)) },
                         onSearch = viewModel::search,
+                    )
+                    
+                    MangaCarousel(
+                        mangaList = mangaList,
+                        onMangaClick = { navigator.push(MangaScreen(it.id, true)) }
                     )
 
                     Row(
