@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +32,7 @@ import eu.kanade.tachiyomi.ui.manga.SourceRecommendation
 fun MangaRecommendationsRow(
     recommendations: List<SourceRecommendation>,
     isLoading: Boolean,
+    onRecommendationClicked: (SourceRecommendation) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     // Jangan tampilkan apa-apa jika tidak ada rekomendasi dan tidak sedang loading
@@ -55,7 +57,10 @@ fun MangaRecommendationsRow(
             ) {
                 items(recommendations) { rec ->
                     Column(
-                        modifier = Modifier.width(104.dp)
+                        modifier = Modifier
+                            .width(104.dp)
+                            .clip(RoundedCornerShape(6.dp)) // Opsional: Biar efek ripple kliknya rapi mengikuti bentuk
+                            .clickable { onRecommendationClicked(rec) }
                     ) {
                         AsyncImage(
                             model = rec.thumbnailUrl,

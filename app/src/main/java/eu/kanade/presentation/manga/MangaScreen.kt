@@ -94,6 +94,7 @@ fun MangaScreen(
     onWebViewLongClicked: (() -> Unit)?,
     onCopyUrlClicked: (() -> Unit)?,
     onTrackingClicked: () -> Unit,
+    onRecommendationClicked: (SourceRecommendation) -> Unit,
 
     // For tags menu
     onTagSearch: (String) -> Unit,
@@ -150,6 +151,7 @@ fun MangaScreen(
             onWebViewLongClicked = onWebViewLongClicked,
             onCopyUrlClicked = onCopyUrlClicked,
             onTrackingClicked = onTrackingClicked,
+            onRecommendationClicked = onRecommendationClicked,
             onTagSearch = onTagSearch,
             onCopyTagToClipboard = onCopyTagToClipboard,
             onFilterClicked = onFilterButtonClicked,
@@ -187,6 +189,7 @@ fun MangaScreen(
             onWebViewLongClicked = onWebViewLongClicked,
             onCopyUrlClicked = onCopyUrlClicked,
             onTrackingClicked = onTrackingClicked,
+            onRecommendationClicked = onRecommendationClicked,
             onTagSearch = onTagSearch,
             onCopyTagToClipboard = onCopyTagToClipboard,
             onFilterButtonClicked = onFilterButtonClicked,
@@ -227,6 +230,7 @@ private fun MangaScreenSmallImpl(
     onWebViewLongClicked: (() -> Unit)?,
     onCopyUrlClicked: (() -> Unit)?,
     onTrackingClicked: () -> Unit,
+    onRecommendationClicked: (SourceRecommendation) -> Unit,
 
     // For tags menu
     onTagSearch: (String) -> Unit,
@@ -430,7 +434,8 @@ private fun MangaScreenSmallImpl(
                     ) {
                         MangaRecommendationsRow(
                             recommendations = state.recommendations,
-                            isLoading = state.isFetchingRecommendations
+                            isLoading = state.isFetchingRecommendations,
+                            onRecommendationClicked = onRecommendationClicked
                         )
                     }
 
@@ -482,6 +487,7 @@ fun MangaScreenLargeImpl(
     onWebViewLongClicked: (() -> Unit)?,
     onCopyUrlClicked: (() -> Unit)?,
     onTrackingClicked: () -> Unit,
+    onRecommendationClicked: (SourceRecommendation) -> Unit,
 
     // For tags menu
     onTagSearch: (String) -> Unit,
@@ -661,7 +667,8 @@ fun MangaScreenLargeImpl(
                         )
                         MangaRecommendationsRow(
                             recommendations = state.recommendations,
-                            isLoading = state.isFetchingRecommendations
+                            isLoading = state.isFetchingRecommendations,
+                            onRecommendationClicked = onRecommendationClicked
                         )
                     }
                 },
