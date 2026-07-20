@@ -391,7 +391,7 @@ fun MangaCarousel(
                         
                         // Teks Judul Komik di dalam Carousel
                         AsyncImage(
-                            model = manga, // Base app biasanya otomatis mengambil cover dari object Manga
+                            model = manga, // Base app Manga
                             contentDescription = "Cover for ${manga.title}",
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop // Agar gambar memenuhi ukuran Card
@@ -402,7 +402,7 @@ fun MangaCarousel(
                             text = manga.title,
                             modifier = Modifier
                                 .align(Alignment.BottomStart)
-                                .background(Color.Black.copy(alpha = 0.6f)) // Memberikan background gelap agar teks terbaca
+                                .background(Color.Black.copy(alpha = 0.6f))
                                 .padding(horizontal = 12.dp, vertical = 8.dp)
                                 .fillMaxWidth(),
                             color = Color.White,
