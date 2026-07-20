@@ -15,7 +15,6 @@ import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import androidx.paging.filter
 import androidx.paging.map
-import androidx.paging.PagingData
 import eu.kanade.core.preference.asState
 import eu.kanade.domain.manga.interactor.UpdateManga
 import eu.kanade.domain.source.interactor.GetIncognitoState
@@ -30,13 +29,8 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapLatest
 import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.mapAsCheckboxState
@@ -53,8 +47,6 @@ import tachiyomi.domain.manga.model.MangaWithChapterCount
 import tachiyomi.domain.manga.model.toMangaUpdate
 import tachiyomi.domain.source.interactor.GetRemoteManga
 import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.domain.history.interactor.GetHistory
-
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.time.Instant
@@ -73,7 +65,6 @@ class BrowseSourceViewModel(
     private val setMangaCategories: SetMangaCategories = Injekt.get(),
     private val setMangaDefaultChapterFlags: SetMangaDefaultChapterFlags = Injekt.get(),
     private val getManga: GetManga = Injekt.get(),
-    private val getHistory: GetHistory = Injekt.get(),
     private val updateManga: UpdateManga = Injekt.get(),
     private val addTracks: AddTracks = Injekt.get(),
     getIncognitoState: GetIncognitoState = Injekt.get(),
@@ -138,7 +129,7 @@ class BrowseSourceViewModel(
             }
                 .cachedIn(viewModelScope)
         }
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyFlow<PagingData<StateFlow<Manga>>>())
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyFlow())
 
     fun getColumnsPreference(orientation: Int): GridCells {
         val isLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -355,96 +346,6 @@ class BrowseSourceViewModel(
         ) : Dialog
         data class Migrate(val target: Manga, val current: Manga) : Dialog
     }
-    
-    private val carouselListingFlow = MutableStateFlow<Listing?>(null)
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val carouselMangaFlow = carouselListingFlow
-        .filterNotNull()
-        .map { listing ->
-            Pager(PagingConfig(pageSize = 10)) {
-                getRemoteManga(sourceId, listing.query ?: "", listing.filters)
-            }.flow.map { pagingData ->
-                pagingData.map { manga ->
-                    getManga.subscribe(manga.url, manga.source)
-                        .map { it ?: manga }
-                        .stateIn(viewModelScope)
-                }
-            }
-                .cachedIn(viewModelScope)
-        }
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyFlow<PagingData<StateFlow<Manga>>>())
-
-    fun fetchCarouselRecommendations() {
-        viewModelScope.launchIO {
-            val topGenres = getTopGenresFromHistory()
-            
-            if (topGenres.isEmpty()) {
-                carouselListingFlow.value = Listing.Popular
-                return@launchIO
-            }
-
-            val defaultFilters = source.getFilterList()
-            val topGenre = topGenres.first()
-            var genreExists = false
-            
-            filter@ for (sourceFilter in defaultFilters) {
-                if (sourceFilter is SourceModelFilter.Group<*>) {
-                    for (filter in sourceFilter.state) {
-                        if (filter is SourceModelFilter<*> && filter.name.equals(topGenre, true)) {
-                            when (filter) {
-                                is SourceModelFilter.TriState -> filter.state = 1
-                                is SourceModelFilter.CheckBox -> filter.state = true
-                                else -> {}
-                            }
-                            genreExists = true
-                            break@filter
-                        }
-                    }
-                } else if (sourceFilter is SourceModelFilter.Select<*>) {
-                    val index = sourceFilter.values.filterIsInstance<String>()
-                        .indexOfFirst { it.equals(topGenre, true) }
-
-                    if (index != -1) {
-                        sourceFilter.state = index
-                        genreExists = true
-                        break
-                    }
-                }
-            }
-
-            if (genreExists) {
-                carouselListingFlow.value = Listing.Search(query = null, filters = defaultFilters)
-            } else {
-                carouselListingFlow.value = Listing.Popular
-            }
-        }
-    }
-
-    private suspend fun getTopGenresFromHistory(): List<String> {
-        val historyList = getHistory.subscribe("").firstOrNull() ?: emptyList()
-        val lastReadManga = historyList.take(5)
-        
-        if (lastReadManga.isEmpty()) return emptyList()
-        
-        val genreCounts = mutableMapOf<String, Int>()
-        
-        for (historyItem in lastReadManga) {
-            val manga = getManga.await(historyItem.mangaId)
-            val genres = manga?.genre ?: continue 
-            for (genre in genres) {
-                if (genre.isNotBlank()) {
-                    val trimmedGenre = genre.trim()
-                    genreCounts[trimmedGenre] = genreCounts.getOrDefault(trimmedGenre, 0) + 1
-                }
-            }
-        }
-        
-        return genreCounts.entries
-            .sortedByDescending { it.value }
-            .map { it.key }
-    }
-
 
     @Immutable
     data class State(

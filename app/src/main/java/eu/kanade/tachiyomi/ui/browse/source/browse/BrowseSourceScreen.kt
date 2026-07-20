@@ -127,7 +127,6 @@ data class BrowseSourceScreen(
         val state by viewModel.state.collectAsState()
         
         val mangaList = viewModel.mangaPagerFlowFlow.collectAsLazyPagingItems()
-        val carouselMangaList = viewModel.carouselMangaFlow.collectAsLazyPagingItems()
 
         val navigator = LocalNavigator.currentOrThrow
         val navigateUp: () -> Unit = {
@@ -229,7 +228,7 @@ data class BrowseSourceScreen(
                         )
                     ) {
                         MangaCarousel(
-                            mangaList = carouselMangaList,
+                            mangaList = mangaList,
                             onMangaClick = { navigator.push(MangaScreen(it.id, true)) }
                         )
                     }
