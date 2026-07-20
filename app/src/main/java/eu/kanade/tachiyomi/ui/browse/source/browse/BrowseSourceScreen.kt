@@ -47,13 +47,14 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.layout.ContentScale
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.LazyPagingItems
 
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-
+import coil3.compose.AsyncImage
 import eu.kanade.core.util.ifSourcesLoaded
 import eu.kanade.presentation.browse.BrowseSourceContent
 import eu.kanade.presentation.browse.MissingSourceScreen
@@ -388,11 +389,19 @@ fun MangaCarousel(
                     Box(modifier = Modifier.fillMaxSize()) {
                         
                         // Teks Judul Komik di dalam Carousel
+                        AsyncImage(
+                            model = manga, // Base app biasanya otomatis mengambil cover dari object Manga
+                            contentDescription = "Cover for ${manga.title}",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop // Agar gambar memenuhi ukuran Card
+                        )
+
+                        // Teks Judul Komik di dalam Carousel
                         Text(
                             text = manga.title,
                             modifier = Modifier
                                 .align(Alignment.BottomStart)
-                                .background(Color.Black.copy(alpha = 0.6f))
+                                .background(Color.Black.copy(alpha = 0.6f)) // Memberikan background gelap agar teks terbaca
                                 .padding(horizontal = 12.dp, vertical = 8.dp)
                                 .fillMaxWidth(),
                             color = Color.White,
