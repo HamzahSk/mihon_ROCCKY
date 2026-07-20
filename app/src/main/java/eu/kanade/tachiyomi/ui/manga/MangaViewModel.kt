@@ -1124,32 +1124,58 @@ class MangaViewModel(
             try {
                 val catalogueSource = state.source as? CatalogueSource
                 
-                // Gunakan nama author, atau ambil kata pertama dari judul sebagai keyword pencarian luas
-                val authorQuery = state.manga.author?.takeIf { it.isNotBlank() } 
-                    ?: state.manga.title.split(" ").firstOrNull() 
-                    ?: ""
+                // 1. Ambil genre pertama sebagai target pencarian utama
+                val currentGenres = state.manga.genre ?: emptyList()
+                val targetGenre = currentGenres.firstOrNull()?.trim()
                 
-                if (catalogueSource != null && authorQuery.isNotBlank()) {
-                    // PERBAIKAN: Gunakan getSearchManga() agar langsung mengembalikan data MangasPage
-                    val searchPage = catalogueSource.getSearchManga(1, authorQuery, catalogueSource.getFilterList())
+                if (catalogueSource != null && targetGenre != null) {
                     
-                    // 1. Siapkan daftar genre komik yang lagi dibuka (ubah ke huruf kecil semua)
-                    val currentGenres = state.manga.genre?.map { it.trim().lowercase() } ?: emptyList()
-                    
-                    // 2. Olah hasilnya dengan algoritma kecocokan genre
-                    val recs = searchPage.mangas
-                        .filter { it.url != state.manga.url } // Buang komik yang lagi dibaca
-                        .sortedByDescending { sManga ->
-                            // Hitung seberapa banyak genre yang sama
-                            val resultGenres = sManga.genre?.split(",")?.map { it.trim().lowercase() } ?: emptyList()
-                            
-                            // .intersect() akan mencari irisan (genre yang sama persis)
-                            val matchingScore = resultGenres.intersect(currentGenres.toSet()).size
-                            
-                            // Komik dengan skor tertinggi (genre paling mirip) akan naik ke atas
-                            matchingScore 
+                    val filterList = catalogueSource.getFilterList()
+                    var genreExists = false
+
+                    // 2. Terapkan logika "searchGenre" dari BrowseSourceViewModel
+                    filter@ for (sourceFilter in filterList) {
+                        if (sourceFilter is eu.kanade.tachiyomi.source.model.Filter.Group<*>) {
+                            for (filter in sourceFilter.state) {
+                                if (filter is eu.kanade.tachiyomi.source.model.Filter<*> && 
+                                    filter.name.equals(targetGenre, true)) {
+                                    when (filter) {
+                                        is eu.kanade.tachiyomi.source.model.Filter.TriState -> filter.state = 1
+                                        is eu.kanade.tachiyomi.source.model.Filter.CheckBox -> filter.state = true
+                                        else -> {}
+                                    }
+                                    genreExists = true
+                                    break@filter
+                                }
+                            }
+                        } else if (sourceFilter is eu.kanade.tachiyomi.source.model.Filter.Select<*>) {
+                            val index = sourceFilter.values.filterIsInstance<String>()
+                                .indexOfFirst { it.equals(targetGenre, true) }
+
+                            if (index != -1) {
+                                sourceFilter.state = index
+                                genreExists = true
+                                break
+                            }
                         }
-                        .take(12) // Ambil 12 rekomendasi terbaik
+                    }
+
+                    // 3. Tentukan query string. Jika genre ketemu di filter, query kosong. Jika tidak, jadikan teks biasa.
+                    val textQuery = if (genreExists) "" else targetGenre
+
+                    // 4. Eksekusi pencarian
+                    val searchPage = catalogueSource.getSearchManga(1, textQuery, filterList)
+                    
+                    val currentGenresLower = currentGenres.map { it.trim().lowercase() }.toSet()
+                    
+                    // 5. Olah hasil: Sortir berdasarkan kemiripan semua genre
+                    val recs = searchPage.mangas
+                        .filter { it.url != state.manga.url } // Jangan masukkan komik yang sama
+                        .sortedByDescending { sManga ->
+                            val resultGenres = sManga.genre?.split(",")?.map { it.trim().lowercase() } ?: emptyList()
+                            resultGenres.intersect(currentGenresLower).size
+                        }
+                        .take(12)
                         .map { sManga ->
                             SourceRecommendation(
                                 title = sManga.title,
@@ -1162,6 +1188,7 @@ class MangaViewModel(
                         it.copy(recommendations = recs, isFetchingRecommendations = false) 
                     }
                 } else {
+                    // Fallback kalau tidak ada genre sama sekali (bisa kamu isi dengan search by author seperti sblmnya jika mau)
                     updateSuccessState { it.copy(isFetchingRecommendations = false) }
                 }
             } catch (e: Exception) {
@@ -1169,8 +1196,7 @@ class MangaViewModel(
                 updateSuccessState { it.copy(isFetchingRecommendations = false) }
             }
         }
-    }
-    
+    }    
 
     sealed interface State {
         @Immutable
