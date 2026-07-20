@@ -15,6 +15,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import androidx.paging.filter
 import androidx.paging.map
+import androidx.paging.PagingData
 import eu.kanade.core.preference.asState
 import eu.kanade.domain.manga.interactor.UpdateManga
 import eu.kanade.domain.source.interactor.GetIncognitoState
@@ -136,7 +137,7 @@ class BrowseSourceViewModel(
             }
                 .cachedIn(viewModelScope)
         }
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyFlow())
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyFlow<PagingData<StateFlow<Manga>>>())
 
     fun getColumnsPreference(orientation: Int): GridCells {
         val isLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -371,7 +372,7 @@ class BrowseSourceViewModel(
             }
                 .cachedIn(viewModelScope)
         }
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyFlow())
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyFlow<PagingData<StateFlow<Manga>>>())
 
     fun fetchCarouselRecommendations() {
         viewModelScope.launchIO {
@@ -429,13 +430,11 @@ class BrowseSourceViewModel(
         
         for (historyItem in lastReadManga) {
             val manga = getManga.await(historyItem.mangaId)
-            // PASTIKAN pakai nullable safe call (?.) atau null check yang benar
-            val genreString = manga?.genre ?: continue 
-            
-            val genres = genreString.split(",").map { it.trim() }
+            val genres = manga?.genre ?: continue 
             for (genre in genres) {
-                if (genre.isNotEmpty()) {
-                    genreCounts[genre] = genreCounts.getOrDefault(genre, 0) + 1
+                if (genre.isNotBlank()) {
+                    val trimmedGenre = genre.trim()
+                    genreCounts[trimmedGenre] = genreCounts.getOrDefault(trimmedGenre, 0) + 1
                 }
             }
         }
