@@ -149,6 +149,20 @@ class MangaScreen(
                     viewModel.source,
                 )
             }.takeIf { isHttpSource },
+            onCopyChapterUrlClicked = { chapter ->
+                val source = viewModel.source as? HttpSource
+                if (source != null) {
+                    try {
+                        // Di Mihon/Tachiyomi, URL chapter biasanya digabung dari baseUrl source + path chapter
+                        // Kalau source.getChapterUrl(chapter) error minta SChapter, 
+                        // kamu bisa ganti jadi: source.getChapterUrl(chapter.toSChapter())
+                        val url = "${source.baseUrl}${chapter.url}"
+                        context.copyToClipboard(url, url)
+                    } catch (e: Exception) {
+                        context.toast("Gagal copy link: ${e.message}")
+                    }
+                }
+            },
             onTrackingClicked = {
                 if (!successState.hasLoggedInTrackers) {
                     navigator.push(SettingsScreen(SettingsScreen.Destination.Tracking))
