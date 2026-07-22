@@ -94,6 +94,7 @@ fun MangaScreen(
     onWebViewClicked: (() -> Unit)?,
     onWebViewLongClicked: (() -> Unit)?,
     onCopyUrlClicked: (() -> Unit)?,
+    onCopyChapterUrlClicked: ((Chapter) -> Unit)?,
     onTrackingClicked: () -> Unit,
     onRecommendationClicked: (SourceRecommendation) -> Unit,
 
@@ -151,6 +152,7 @@ fun MangaScreen(
             onWebViewClicked = onWebViewClicked,
             onWebViewLongClicked = onWebViewLongClicked,
             onCopyUrlClicked = onCopyUrlClicked,
+            onCopyChapterUrlClicked = onCopyChapterUrlClicked,
             onTrackingClicked = onTrackingClicked,
             onRecommendationClicked = onRecommendationClicked,
             onTagSearch = onTagSearch,
@@ -189,6 +191,7 @@ fun MangaScreen(
             onWebViewClicked = onWebViewClicked,
             onWebViewLongClicked = onWebViewLongClicked,
             onCopyUrlClicked = onCopyUrlClicked,
+            onCopyChapterUrlClicked = onCopyChapterUrlClicked,
             onTrackingClicked = onTrackingClicked,
             onRecommendationClicked = onRecommendationClicked,
             onTagSearch = onTagSearch,
@@ -230,6 +233,7 @@ private fun MangaScreenSmallImpl(
     onWebViewClicked: (() -> Unit)?,
     onWebViewLongClicked: (() -> Unit)?,
     onCopyUrlClicked: (() -> Unit)?,
+    onCopyChapterUrlClicked: ((Chapter) -> Unit)?,
     onTrackingClicked: () -> Unit,
     onRecommendationClicked: (SourceRecommendation) -> Unit,
 
@@ -464,6 +468,7 @@ private fun MangaScreenSmallImpl(
                         onChapterClicked = onChapterClicked,
                         onDownloadChapter = onDownloadChapter,
                         onCopyUrlClicked = onCopyUrlClicked,
+                        onCopyChapterUrlClicked = onCopyChapterUrlClicked,
                         onChapterSelected = onChapterSelected,
                         onChapterSwipe = onChapterSwipe,
                     )
@@ -487,6 +492,7 @@ fun MangaScreenLargeImpl(
     onWebViewClicked: (() -> Unit)?,
     onWebViewLongClicked: (() -> Unit)?,
     onCopyUrlClicked: (() -> Unit)?,
+    onCopyChapterUrlClicked: ((Chapter) -> Unit)?,
     onTrackingClicked: () -> Unit,
     onRecommendationClicked: (SourceRecommendation) -> Unit,
 
@@ -710,6 +716,7 @@ fun MangaScreenLargeImpl(
                                 onChapterClicked = onChapterClicked,
                                 onDownloadChapter = onDownloadChapter,
                                 onCopyUrlClicked = onCopyUrlClicked,
+                                onCopyChapterUrlClicked = onCopyChapterUrlClicked,
                                 onChapterSelected = onChapterSelected,
                                 onChapterSwipe = onChapterSwipe,
                             )
@@ -772,6 +779,7 @@ private fun LazyListScope.sharedChapterItems(
     onChapterClicked: (Chapter) -> Unit,
     onDownloadChapter: ((List<ChapterList.Item>, ChapterDownloadAction) -> Unit)?,
     onCopyUrlClicked: (() -> Unit)?,
+    onCopyChapterUrlClicked: ((Chapter) -> Unit)?,
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onChapterSwipe: (ChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
 ) {
@@ -836,7 +844,7 @@ private fun LazyListScope.sharedChapterItems(
                     } else {
                         null
                     },
-                    onCopyUrlClick = onCopyUrlClicked,
+                    onCopyUrlClick = { onCopyChapterUrlClicked?.invoke(item.chapter) },
                     onChapterSwipe = {
                         onChapterSwipe(item, it)
                     },
