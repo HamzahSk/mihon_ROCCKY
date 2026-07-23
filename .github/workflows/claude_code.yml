@@ -48,14 +48,14 @@ jobs:
           Tolong periksa kode proyek ini, khususnya yang berkaitan dengan database history pencarian. 
           
           Tugasmu:
-          1. Temukan dan perbaiki bug atau masalah logika pada fitur history pencarian atau search_history.
-          2. Setelah kamu melakukan perubahan kode, KAMU WAJIB memvalidasi kodemu dengan menjalankan perintah `./gradlew testDebugUnitTest` di terminal.
-          3. Jika ada error saat proses build atau hasil test gagal, baca pesan error-nya, perbaiki kodenya lagi, lalu jalankan perintah `./gradlew testDebugUnitTest` lagi. Ulangi proses ini sampai test berhasil (BUILD SUCCESSFUL).
-          4. Langsung edit file yang bermasalah. Jangan meminta saya yang menjalankannya, kamu yang harus menjalankannya sendiri di terminal ini.
+          1. Temukan dan perbaiki bug atau masalah logika pada fitur history pencarian.
+          2. Setelah kamu melakukan perubahan kode, kamu wajib memvalidasi kodemu dengan menjalankan perintah `./gradlew testDebugUnitTest` di terminal.
+          3. Jika ada error, perbaiki kodenya lagi, lalu test lagi sampai BUILD SUCCESSFUL.
+          4. Jangan meminta konfirmasi atau izin kepadaku. Lakukan semuanya secara otomatis.
           EOF
           
-          # Menjalankan claude code. Pipa 'yes' berfungsi untuk menyetujui jika Claude meminta izin menjalankan command CLI.
-          yes | claude -p claude_prompt.txt || true
+          # Jalankan claude langsung tanpa pipe 'yes'
+          claude -p claude_prompt.txt || true
 
       # --- 4. Ekstrak Perbaikan Menjadi Artifact ---
       - name: Generate Patch File
