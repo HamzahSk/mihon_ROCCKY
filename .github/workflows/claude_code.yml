@@ -44,6 +44,12 @@ jobs:
           ANTHROPIC_AUTH_TOKEN: sk-1BOhosptLV2kztUELb9PhjjvYyIkIhqf7EYFbseS984Kb3FL
           ANTHROPIC_MODEL: claude-opus-4-6
         run: |
+          # --- DEBUGGING LENGKAP ---
+          # Kita intip balasan asli dari server AgentRouter untuk memastikan tidak diblokir Cloudflare
+          echo "Mengecek koneksi langsung ke AgentRouter..."
+          curl -i https://agentrouter.org/
+          echo ""
+          
           cat << 'EOF' > claude_prompt.txt
           Tolong periksa kode proyek ini, khususnya yang berkaitan dengan database history pencarian. 
           
