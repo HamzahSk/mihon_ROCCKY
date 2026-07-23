@@ -1,0 +1,72 @@
+name: Claude Code DB Fixer & Auto-Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  claude-fix-and-test:
+    name: Let Claude Fix & Test DB History
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # --- 1. Siapkan Environment untuk Build & Test ---
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+      # ------------------------------------------------
+
+      # --- 2. Siapkan Environment untuk Claude Code ---
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+      # ------------------------------------------------
+
+      # --- 3. Jalankan Claude Code dengan Instruksi Testing ---
+      - name: Run Claude Code to Fix and Verify
+        env:
+          # PENGINGAT: Demi keamanan, sangat disarankan memindahkan API Key ini ke GitHub Secrets!
+          ANTHROPIC_BASE_URL: https://agentrouter.org/
+          ANTHROPIC_API_KEY: sk-1BOhosptLV2kztUELb9PhjjvYyIkIhqf7EYFbseS984Kb3FL
+          ANTHROPIC_MODEL: claude-opus-4-6
+        run: |
+          cat << 'EOF' > claude_prompt.txt
+          Tolong periksa kode proyek ini, khususnya yang berkaitan dengan database history pencarian. 
+          
+          Tugasmu:
+          1. Temukan dan perbaiki bug atau masalah logika pada fitur history pencarian atau search_history.
+          2. Setelah kamu melakukan perubahan kode, KAMU WAJIB memvalidasi kodemu dengan menjalankan perintah `./gradlew testDebugUnitTest` di terminal.
+          3. Jika ada error saat proses build atau hasil test gagal, baca pesan error-nya, perbaiki kodenya lagi, lalu jalankan perintah `./gradlew testDebugUnitTest` lagi. Ulangi proses ini sampai test berhasil (BUILD SUCCESSFUL).
+          4. Langsung edit file yang bermasalah. Jangan meminta saya yang menjalankannya, kamu yang harus menjalankannya sendiri di terminal ini.
+          EOF
+          
+          # Menjalankan claude code. Pipa 'yes' berfungsi untuk menyetujui jika Claude meminta izin menjalankan command CLI.
+          yes | claude -p claude_prompt.txt || true
+
+      # --- 4. Ekstrak Perbaikan Menjadi Artifact ---
+      - name: Generate Patch File
+        run: |
+          git diff > claude_db_fix_tested.patch
+          echo "Perubahan yang berhasil diuji oleh Claude:"
+          git diff --stat
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-db-fix-tested-${{ github.sha }}
+          path: claude_db_fix_tested.patch
+          
