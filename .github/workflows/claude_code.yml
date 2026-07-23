@@ -41,7 +41,7 @@ jobs:
         env:
           # PENGINGAT: Demi keamanan, sangat disarankan memindahkan API Key ini ke GitHub Secrets!
           ANTHROPIC_BASE_URL: https://agentrouter.org/
-          ANTHROPIC_API_KEY: sk-1BOhosptLV2kztUELb9PhjjvYyIkIhqf7EYFbseS984Kb3FL
+          ANTHROPIC_AUTH_TOKEN: sk-1BOhosptLV2kztUELb9PhjjvYyIkIhqf7EYFbseS984Kb3FL
           ANTHROPIC_MODEL: claude-opus-4-6
         run: |
           cat << 'EOF' > claude_prompt.txt
