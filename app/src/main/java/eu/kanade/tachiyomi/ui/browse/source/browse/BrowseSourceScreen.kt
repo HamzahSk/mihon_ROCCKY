@@ -126,6 +126,8 @@ data class BrowseSourceScreen(
         )
         val state by viewModel.state.collectAsState()
         
+        val searchHistory by viewModel.searchHistory.collectAsState()
+        
         val mangaList = viewModel.mangaPagerFlowFlow.collectAsLazyPagingItems()
 
         val navigator = LocalNavigator.currentOrThrow
@@ -216,6 +218,7 @@ data class BrowseSourceScreen(
                         onHelpClick = onHelpClick,
                         onSettingsClick = { navigator.push(SourcePreferencesScreen(sourceId)) },
                         onSearch = viewModel::search,
+                        recentSearches = searchHistory,
                     )
                     
                     AnimatedVisibility(
