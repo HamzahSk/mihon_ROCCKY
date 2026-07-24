@@ -1,4 +1,4 @@
-name: Claude Code DB Fixer & Auto-Test
+name: OMP DB Fixer & Auto-Test
 
 on:
   workflow_dispatch:
@@ -7,8 +7,8 @@ permissions:
   contents: read
 
 jobs:
-  claude-fix-and-test:
-    name: Let Claude Fix & Test DB History
+  omp-fix-and-test:
+    name: Let OMP Fix & Test DB History
     runs-on: ubuntu-24.04
 
     steps:
@@ -26,53 +26,62 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
       # ------------------------------------------------
 
-      # --- 2. Siapkan Environment untuk Claude Code ---
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install Claude Code
-        run: npm install -g @anthropic-ai/claude-code
+      # --- 2. Install OMP (oh my pi) ---
+      - name: Install OMP
+        run: curl -fsSL https://omp.sh/install | sh
       # ------------------------------------------------
 
-      # --- 3. Jalankan Claude Code dengan Instruksi Testing ---
-      - name: Run Claude Code to Fix and Verify
+      # --- 3. Jalankan OMP dengan Instruksi Testing ---
+      - name: Run OMP to Fix and Verify
         env:
-          # PENGINGAT: Demi keamanan, sangat disarankan memindahkan API Key ini ke GitHub Secrets!
-          ANTHROPIC_BASE_URL: https://api.bluesminds.com/v1
-          ANTHROPIC_AUTH_TOKEN: sk-zJct6jIkvGNYSMyK9ETsitpaBa3DE23ftQI5n4VgQmYEKxWh
-          ANTHROPIC_MODEL: nvidia/nemotron-4-340b-instruct
+          # PENGINGAT: Pindahkan API Key ke GitHub Secrets!
+          # Format API key mereka menggunakan standar "sk-••••"
+          HUANCHENG_API_KEY: sk-GUWsLR2rd2tuxXP6Nzkux2kVQIZxfuLRPCzO6rx8xwTUJQiI
         run: |
-          # --- DEBUGGING LENGKAP ---
-          # Kita intip balasan asli dari server AgentRouter untuk memastikan tidak diblokir Cloudflare
-          echo "Mengecek koneksi langsung ke AgentRouter..."
-          curl -i https://agentrouter.org/
-          echo ""
+          mkdir -p ~/.omp/agent
           
-          cat << 'EOF' > claude_prompt.txt
+          # Mendaftarkan custom provider untuk API Xinjiang Huancheng
+          cat << 'EOF' > ~/.omp/agent/models.yml
+          providers:
+            huancheng_api:
+              # Menggunakan standar openai-responses karena NewAPI sangat kompatibel dengan format ini
+              type: openai-responses
+              # Ganti URL di bawah ini dengan Base URL asli dari dashboard mereka (jangan lupa akhiran /v1)
+              baseURL: "https://api.url-mereka.com/v1" 
+              apiKey: env:HUANCHENG_API_KEY
+          models:
+            # Ini nama alias untuk di-panggil di OMP
+            my-agent-model:
+              provider: huancheng_api
+              # Ganti dengan nama model ID (Model Square) yang tersedia di web mereka
+              # Contoh: claude-3-haiku-20240307 atau gpt-4o
+              id: nama-model-dari-dashboard 
+          EOF
+          
+          # Membuat file instruksi
+          cat << 'EOF' > prompt.txt
           Tolong periksa kode proyek ini, khususnya yang berkaitan dengan database history pencarian. 
           
           Tugasmu:
           1. Temukan dan perbaiki bug atau masalah logika pada fitur history pencarian.
-          2. Setelah kamu melakukan perubahan kode, kamu wajib memvalidasi kodemu dengan menjalankan perintah `./gradlew testDebugUnitTest` di terminal.
+          2. Setelah kamu melakukan perubahan kode, kamu wajib memvalidasi kodemu dengan menjalankan perintah `./gradlew testDebugUnitTest` di terminal menggunakan tool bash.
           3. Jika ada error, perbaiki kodenya lagi, lalu test lagi sampai BUILD SUCCESSFUL.
-          4. Jangan meminta konfirmasi atau izin kepadaku. Lakukan semuanya secara otomatis.
+          4. Lakukan semuanya secara otomatis tanpa meminta persetujuan.
           EOF
           
-          # Jalankan claude langsung tanpa pipe 'yes'
-          claude -p claude_prompt.txt || true
+          # Jalankan OMP dengan model yang baru didaftarkan
+          omp --model my-agent-model -p "$(cat prompt.txt)" || true
+
 
       # --- 4. Ekstrak Perbaikan Menjadi Artifact ---
       - name: Generate Patch File
         run: |
-          git diff > claude_db_fix_tested.patch
-          echo "Perubahan yang berhasil diuji oleh Claude:"
+          git diff > omp_db_fix_tested.patch
+          echo "Perubahan yang berhasil diuji oleh OMP:"
           git diff --stat
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: claude-db-fix-tested-${{ github.sha }}
-          path: claude_db_fix_tested.patch
-          
+          name: omp-db-fix-tested-${{ github.sha }}
+          path: omp_db_fix_tested.patch
