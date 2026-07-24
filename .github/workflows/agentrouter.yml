@@ -1,4 +1,4 @@
-name: OMP DB Fixer & Auto-Test
+name: OMP DB Fixer & Auto-Test ARt
 
 on:
   workflow_dispatch:
@@ -29,32 +29,31 @@ jobs:
 
       - name: Run OMP to Fix and Verify
         env:
-          # Pastikan API Key Bluesminds milikmu ditaruh di GitHub Secrets demi keamanan!
-          BLUESMINDS_API_KEY: sk-zJct6jIkvGNYSMyK9ETsitpaBa3DE23ftQI5n4VgQmYEKxWh
-          
+          # Pastikan API Key AgentRouter milikmu ditaruh di GitHub Secrets!
+          AGENTROUTER_API_KEY: sk-1BOhosptLV2kztUELb9PhjjvYyIkIhqf7EYFbseS984Kb3FL
+          # Memaksa sistem mengenali ini sebagai environment CI
           CI: true
-          # Mengaktifkan debug (jika OMP berbasis Node.js, ini akan memunculkan log ekstra)
+          # Menyalakan debug agar proses pemanggilan OMP lebih terlihat
           DEBUG: "omp:*"
         run: |
           mkdir -p ~/.omp/agent
           
-          # --- MEMBUAT CONFIG MODELS.YML UNTUK BLUESMINDS ---
+          # --- 1. MEMBUAT CONFIG MODELS.YML UNTUK AGENTROUTER ---
+          # Catatan: Walau di dokumen Claude Code dibilang jangan pakai /v1, 
+          # tapi karena OMP pakai standar OpenAI, kita WAJIB pakai /v1 di akhirnya.
           cat << 'EOF' > ~/.omp/agent/models.yml
           providers:
-            bluesminds_proxy:
-              # Base URL untuk Bluesminds (jangan lupa /v1)
-              baseUrl: "https://api.bluesminds.com/v1"
-              apiKey: BLUESMINDS_API_KEY
-              # Format standar New API
+            agentrouter:
+              baseUrl: "https://agentrouter.org/v1"
+              apiKey: AGENTROUTER_API_KEY
               api: openai-completions
               models:
-                # Ganti 'auto' di bawah ini dengan ID Model yang ada di menu "Model Square" Bluesminds
-                # Contoh: claude-haiku-4-5 atau gpt-4o
-                - id: gpt-5-mini 
-                  name: Bluesminds Model
+                # Kita panggil model claude-opus-4-6 sesuai saran di dokumen mereka
+                - id: glm-5.2
+                  name: AgentRouter Opus Model
           EOF
           
-          # --- MEMBUAT FILE INSTRUKSI ---
+          # --- 2. MEMBUAT FILE INSTRUKSI ---
           cat << 'EOF' > prompt.txt
           Tolong periksa kode proyek ini, khususnya yang berkaitan dengan database history pencarian. 
           
@@ -65,23 +64,17 @@ jobs:
           4. Lakukan semuanya secara otomatis tanpa meminta persetujuan.
           EOF
           
-          # --- JALANKAN OMP ---
-          # Memanggil model dari provider Bluesminds
-          # Jika di file config atas id modelnya kamu ganti (misal gpt-4o), 
-          # pastikan perintah di bawah juga diganti jadi: bluesminds_proxy/gpt-4o
-          script -q -e -c 'omp --model bluesminds_proxy/gpt-5-mini -p "$(cat prompt.txt)"' /dev/null || true
+          # --- 3. JALANKAN OMP SECARA REAL-TIME ---
+          # Trik 'script -q -e -c' ini akan memanipulasi GitHub Actions seolah-olah OMP 
+          # dijalankan di terminal komputer asli, jadi kamu bisa lihat AI-nya lagi mikir/ngetik!
+          script -q -e -c 'omp --model agentrouter/glm-5.2 -p "$(cat prompt.txt)"' /dev/null || true
 
       - name: Collect Changed and New Files
         run: |
-          # 1. Masukkan semua perubahan dan file baru ke staging area
           git add -A
-          
-          # 2. Buat folder penampung sementara
           mkdir -p output_artifact
           
-          # 3. Looping semua file yang berubah, buat struktur foldernya, dan copy filenya
           for file in $(git diff --name-only --cached); do
-            # Pastikan itu benar-benar file, bukan folder yang terhapus
             if [ -f "$file" ]; then
               mkdir -p "output_artifact/$(dirname "$file")"
               cp "$file" "output_artifact/$file"
@@ -96,3 +89,4 @@ jobs:
         with:
           name: omp-db-fixed-files-${{ github.sha }}
           path: output_artifact/
+          
