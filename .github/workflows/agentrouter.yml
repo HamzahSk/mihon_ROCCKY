@@ -44,7 +44,7 @@ jobs:
               apiKey: AGENTROUTER_API_KEY
               api: anthropic-messages
               models:
-                - id: claude-opus-4-6
+                - id: claude-opus-4-8
                   name: AgentRouter Opus
           EOF
           
@@ -60,7 +60,7 @@ jobs:
           EOF
           
           # --- 3. JALANKAN OMP & BACA LOG JIKA ERROR ---
-          omp --model agentrouter/claude-opus-4-6 -p "$(cat prompt.txt)" || {
+          omp --model agentrouter/claude-opus-4-8 -p "$(cat prompt.txt)" || {
             echo "========================================================="
             echo "❌ OMP Gagal! Menampilkan isi log raw-http-request:"
             echo "========================================================="
