@@ -38,14 +38,10 @@ jobs:
           # --- MEMBUAT CONFIG MODELS.YML SESUAI DOKUMEN RESMI OMP ---
           cat << 'EOF' > ~/.omp/agent/models.yml
           providers:
-            # Kita beri nama providernya 'hcnsec_proxy'
             hcnsec_proxy:
               baseUrl: "https://openai-b922.onrender.com/v1"
-              # OMP akan otomatis membaca nilai variabel dari env: HCNSEC_API_KEY
               apiKey: HCNSEC_API_KEY
-              # Sesuai format curl (chat/completions)
               api: openai-completions
-              # Daftar model diletakkan di dalam provider
               models:
                 - id: auto
                   name: Proxy Auto Model
@@ -63,17 +59,30 @@ jobs:
           EOF
           
           # --- JALANKAN OMP ---
-          # Memanggil spesifik: nama_provider/nama_model
           omp --model hcnsec_proxy/auto -p "$(cat prompt.txt)" || true
 
-      - name: Generate Patch File
+      - name: Collect Changed and New Files
         run: |
-          git diff > omp_db_fix_tested.patch
-          echo "Perubahan yang berhasil diuji oleh OMP:"
-          git diff --stat
+          # 1. Masukkan semua perubahan dan file baru ke staging area
+          git add -A
+          
+          # 2. Buat folder penampung sementara
+          mkdir -p output_artifact
+          
+          # 3. Looping semua file yang berubah, buat struktur foldernya, dan copy filenya
+          for file in $(git diff --name-only --cached); do
+            # Pastikan itu benar-benar file, bukan folder yang terhapus
+            if [ -f "$file" ]; then
+              mkdir -p "output_artifact/$(dirname "$file")"
+              cp "$file" "output_artifact/$file"
+            fi
+          done
+          
+          echo "File yang berhasil diubah/dibuat beserta strukturnya:"
+          git diff --name-status --cached
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: omp-db-fix-tested-${{ github.sha }}
-          path: omp_db_fix_tested.patch
+          name: omp-db-fixed-files-${{ github.sha }}
+          path: output_artifact/
