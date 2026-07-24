@@ -133,7 +133,7 @@ fun BrowseSourceToolbar(
     )
 
     // Render recent searches as suggestion chips below toolbar when typing
-    if (!searchQuery.isNullOrBlank() && recentSearches.isNotEmpty()) {
+    if (searchQuery != null && recentSearches.isNotEmpty()) {
         Column {
             Row(
                 modifier = Modifier
