@@ -15,7 +15,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # --- 1. Siapkan Environment untuk Build & Test ---
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
@@ -24,38 +23,35 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
-      # ------------------------------------------------
 
-      # --- 2. Install OMP (oh my pi) ---
       - name: Install OMP
         run: curl -fsSL https://omp.sh/install | sh
-      # ------------------------------------------------
 
-      # --- 3. Jalankan OMP dengan Instruksi Testing ---
       - name: Run OMP to Fix and Verify
         env:
-          # API Key dari Xinjiang Huancheng
-          # (Sangat disarankan untuk pindah ini ke GitHub Secrets nanti ya!)
-          HUANCHENG_API_KEY: sk-GUWsLR2rd2tuxXP6Nzkux2kVQIZxfuLRPCzO6rx8xwTUJQiI
+          # Pastikan kamu menaruh API Key dari dashboard hcnsec di GitHub Secrets!
+          # Contoh isinya: sk-1234567890abcdef
+          HCNSEC_API_KEY: ${{ secrets.HCNSEC_API_KEY }}
         run: |
           mkdir -p ~/.omp/agent
           
-          # --- A. BIKIN FILE KONFIGURASI (DENGAN PENUTUP EOF YANG BENAR) ---
+          # --- MEMBUAT CONFIG MODELS.YML SESUAI DOKUMEN RESMI OMP ---
           cat << 'EOF' > ~/.omp/agent/models.yml
           providers:
-            huancheng_api:
-              type: openai-responses
-              # GANTI URL INI dengan Base URL asli dari dashboard web mereka
-              baseURL: "https://api.url-mereka.com/v1" 
-              apiKey: env:HUANCHENG_API_KEY
-          models:
-            my-agent-model:
-              provider: huancheng_api
-              # Jika di web mereka id modelnya benar-benar ditulis "auto", biarkan seperti ini
-              id: auto
+            # Kita beri nama providernya 'hcnsec_proxy'
+            hcnsec_proxy:
+              baseUrl: "https://openai-b922.onrender.com/v1"
+              # OMP akan otomatis membaca nilai variabel dari env: HCNSEC_API_KEY
+              apiKey: HCNSEC_API_KEY
+              # Sesuai format curl (chat/completions)
+              api: openai-completions
+              # Daftar model diletakkan di dalam provider
+              models:
+                - id: auto
+                  name: Proxy Auto Model
           EOF
           
-          # --- B. BIKIN FILE PROMPT (DENGAN PENUTUP EOF) ---
+          # --- MEMBUAT FILE INSTRUKSI ---
           cat << 'EOF' > prompt.txt
           Tolong periksa kode proyek ini, khususnya yang berkaitan dengan database history pencarian. 
           
@@ -66,11 +62,10 @@ jobs:
           4. Lakukan semuanya secara otomatis tanpa meminta persetujuan.
           EOF
           
-          # --- C. JALANKAN OMP ---
-          # Kita panggil alias "my-agent-model" yang sudah kita daftarkan di models.yml atas
-          omp --model auto -p "$(cat prompt.txt)" || true
+          # --- JALANKAN OMP ---
+          # Memanggil spesifik: nama_provider/nama_model
+          omp --model hcnsec_proxy/auto -p "$(cat prompt.txt)" || true
 
-      # --- 4. Ekstrak Perbaikan Menjadi Artifact ---
       - name: Generate Patch File
         run: |
           git diff > omp_db_fix_tested.patch
