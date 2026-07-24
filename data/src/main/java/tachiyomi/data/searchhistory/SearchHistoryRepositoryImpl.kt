@@ -4,20 +4,20 @@ import app.cash.sqldelight.async.coroutines.awaitAsList
 import kotlinx.coroutines.flow.Flow
 import tachiyomi.data.Database
 import tachiyomi.data.subscribeToList
+import tachiyomi.domain.searchhistory.repository.SearchHistoryRepository
 
 class SearchHistoryRepositoryImpl(
     private val database: Database,
-) {
-    // Memakai subscribeToList() agar UI otomatis merespons perubahan data
-    fun getSearchHistory(sourceId: Long): Flow<List<String>> {
-        return database.searchHistoryQueries
+) : SearchHistoryRepository {
+    override fun getSearchHistory(sourceId: Long): Flow<List<String>> {
+        return database.search_historyQueries
             .getHistoryBySource(sourceId)
             .subscribeToList()
     }
 
-    suspend fun insertSearchHistory(sourceId: Long, query: String) {
+    override suspend fun insertSearchHistory(sourceId: Long, query: String) {
         try {
-            database.searchHistoryQueries.insert(
+            database.search_historyQueries.insert(
                 sourceId = sourceId,
                 searchQuery = query,
                 dateSearched = System.currentTimeMillis()
@@ -27,9 +27,9 @@ class SearchHistoryRepositoryImpl(
         }
     }
 
-    suspend fun deleteSearchHistory(sourceId: Long, query: String) {
+    override suspend fun deleteSearchHistory(sourceId: Long, query: String) {
         try {
-            database.searchHistoryQueries.deleteQuery(sourceId, query)
+            database.search_historyQueries.deleteQuery(sourceId, query)
         } catch (e: Exception) {
             // Tangani error
         }

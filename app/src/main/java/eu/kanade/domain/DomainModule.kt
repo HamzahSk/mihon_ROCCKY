@@ -73,6 +73,9 @@ import tachiyomi.domain.history.interactor.RemoveHistory
 import tachiyomi.domain.history.interactor.UpsertHistory
 import tachiyomi.domain.history.repository.HistoryRepository
 import tachiyomi.domain.searchhistory.repository.SearchHistoryRepository
+import tachiyomi.domain.searchhistory.interactor.GetSearchHistory
+import tachiyomi.domain.searchhistory.interactor.InsertSearchHistory
+import tachiyomi.domain.searchhistory.interactor.DeleteSearchHistory
 import tachiyomi.domain.manga.interactor.FetchInterval
 import tachiyomi.domain.manga.interactor.GetDuplicateLibraryManga
 import tachiyomi.domain.manga.interactor.GetFavorites
