@@ -40,7 +40,7 @@ jobs:
           providers:
             bluesminds_proxy:
               # Base URL untuk Bluesminds (jangan lupa /v1)
-              baseUrl: "https://vsllm.com/v1"
+              baseUrl: "https://vsllm.com"
               apiKey: BLUESMINDS_API_KEY
               # Format standar New API
               api: openai-completions
