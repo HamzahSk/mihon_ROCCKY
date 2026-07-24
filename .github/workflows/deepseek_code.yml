@@ -1,0 +1,94 @@
+name: OMP DB Fixer & Auto-Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  omp-fix-and-test:
+    name: Let OMP Fix & Test DB History
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Install OMP
+        run: curl -fsSL https://omp.sh/install | sh
+
+      - name: Run OMP to Fix and Verify
+        env:
+          # Pastikan API Key Bluesminds milikmu ditaruh di GitHub Secrets demi keamanan!
+          BLUESMINDS_API_KEY: sk-zJct6jIkvGNYSMyK9ETsitpaBa3DE23ftQI5n4VgQmYEKxWh
+        run: |
+          mkdir -p ~/.omp/agent
+          
+          # --- MEMBUAT CONFIG MODELS.YML UNTUK BLUESMINDS ---
+          cat << 'EOF' > ~/.omp/agent/models.yml
+          providers:
+            bluesminds_proxy:
+              # Base URL untuk Bluesminds (jangan lupa /v1)
+              baseUrl: "https://api.bluesminds.com/v1"
+              apiKey: BLUESMINDS_API_KEY
+              # Format standar New API
+              api: openai-completions
+              models:
+                # Ganti 'auto' di bawah ini dengan ID Model yang ada di menu "Model Square" Bluesminds
+                # Contoh: claude-haiku-4-5 atau gpt-4o
+                - id: deepseek-r1 
+                  name: Bluesminds Model
+          EOF
+          
+          # --- MEMBUAT FILE INSTRUKSI ---
+          cat << 'EOF' > prompt.txt
+          Tolong periksa kode proyek ini, khususnya yang berkaitan dengan database history pencarian. 
+          
+          Tugasmu:
+          1. Temukan dan perbaiki bug atau masalah logika pada fitur history pencarian. Lalu terapkan kode nya ke fitur aplikasi, jadi jika user melakukan pencarian manga di ekstensi, maka bakal muncul history pencarian nya disitu.
+          2. Setelah kamu melakukan perubahan kode, kamu wajib memvalidasi kodemu dengan menjalankan perintah `./gradlew testDebugUnitTest` di terminal menggunakan tool bash.
+          3. Jika ada error, perbaiki kodenya lagi, lalu test lagi sampai BUILD SUCCESSFUL.
+          4. Lakukan semuanya secara otomatis tanpa meminta persetujuan.
+          EOF
+          
+          # --- JALANKAN OMP ---
+          # Memanggil model dari provider Bluesminds
+          # Jika di file config atas id modelnya kamu ganti (misal gpt-4o), 
+          # pastikan perintah di bawah juga diganti jadi: bluesminds_proxy/gpt-4o
+          omp --model bluesminds_proxy/deepseek-r1 -p "$(cat prompt.txt)" || true
+
+      - name: Collect Changed and New Files
+        run: |
+          # 1. Masukkan semua perubahan dan file baru ke staging area
+          git add -A
+          
+          # 2. Buat folder penampung sementara
+          mkdir -p output_artifact
+          
+          # 3. Looping semua file yang berubah, buat struktur foldernya, dan copy filenya
+          for file in $(git diff --name-only --cached); do
+            # Pastikan itu benar-benar file, bukan folder yang terhapus
+            if [ -f "$file" ]; then
+              mkdir -p "output_artifact/$(dirname "$file")"
+              cp "$file" "output_artifact/$file"
+            fi
+          done
+          
+          echo "File yang berhasil diubah/dibuat beserta strukturnya:"
+          git diff --name-status --cached
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: omp-db-fixed-files-${{ github.sha }}
+          path: output_artifact/
