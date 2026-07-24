@@ -1,0 +1,12 @@
+Tolong periksa kode proyek ini, khususnya yang berkaitan dengan fitur "Manga Recommendation" di halaman utama ekstensi. Fiturnya sudah ada, tetapi data rekomendasi yang ditampilkan belum benar dan perlu diperbaiki.
+
+Tugasmu:
+1. Perbaiki logika penarikan data pada fitur "Manga Recommendation" tersebut dengan ketentuan berikut:
+   - Ambil 5 riwayat komik/manga terakhir yang dibaca di ekstensi tersebut dan kumpulkan semua genrenya.
+   - Gunakan fitur filter ekstensi untuk mencari manga berdasarkan gabungan genre tersebut.
+   - Jika hasil pencarian kurang atau kosong, kurangi parameter genre satu per satu dengan tetap mempertahankan genre yang paling sering muncul dari history, lalu lakukan filter ulang.
+   - Jika ekstensi tidak mendukung filter genre, gunakan metode fallback: gabungkan daftar dari "populer" dan "latest", atau gunakan fitur pencarian dengan query (judul/keyword) yang berhubungan dengan history.
+   - Terapkan perbaikan logika ini tanpa melakukan modifikasi pada struktur database (gunakan manipulasi data di level repository, use case, atau view model saja).
+2. Setelah kamu melakukan perubahan kode, kamu wajib memvalidasi kodemu dengan menjalankan perintah `./gradlew testDebugUnitTest` di terminal menggunakan tool bash.
+3. Jika ada error, perbaiki kodenya lagi, lalu test lagi sampai BUILD SUCCESSFUL.
+4. Lakukan semuanya secara otomatis tanpa meminta persetujuan.

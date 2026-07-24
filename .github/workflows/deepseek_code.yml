@@ -50,21 +50,6 @@ jobs:
                   name: Bluesminds Model
           EOF
           
-          # --- MEMBUAT FILE INSTRUKSI ---
-          cat << 'EOF' > prompt.txt
-          Tolong periksa kode proyek ini, khususnya yang berkaitan dengan database history pencarian. 
-          
-          Tugasmu:
-          1. Temukan dan perbaiki bug atau masalah logika pada fitur history pencarian. Lalu terapkan kode nya ke fitur aplikasi, jadi jika user melakukan pencarian manga di ekstensi, maka bakal muncul history pencarian nya disitu.
-          2. Setelah kamu melakukan perubahan kode, kamu wajib memvalidasi kodemu dengan menjalankan perintah `./gradlew testDebugUnitTest` di terminal menggunakan tool bash.
-          3. Jika ada error, perbaiki kodenya lagi, lalu test lagi sampai BUILD SUCCESSFUL.
-          4. Lakukan semuanya secara otomatis tanpa meminta persetujuan.
-          EOF
-          
-          # --- JALANKAN OMP ---
-          # Memanggil model dari provider Bluesminds
-          # Jika di file config atas id modelnya kamu ganti (misal gpt-4o), 
-          # pastikan perintah di bawah juga diganti jadi: bluesminds_proxy/gpt-4o
           omp --model bluesminds_proxy/gpt-5-mini -p "$(cat prompt.txt)" || true
 
       - name: Collect Changed and New Files
