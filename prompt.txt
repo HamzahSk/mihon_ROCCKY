@@ -1,7 +1,7 @@
 Tolong periksa kode proyek ini, khususnya yang berkaitan dengan fitur "Manga Recommendation" di halaman utama ekstensi. Fiturnya sudah ada, tetapi data rekomendasi yang ditampilkan belum benar dan perlu diperbaiki.
 
 Tugasmu:
-1. Perbaiki logika penarikan data pada fitur "Manga Recommendation" tersebut dengan ketentuan berikut:
+1. Perbaiki logika penarikan data pada fitur "Manga Recommendation" cek di /app/src/main/java/eu/kanade/tachiyomi/ui/browse/source/browse/BrowseSourceScreen.kt tersebut dengan ketentuan berikut:
    - Ambil 5 riwayat komik/manga terakhir yang dibaca di ekstensi tersebut dan kumpulkan semua genrenya.
    - Gunakan fitur filter ekstensi untuk mencari manga berdasarkan gabungan genre tersebut.
    - Jika hasil pencarian kurang atau kosong, kurangi parameter genre satu per satu dengan tetap mempertahankan genre yang paling sering muncul dari history, lalu lakukan filter ulang.
