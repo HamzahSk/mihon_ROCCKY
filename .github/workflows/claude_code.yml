@@ -68,7 +68,7 @@ jobs:
           
           # --- C. JALANKAN OMP ---
           # Kita panggil alias "my-agent-model" yang sudah kita daftarkan di models.yml atas
-          omp --model my-agent-model -p "$(cat prompt.txt)" || true
+          omp --model auto -p "$(cat prompt.txt)" || true
 
       # --- 4. Ekstrak Perbaikan Menjadi Artifact ---
       - name: Generate Patch File
