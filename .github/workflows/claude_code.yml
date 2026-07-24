@@ -42,7 +42,7 @@ jobs:
           # PENGINGAT: Demi keamanan, sangat disarankan memindahkan API Key ini ke GitHub Secrets!
           ANTHROPIC_BASE_URL: https://api.bluesminds.com/v1
           ANTHROPIC_AUTH_TOKEN: sk-zJct6jIkvGNYSMyK9ETsitpaBa3DE23ftQI5n4VgQmYEKxWh
-          ANTHROPIC_MODEL: claude-haiku
+          ANTHROPIC_MODEL: claude-sonnet-4-5
         run: |
           # --- DEBUGGING LENGKAP ---
           # Kita intip balasan asli dari server AgentRouter untuk memastikan tidak diblokir Cloudflare
