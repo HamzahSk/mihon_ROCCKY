@@ -47,6 +47,8 @@ import tachiyomi.domain.manga.model.MangaWithChapterCount
 import tachiyomi.domain.manga.model.toMangaUpdate
 import tachiyomi.domain.source.interactor.GetRemoteManga
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.searchhistory.interactor.GetSearchHistory
+import tachiyomi.domain.searchhistory.interactor.InsertSearchHistory
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.time.Instant
@@ -60,6 +62,8 @@ class BrowseSourceViewModel(
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val coverCache: CoverCache = Injekt.get(),
     private val getRemoteManga: GetRemoteManga = Injekt.get(),
+    private val getSearchHistory: GetSearchHistory = Injekt.get(),
+    private val insertSearchHistory: InsertSearchHistory = Injekt.get(),
     private val getDuplicateLibraryManga: GetDuplicateLibraryManga = Injekt.get(),
     private val getCategories: GetCategories = Injekt.get(),
     private val setMangaCategories: SetMangaCategories = Injekt.get(),
@@ -67,7 +71,7 @@ class BrowseSourceViewModel(
     private val getManga: GetManga = Injekt.get(),
     private val updateManga: UpdateManga = Injekt.get(),
     private val addTracks: AddTracks = Injekt.get(),
-    getIncognitoState: GetIncognitoState = Injekt.get(),
+    private val getIncognitoState: GetIncognitoState = Injekt.get(),
 ) : StateViewModel<BrowseSourceViewModel.State>(State(Listing.valueOf(listingQuery))) {
 
     companion object {
@@ -87,6 +91,11 @@ class BrowseSourceViewModel(
     var displayMode by sourcePreferences.sourceDisplayMode.asState(viewModelScope)
 
     val source = sourceManager.getOrStub(sourceId)
+
+    // Expose recent search queries for this source
+    val searchHistory = getSearchHistory
+        .subscribe(sourceId)
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList<String>())
 
     init {
         mutableState.update {
@@ -169,6 +178,19 @@ class BrowseSourceViewModel(
                 ),
                 toolbarQuery = query ?: input.query,
             )
+        }
+
+        // Persist search query to history, unless incognito or blank
+        if (!query.isNullOrBlank()) {
+            viewModelScope.launch {
+                try {
+                    if (!getIncognitoState.await(sourceId)) {
+                        insertSearchHistory.await(sourceId, query)
+                    }
+                } catch (e: Exception) {
+                    // ignore failures saving search history
+                }
+            }
         }
     }
 
