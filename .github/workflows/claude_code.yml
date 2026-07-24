@@ -34,31 +34,28 @@ jobs:
       # --- 3. Jalankan OMP dengan Instruksi Testing ---
       - name: Run OMP to Fix and Verify
         env:
-          # Gunakan variabel bawaan OpenAI agar OMP langsung paham
-          OPENAI_API_KEY: sk-GUWsLR2rd2tuxXP6Nzkux2kVQIZxfuLRPCzO6rx8xwTUJQiI
-          # Belokkan jalurnya ke URL web New API (jangan lupa /v1)
-          OPENAI_BASE_URL: https://api.url-web-mereka.com/v1
+          # API Key dari Xinjiang Huancheng
+          # (Sangat disarankan untuk pindah ini ke GitHub Secrets nanti ya!)
+          HUANCHENG_API_KEY: sk-GUWsLR2rd2tuxXP6Nzkux2kVQIZxfuLRPCzO6rx8xwTUJQiI
         run: |
           mkdir -p ~/.omp/agent
           
-          # Mendaftarkan custom provider untuk API Xinjiang Huancheng
+          # --- A. BIKIN FILE KONFIGURASI (DENGAN PENUTUP EOF YANG BENAR) ---
           cat << 'EOF' > ~/.omp/agent/models.yml
           providers:
             huancheng_api:
-              # Menggunakan standar openai-responses karena NewAPI sangat kompatibel dengan format ini
               type: openai-responses
-              # Ganti URL di bawah ini dengan Base URL asli dari dashboard mereka (jangan lupa akhiran /v1)
+              # GANTI URL INI dengan Base URL asli dari dashboard web mereka
               baseURL: "https://api.url-mereka.com/v1" 
               apiKey: env:HUANCHENG_API_KEY
           models:
-            # Ini nama alias untuk di-panggil di OMP
             my-agent-model:
               provider: huancheng_api
-              # Ganti dengan nama model ID (Model Square) yang tersedia di web mereka
-              # Contoh: claude-3-haiku-20240307 atau gpt-4o
+              # Jika di web mereka id modelnya benar-benar ditulis "auto", biarkan seperti ini
               id: auto
+          EOF
           
-          # Membuat file instruksi
+          # --- B. BIKIN FILE PROMPT (DENGAN PENUTUP EOF) ---
           cat << 'EOF' > prompt.txt
           Tolong periksa kode proyek ini, khususnya yang berkaitan dengan database history pencarian. 
           
@@ -69,9 +66,9 @@ jobs:
           4. Lakukan semuanya secara otomatis tanpa meminta persetujuan.
           EOF
           
-          # Jalankan OMP dengan model yang baru didaftarkan
-          omp --model auto -p "$(cat prompt.txt)" || true
-
+          # --- C. JALANKAN OMP ---
+          # Kita panggil alias "my-agent-model" yang sudah kita daftarkan di models.yml atas
+          omp --model my-agent-model -p "$(cat prompt.txt)" || true
 
       # --- 4. Ekstrak Perbaikan Menjadi Artifact ---
       - name: Generate Patch File
