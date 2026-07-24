@@ -31,16 +31,13 @@ jobs:
         env:
           # Pastikan API Key AgentRouter milikmu ditaruh di GitHub Secrets!
           AGENTROUTER_API_KEY: sk-1BOhosptLV2kztUELb9PhjjvYyIkIhqf7EYFbseS984Kb3FL
-          # Memaksa sistem mengenali ini sebagai environment CI
           CI: true
-          # Menyalakan debug agar proses pemanggilan OMP lebih terlihat
+          # DEBUG ini yang akan membuat prosesnya tetap terlihat real-time di log!
           DEBUG: "omp:*"
         run: |
           mkdir -p ~/.omp/agent
           
           # --- 1. MEMBUAT CONFIG MODELS.YML UNTUK AGENTROUTER ---
-          # Catatan: Walau di dokumen Claude Code dibilang jangan pakai /v1, 
-          # tapi karena OMP pakai standar OpenAI, kita WAJIB pakai /v1 di akhirnya.
           cat << 'EOF' > ~/.omp/agent/models.yml
           providers:
             agentrouter:
@@ -48,9 +45,8 @@ jobs:
               apiKey: AGENTROUTER_API_KEY
               api: openai-completions
               models:
-                # Kita panggil model claude-opus-4-6 sesuai saran di dokumen mereka
                 - id: glm-5.2
-                  name: AgentRouter Opus Model
+                  name: AgentRouter GLM Model
           EOF
           
           # --- 2. MEMBUAT FILE INSTRUKSI ---
@@ -64,10 +60,10 @@ jobs:
           4. Lakukan semuanya secara otomatis tanpa meminta persetujuan.
           EOF
           
-          # --- 3. JALANKAN OMP SECARA REAL-TIME ---
-          # Trik 'script -q -e -c' ini akan memanipulasi GitHub Actions seolah-olah OMP 
-          # dijalankan di terminal komputer asli, jadi kamu bisa lihat AI-nya lagi mikir/ngetik!
-          script -q -e -c 'omp --model agentrouter/glm-5.2 -p "$(cat prompt.txt)"' /dev/null || true
+          # --- 3. JALANKAN OMP (Tanpa Script Wrapper) ---
+          # Jalankan langsung agar tidak menyangkut di prompt konfirmasi terminal
+          omp --model agentrouter/glm-5.2 -p "$(cat prompt.txt)" || true
+
 
       - name: Collect Changed and New Files
         run: |
