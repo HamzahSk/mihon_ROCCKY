@@ -29,29 +29,23 @@ jobs:
 
       - name: Run OMP to Fix and Verify
         env:
-          # (Sangat disarankan memakai Secrets nantinya: ${{ secrets.AGENTROUTER_API_KEY }})
           AGENTROUTER_API_KEY: sk-1BOhosptLV2kztUELb9PhjjvYyIkIhqf7EYFbseS984Kb3FL
-          # WAJIB ADA: Agar OMP tidak minta izin/konfirmasi saat menjalankan perintah terminal
           CI: true
-          # WAJIB ADA: Agar kamu bisa melihat log proses AI-nya jika terjadi error
           DEBUG: "omp:*"
         run: |
           mkdir -p ~/.omp/agent
           
-          # --- 1. MEMBUAT CONFIG MODELS.JSON (Sesuai Dokumen Resmi AgentRouter untuk Pi) ---
-          cat << 'EOF' > ~/.omp/agent/models.json
-          {
-            "providers": {
-              "agentrouter": {
-                "baseUrl": "https://agentrouter.org/v1",
-                "api": "openai-completions",
-                "apiKey": "AGENTROUTER_API_KEY",
-                "models": [
-                  { "id": "glm-5.2", "name": "AgentRouter GLM Model" }
-                ]
-              }
-            }
-          }
+          # --- 1. MEMBUAT CONFIG MODELS.YML (MENGGUNAKAN PROTOKOL ANTHROPIC) ---
+          # Sesuai dokumen AgentRouter: baseUrl tanpa /v1 dan api menggunakan anthropic-messages
+          cat << 'EOF' > ~/.omp/agent/models.yml
+          providers:
+            agentrouter:
+              baseUrl: "https://agentrouter.org"
+              apiKey: AGENTROUTER_API_KEY
+              api: anthropic-messages
+              models:
+                - id: claude-opus-4-6
+                  name: AgentRouter Opus
           EOF
           
           # --- 2. MEMBUAT FILE INSTRUKSI ---
@@ -65,8 +59,15 @@ jobs:
           4. Lakukan semuanya secara otomatis tanpa meminta persetujuan.
           EOF
           
-          # --- 3. JALANKAN OMP ---
-          omp --model agentrouter/glm-5.2 -p "$(cat prompt.txt)" || true
+          # --- 3. JALANKAN OMP & BACA LOG JIKA ERROR ---
+          omp --model agentrouter/claude-opus-4-6 -p "$(cat prompt.txt)" || {
+            echo "========================================================="
+            echo "❌ OMP Gagal! Menampilkan isi log raw-http-request:"
+            echo "========================================================="
+            # Membaca dan menampilkan isi file log error yang kamu sebutkan tadi
+            cat /home/runner/.omp/logs/http-400-requests/* || true
+            exit 1
+          }
 
       - name: Collect Changed and New Files
         run: |
