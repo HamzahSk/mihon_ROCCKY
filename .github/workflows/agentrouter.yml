@@ -31,9 +31,7 @@ jobs:
         env:
           # Pastikan API Key AgentRouter milikmu ditaruh di GitHub Secrets!
           AGENTROUTER_API_KEY: sk-1BOhosptLV2kztUELb9PhjjvYyIkIhqf7EYFbseS984Kb3FL
-          CI: true
-          # DEBUG ini yang akan membuat prosesnya tetap terlihat real-time di log!
-          DEBUG: "omp:*"
+
         run: |
           mkdir -p ~/.omp/agent
           

@@ -31,10 +31,6 @@ jobs:
         env:
           # Pastikan API Key Bluesminds milikmu ditaruh di GitHub Secrets demi keamanan!
           BLUESMINDS_API_KEY: sk-zJct6jIkvGNYSMyK9ETsitpaBa3DE23ftQI5n4VgQmYEKxWh
-          
-          CI: true
-          # Mengaktifkan debug (jika OMP berbasis Node.js, ini akan memunculkan log ekstra)
-          DEBUG: "omp:*"
         run: |
           mkdir -p ~/.omp/agent
           
@@ -69,7 +65,7 @@ jobs:
           # Memanggil model dari provider Bluesminds
           # Jika di file config atas id modelnya kamu ganti (misal gpt-4o), 
           # pastikan perintah di bawah juga diganti jadi: bluesminds_proxy/gpt-4o
-          script -q -e -c 'omp --model bluesminds_proxy/gpt-5-mini -p "$(cat prompt.txt)"' /dev/null || true
+          omp --model bluesminds_proxy/gpt-5-mini -p "$(cat prompt.txt)" || true
 
       - name: Collect Changed and New Files
         run: |
