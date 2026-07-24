@@ -40,9 +40,9 @@ jobs:
       - name: Run Claude Code to Fix and Verify
         env:
           # PENGINGAT: Demi keamanan, sangat disarankan memindahkan API Key ini ke GitHub Secrets!
-          ANTHROPIC_BASE_URL: https://agentrouter.org
-          ANTHROPIC_AUTH_TOKEN: sk-1BOhosptLV2kztUELb9PhjjvYyIkIhqf7EYFbseS984Kb3FL
-          ANTHROPIC_MODEL: claude-opus-4-6
+          ANTHROPIC_BASE_URL: https://api.bluesminds.com/v1
+          ANTHROPIC_AUTH_TOKEN: sk-zJct6jIkvGNYSMyK9ETsitpaBa3DE23ftQI5n4VgQmYEKxWh
+          ANTHROPIC_MODEL: claude-haiku
         run: |
           # --- DEBUGGING LENGKAP ---
           # Kita intip balasan asli dari server AgentRouter untuk memastikan tidak diblokir Cloudflare
