@@ -35,8 +35,9 @@ import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.data.track.EnhancedTracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
-import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.model.Filter as SourceModelFilter
+import eu.kanade.tachiyomi.source.model.FilterList
+import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import eu.kanade.tachiyomi.util.chapter.getNextUnread
@@ -45,6 +46,7 @@ import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -73,6 +75,7 @@ import tachiyomi.domain.chapter.model.ChapterUpdate
 import tachiyomi.domain.chapter.model.NoChaptersException
 import tachiyomi.domain.chapter.service.calculateChapterGap
 import tachiyomi.domain.chapter.service.getChapterSort
+import tachiyomi.domain.history.interactor.GetHistory
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.manga.interactor.GetDuplicateLibraryManga
 import tachiyomi.domain.manga.interactor.GetMangaWithChapters
@@ -116,6 +119,7 @@ class MangaViewModel(
     private val addTracks: AddTracks = Injekt.get(),
     private val setMangaCategories: SetMangaCategories = Injekt.get(),
     private val mangaRepository: MangaRepository = Injekt.get(),
+    private val getHistory: GetHistory = Injekt.get(),
     private val filterChaptersForDownload: FilterChaptersForDownload = Injekt.get(),
     private val updateMangaFromRemote: UpdateMangaFromRemote = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
@@ -1116,106 +1120,241 @@ class MangaViewModel(
     
     fun fetchRecommendationsFromSource() {
         val state = successState ?: return
-        
-        // Jangan fetch ulang kalau sudah ada atau sedang loading
+
         if (state.recommendations.isNotEmpty() || state.isFetchingRecommendations) return
 
         viewModelScope.launchIO {
             updateSuccessState { it.copy(isFetchingRecommendations = true) }
-            
+
             try {
-                val catalogueSource = state.source as? CatalogueSource
-                val currentGenres = state.manga.genre?.map { it.trim() }?.filter { it.isNotBlank() } ?: emptyList()
-                
-                if (catalogueSource != null && currentGenres.isNotEmpty()) {
-                    
-                    val currentGenresLower = currentGenres.map { it.lowercase() }.toSet()
-                    
-                    // Kita gunakan Pair untuk menyimpan <Rekomendasi, Skor Kemiripan Genre> 
-                    // dan Map dengan key URL agar tidak ada duplikat.
-                    val collectedRecs = mutableMapOf<String, Pair<SourceRecommendation, Int>>()
-                    
-                    var activeGenres = currentGenres.toList()
-                    val maxAttempts = currentGenres.size
-                    var attempts = 0
-                    
-                    // Looping selama genre masih ada dan jumlah rekomendasi terkumpul < 10
-                    while (activeGenres.isNotEmpty() && collectedRecs.size < 10 && attempts < maxAttempts) {
-                        attempts++
-                        val filterList = catalogueSource.getFilterList()
-                        var appliedFiltersCount = 0
+                val recentHistory = loadRecentHistoryMangas(state.source.id)
+                val orderedGenres = MangaRecommendationHelper.buildGenrePriority(recentHistory)
 
-                        // 1. Terapkan semua genre yang aktif (activeGenres) ke dalam filter
-                        for (sourceFilter in filterList) {
-                            if (sourceFilter is SourceModelFilter.Group<*>) {
-                                for (filter in sourceFilter.state) {
-                                    if (filter is SourceModelFilter<*> && activeGenres.any { it.equals(filter.name, true) }) {
-                                        when (filter) {
-                                            is SourceModelFilter.TriState -> filter.state = 1
-                                            is SourceModelFilter.CheckBox -> filter.state = true
-                                            else -> {}
-                                        }
-                                        appliedFiltersCount++
-                                    }
-                                }
-                            } else if (sourceFilter is SourceModelFilter.Select<*>) {
-                                val index = sourceFilter.values.filterIsInstance<String>()
-                                    .indexOfFirst { activeGenres.any { ag -> ag.equals(it, true) } }
-
-                                if (index != -1) {
-                                    sourceFilter.state = index
-                                    appliedFiltersCount++
-                                }
-                            }
-                        }
-
-                        // 2. Tentukan query string (fallback) jika filter tidak mendukung dan hanya sisa 1 genre
-                        val textQuery = if (appliedFiltersCount == 0 && activeGenres.size == 1) activeGenres.first() else ""
-
-                        // 3. Eksekusi pencarian
-                        val searchPage = catalogueSource.getSearchManga(1, textQuery, filterList)
-                        
-                        // 4. Proses hasil dan saring dari duplikat (komik yang sama atau yang sudah masuk list)
-                        searchPage.mangas.forEach { sManga ->
-                            if (sManga.url != state.manga.url && !collectedRecs.containsKey(sManga.url)) {
-                                val resultGenres = sManga.genre?.split(",")?.map { it.trim().lowercase() } ?: emptyList()
-                                val matchScore = resultGenres.intersect(currentGenresLower).size
-                                
-                                val rec = SourceRecommendation(
-                                    title = sManga.title,
-                                    url = sManga.url,
-                                    thumbnailUrl = sManga.thumbnail_url
-                                )
-                                collectedRecs[sManga.url] = Pair(rec, matchScore)
-                            }
-                        }
-
-                        // 5. Cek kuota. Kalau masih kurang dari 10, buang 1 genre terakhir lalu coba lagi
-                        if (collectedRecs.size < 10) {
-                            activeGenres = activeGenres.dropLast(1)
-                        } else {
-                            break // Keluar loop kalau sudah cukup
-                        }
-                    }
-
-                    // 6. Urutkan semua hasil berdasarkan skor kemiripan tertinggi dan ambil 10 teratas
-                    val finalRecs = collectedRecs.values
-                        .sortedByDescending { it.second }
-                        .take(10)
-                        .map { it.first }
-
-                    updateSuccessState { 
-                        it.copy(recommendations = finalRecs, isFetchingRecommendations = false) 
-                    }
+                val genreRecommendations = if (orderedGenres.isNotEmpty()) {
+                    fetchRecommendationsWithGenreFilters(
+                        source = state.source,
+                        currentMangaUrl = state.manga.url,
+                        orderedGenres = orderedGenres,
+                    )
                 } else {
-                    // Fallback kalau tidak ada genre sama sekali
-                    updateSuccessState { it.copy(isFetchingRecommendations = false) }
+                    emptyList()
+                }
+
+                val recommendations = if (genreRecommendations.size < 10) {
+                    val fallbackRecommendations = fetchRecommendationsWithFallback(
+                        source = state.source,
+                        currentMangaUrl = state.manga.url,
+                        recentHistory = recentHistory,
+                        orderedGenres = orderedGenres,
+                        excludedUrls = genreRecommendations.map { it.url }.toSet(),
+                    )
+
+                    (genreRecommendations + fallbackRecommendations)
+                        .distinctBy { it.url }
+                        .take(10)
+                } else {
+                    genreRecommendations
+                }
+
+                updateSuccessState {
+                    it.copy(
+                        recommendations = recommendations,
+                        isFetchingRecommendations = false,
+                    )
                 }
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR, e) { "Gagal mengambil rekomendasi dari source" }
                 updateSuccessState { it.copy(isFetchingRecommendations = false) }
             }
         }
+    }
+
+    private suspend fun loadRecentHistoryMangas(sourceId: Long): List<RecentHistoryManga> {
+        val histories = getHistory.subscribe("")
+            .firstOrNull()
+            .orEmpty()
+
+        val recentHistories = histories
+            .asSequence()
+            .filter { it.coverData.sourceId == sourceId }
+            .sortedByDescending { it.readAt?.time ?: 0L }
+            .take(5)
+            .toList()
+
+        val recentMangas = ArrayList<RecentHistoryManga>(recentHistories.size)
+        for (history in recentHistories) {
+            try {
+                val manga = mangaRepository.getMangaById(history.mangaId)
+                if (manga.source == sourceId) {
+                    recentMangas += RecentHistoryManga(
+                        title = history.title,
+                        genres = manga.genre.orEmpty(),
+                    )
+                }
+            } catch (_: Exception) {
+                // Skip broken history rows.
+            }
+        }
+
+        return recentMangas
+    }
+
+    private suspend fun fetchRecommendationsWithGenreFilters(
+        source: Source,
+        currentMangaUrl: String,
+        orderedGenres: List<String>,
+    ): List<SourceRecommendation> {
+        val collectedRecs = linkedMapOf<String, Pair<SourceRecommendation, Int>>()
+        val scoredGenres = orderedGenres.map { it.lowercase() }.toSet()
+
+        for (activeGenres in MangaRecommendationHelper.buildGenreAttempts(orderedGenres)) {
+            val filterList = source.getFilterList()
+            if (!applyGenreFilters(filterList, activeGenres)) continue
+
+            val searchPage = runCatching {
+                source.getSearchManga(1, "", filterList)
+            }.getOrNull() ?: continue
+
+            appendRecommendations(
+                mangas = searchPage.mangas,
+                currentMangaUrl = currentMangaUrl,
+                scoredGenres = scoredGenres,
+                excludedUrls = emptySet(),
+                collectedRecs = collectedRecs,
+            )
+
+            if (collectedRecs.size >= 10) break
+        }
+
+        return collectedRecs.values
+            .sortedByDescending { it.second }
+            .map { it.first }
+            .distinctBy { it.url }
+            .take(10)
+    }
+
+    private suspend fun fetchRecommendationsWithFallback(
+        source: Source,
+        currentMangaUrl: String,
+        recentHistory: List<RecentHistoryManga>,
+        orderedGenres: List<String>,
+        excludedUrls: Set<String>,
+    ): List<SourceRecommendation> {
+        val collectedRecs = linkedMapOf<String, Pair<SourceRecommendation, Int>>()
+        val scoredGenres = orderedGenres.map { it.lowercase() }.toSet()
+
+        runCatching { source.getPopularManga(1).mangas }
+            .getOrNull()
+            ?.let {
+                appendRecommendations(
+                    mangas = it,
+                    currentMangaUrl = currentMangaUrl,
+                    scoredGenres = scoredGenres,
+                    excludedUrls = excludedUrls,
+                    collectedRecs = collectedRecs,
+                )
+            }
+
+        if (source.supportsLatest) {
+            runCatching { source.getLatestUpdates(1).mangas }
+                .getOrNull()
+                ?.let {
+                    appendRecommendations(
+                        mangas = it,
+                        currentMangaUrl = currentMangaUrl,
+                        scoredGenres = scoredGenres,
+                        excludedUrls = excludedUrls,
+                        collectedRecs = collectedRecs,
+                    )
+                }
+        }
+
+        for (query in MangaRecommendationHelper.buildFallbackQueries(recentHistory, orderedGenres)) {
+            runCatching { source.getSearchManga(1, query, source.getFilterList()).mangas }
+                .getOrNull()
+                ?.let {
+                    appendRecommendations(
+                        mangas = it,
+                        currentMangaUrl = currentMangaUrl,
+                        scoredGenres = scoredGenres,
+                        excludedUrls = excludedUrls,
+                        collectedRecs = collectedRecs,
+                    )
+                }
+
+            if (collectedRecs.size >= 10) break
+        }
+
+        return collectedRecs.values
+            .sortedByDescending { it.second }
+            .map { it.first }
+            .distinctBy { it.url }
+            .take(10)
+    }
+
+    private fun appendRecommendations(
+        mangas: List<SManga>,
+        currentMangaUrl: String,
+        scoredGenres: Set<String>,
+        excludedUrls: Set<String>,
+        collectedRecs: MutableMap<String, Pair<SourceRecommendation, Int>>,
+    ) {
+        mangas.forEach { sManga ->
+            if (sManga.url == currentMangaUrl || sManga.url in excludedUrls || collectedRecs.containsKey(sManga.url)) {
+                return@forEach
+            }
+
+            val resultGenres = sManga.getGenres().orEmpty()
+                .asSequence()
+                .map { it.lowercase() }
+                .toSet()
+
+            val matchScore = resultGenres.intersect(scoredGenres).size
+            collectedRecs[sManga.url] = SourceRecommendation(
+                title = sManga.title,
+                url = sManga.url,
+                thumbnailUrl = sManga.thumbnail_url,
+            ) to matchScore
+        }
+    }
+
+    private fun applyGenreFilters(filters: FilterList, genres: List<String>): Boolean {
+        val normalizedGenres = genres
+            .asSequence()
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .map { it.lowercase() }
+            .distinct()
+            .toList()
+
+        if (normalizedGenres.isEmpty()) return false
+
+        var applied = false
+
+        for (sourceFilter in filters) {
+            if (sourceFilter is SourceModelFilter.Group<*>) {
+                for (filter in sourceFilter.state) {
+                    if (filter is SourceModelFilter<*> && normalizedGenres.any { it.equals(filter.name, true) }) {
+                        if (filter is SourceModelFilter.TriState) {
+                            filter.state = SourceModelFilter.TriState.STATE_INCLUDE
+                        } else if (filter is SourceModelFilter.CheckBox) {
+                            filter.state = true
+                        }
+                        applied = true
+                    }
+                }
+            } else if (sourceFilter is SourceModelFilter.Select<*>) {
+                val index = sourceFilter.values.filterIsInstance<String>()
+                    .indexOfFirst { value -> normalizedGenres.any { it.equals(value, true) } }
+
+                if (index != -1) {
+                    sourceFilter.state = index
+                    applied = true
+                }
+            }
+        }
+
+        return applied
     }
     
     suspend fun getRecommendationMangaId(recommendation: SourceRecommendation): Long? {
