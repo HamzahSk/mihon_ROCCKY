@@ -70,7 +70,7 @@ jobs:
           EOF
           
           # Jalankan OMP dengan model yang baru didaftarkan
-          omp --model my-agent-model -p "$(cat prompt.txt)" || true
+          omp --model auto -p "$(cat prompt.txt)" || true
 
 
       # --- 4. Ekstrak Perbaikan Menjadi Artifact ---
