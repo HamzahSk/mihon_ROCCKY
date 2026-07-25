@@ -11,6 +11,7 @@ object HistoryMapper {
         chapterId: Long,
         readAt: Date?,
         readDuration: Long,
+        genres: List<String>? = null,
     ): History = History(
         id = id,
         chapterId = chapterId,

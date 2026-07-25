@@ -69,10 +69,22 @@ class HistoryRepositoryImpl(
 
     override suspend fun upsertHistory(historyUpdate: HistoryUpdate) {
         try {
+            // Resolve genres from chapter -> manga relation if available
+            val chapter = database.chaptersQueries.getChapterById(historyUpdate.chapterId).awaitAsOneOrNull()
+            val mangaId = chapter?.manga_id
+            val genres = if (mangaId != null) {
+                try {
+                    database.mangasQueries.getMangaById(mangaId).awaitAsOneOrNull()?.genre ?: emptyList()
+                } catch (_: Exception) {
+                    emptyList<String>()
+                }
+            } else emptyList()
+
             database.historyQueries.upsert(
                 historyUpdate.chapterId,
                 historyUpdate.readAt,
                 historyUpdate.sessionReadDuration,
+                genres,
             )
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, throwable = e)

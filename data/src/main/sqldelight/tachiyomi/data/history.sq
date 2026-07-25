@@ -1,3 +1,5 @@
+import kotlin.collections.List;
+import kotlin.String;
 import java.util.Date;
 
 CREATE TABLE history(
@@ -5,6 +7,7 @@ CREATE TABLE history(
     chapter_id INTEGER NOT NULL UNIQUE,
     last_read INTEGER AS Date,
     time_read INTEGER NOT NULL,
+    genres TEXT AS List<String> NOT NULL DEFAULT '',
     FOREIGN KEY(chapter_id) REFERENCES chapters (_id)
     ON DELETE CASCADE
 );
@@ -17,7 +20,8 @@ SELECT
 H._id,
 H.chapter_id,
 H.last_read,
-H.time_read
+H.time_read,
+H.genres
 FROM history H
 JOIN chapters C
 ON H.chapter_id = C._id
@@ -28,7 +32,8 @@ SELECT
 H._id,
 H.chapter_id,
 H.last_read,
-H.time_read
+H.time_read,
+H.genres
 FROM history H
 JOIN chapters C
 ON H.chapter_id = C._id
@@ -60,13 +65,14 @@ DELETE FROM history
 WHERE last_read = 0;
 
 upsert:
-INSERT INTO history(chapter_id, last_read, time_read)
-VALUES (:chapterId, :readAt, :time_read)
+INSERT INTO history(chapter_id, last_read, time_read, genres)
+VALUES (:chapterId, :readAt, :time_read, :genres)
 ON CONFLICT(chapter_id)
 DO UPDATE
 SET
     last_read = :readAt,
-    time_read = time_read + :time_read
+    time_read = time_read + :time_read,
+    genres = :genres
 WHERE chapter_id = :chapterId;
 
 getReadDuration:

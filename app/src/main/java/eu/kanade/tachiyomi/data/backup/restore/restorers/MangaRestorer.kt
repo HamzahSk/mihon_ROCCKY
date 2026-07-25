@@ -363,6 +363,7 @@ class MangaRestorer(
                     it.chapterId,
                     it.readAt,
                     it.readDuration,
+                    emptyList<String>(),
                 )
             }
         }
