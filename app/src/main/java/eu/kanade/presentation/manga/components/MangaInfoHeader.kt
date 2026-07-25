@@ -338,7 +338,7 @@ fun ExpandableMangaDescription(
                 if (expanded) {
                     FlowRow(
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .fillMaxWidth(),
                         // Jika expanded = true, susunan tag berpindah ke tengah layar (Center)
                         horizontalArrangement = Arrangement.Center, 
                         verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall)
