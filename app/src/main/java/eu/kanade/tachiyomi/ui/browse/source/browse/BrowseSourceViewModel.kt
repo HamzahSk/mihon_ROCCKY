@@ -48,6 +48,7 @@ import tachiyomi.domain.chapter.interactor.SetMangaDefaultChapterFlags
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.manga.interactor.GetDuplicateLibraryManga
 import tachiyomi.domain.manga.interactor.GetManga
+import tachiyomi.domain.manga.interactor.NetworkToLocalManga
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.manga.model.MangaWithChapterCount
 import tachiyomi.domain.manga.model.toMangaUpdate
@@ -80,6 +81,8 @@ class BrowseSourceViewModel(
     private val getIncognitoState: GetIncognitoState = Injekt.get(),
     // database for accessing history rows (genres)
     private val database: Database = Injekt.get(),
+    // New: ensure network-to-local manga helper is injected so clicks create local entries first
+    private val networkToLocalManga: NetworkToLocalManga = Injekt.get(),
 ): StateViewModel<BrowseSourceViewModel.State>(State(Listing.valueOf(listingQuery))) {
 
     companion object {
@@ -124,6 +127,21 @@ class BrowseSourceViewModel(
 
         if (!getIncognitoState.await(source.id)) {
             sourcePreferences.lastUsedSource.set(source.id)
+        }
+    }
+
+    /**
+     * Helper to ensure a network-provided Manga is created/available locally before navigating to it.
+     * This avoids NPEs when the MangaDetails screen expects a local DB row that might not exist yet.
+     */
+    fun onMangaClick(manga: Manga, onClick: (Long) -> Unit) {
+        viewModelScope.launchIO {
+            try {
+                val localManga = networkToLocalManga(manga)
+                onClick(localManga.id)
+            } catch (e: Exception) {
+                logcat(LogPriority.ERROR, e) { "Failed to prepare local manga for click: ${manga.title}" }
+            }
         }
     }
 
