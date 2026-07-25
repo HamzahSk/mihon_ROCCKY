@@ -1,23 +1,37 @@
-Tolong lanjutkan pekerjaan ini secara otomatis tanpa meminta persetujuan. Berdasarkan status sebelumnya, perbaikan database (termasuk kolom genres pada tabel history) sudah berhasil dilakukan.  
+Tolong perbaiki dan tingkatkan UI pada BrowseSourceScreen.kt dan BrowseSourceViewModel.kt berdasarkan instruksi detail di bawah ini.
 
-​Peringatan Penting:
-Jangan melakukan perubahan apapun pada app/src/main/java/eu/kanade/tachiyomi/ui/manga/MangaViewModel.kt atau area manga lainnya. Fokuskan pengerjaan fitur ini HANYA pada area browse.  
-​Lakukan langkah-langkah berikut secara berurutan: 
- 
-​1. Implementasi Fitur "Manga Recommendation"
-​Modifikasi dan terapkan logika penarikan data pada fitur "Manga Recommendation" secara eksklusif di /app/src/main/java/eu/kanade/tachiyomi/ui/browse/source/browse/BrowseSourceScreen.kt dan ViewModel terkait (misalnya BrowseSourceViewModel).  
+---
+### 1. PERINGATAN & BATASAN
+- JANGAN mengubah file apa pun di luar area Browse (seperti MangaViewModel.kt). Fokus HANYA pada `BrowseSourceScreen.kt` dan `BrowseSourceViewModel.kt`.
 
-​Logika Penarikan Data:
-​Ambil 5 riwayat manga terakhir pada ekstensi/source yang sedang diakses tersebut, lalu gunakan genre yang sudah tersimpan di database history.  
-​Hitung genre yang paling sering muncul, lalu gunakan maksimal 5 genre tersebut sebagai filter pencarian.  
-​Jika hasil pencarian kurang atau kosong, kurangi parameter genre satu per satu dengan tetap mempertahankan genre yang paling sering muncul, lalu lakukan filter ulang.  
-​Jika ekstensi tidak mendukung filter genre, gunakan metode fallback: gabungkan daftar dari "popular" dan "latest", atau gunakan fitur pencarian dengan query (judul/keyword) yang berhubungan dengan history.  
-​Perbaikan Bug (State Management):
-​Pastikan eksekusi pencarian rekomendasi ini TIDAK mengubah atau menimpa state listing maupun filters pada UI daftar komik utama.
-​Tambahkan state baru recommendations: List<Manga> = emptyList() di dalam data class State pada BrowseSourceViewModel.
-​Simpan hasil penarikan data (termasuk fallback) murni ke dalam state recommendations.
-​Di BrowseSourceScreen, passing data recommendations tersebut ke dalam komponen MangaCarousel.
+---
+### 2. FIX NPE & SYNTAX ERROR
+1. **Fix NullPointerException (Manga Click):**
+   - Aplikasi crash saat komik di Carousel diklik (`ResultSet returned null for mangas.sq:getMangaById`) karena data dari network belum masuk ke DB lokal.
+   - Di `BrowseSourceViewModel.kt`, pastikan dependency `networkToLocalManga: NetworkToLocalManga` ter-inject.
+   - Buat fungsi helper `onMangaClick(manga: Manga, onClick: (Long) -> Unit)` yang memanggil `val localManga = networkToLocalManga.await(manga)` di IO scope sebelum mengirim ID ke callback `onClick(localManga.id)`.
+   - Di `BrowseSourceScreen.kt`, gunakan `viewModel.onMangaClick(manga) { id -> navigator.push(MangaScreen(id, true)) }` pada listener klik carousel.
 
-​2. Validasi dan Pengujian Otomatis
-​Setelah melakukan perubahan kode, wajib memvalidasi dengan menjalankan ./gradlew testDebugUnitTest menggunakan tool bash.  
-​Jika ada error, perbaiki lalu jalankan test kembali sampai mendapatkan hasil BUILD SUCCESSFUL.  
+2. **Fix Syntax/Structure Error di `BrowseSourceScreen.kt`:**
+   - Rapikan struktur penutup kelas `BrowseSourceScreen`.
+   - Pastikan dua composable `MangaCarousel` dan `MangaCarouselRecommendations` berada di luar kelas `BrowseSourceScreen` (top-level functions) agar tidak terjadi syntax/compile error.
+
+---
+### 3. UPGRADE UI CAROUSEL (Full-Bleed Header & Tall Aspect Ratio)
+Ubah tampilan Carousel Rekomendasi di `BrowseSourceScreen.kt` agar lebih tinggi dan tidak memotong thumbnail:
+1. **Carousel Lebih Tinggi Ke Bawah (Tall/Vertical Ratio):**
+   - Tingkatkan tinggi Carousel (ubah dari `200.dp` menjadi sekitar `320.dp` hingga `360.dp`).
+   - Atur proporsi gambar poster agar mengikuti aspek rasio sampul komik (sekitar `2:3` atau `3:4`) sehingga gambar thumbnail komik tampil lebih utuh vertikal dan TIDAK terpotong di bagian atas/bawahnya.
+2. **Full-Bleed Top Header:**
+   - Buat Carousel berada di posisi paling atas layar (menyatu/meliputi area status bar & top app bar) saat di-scroll ke posisi teratas.
+   - Saat halaman di-scroll ke bawah, Top Bar bertransisi kembali ke tampilan normal (solid background) secara mulus.
+3. **Background & Overlay Imersif:**
+   - Gunakan gambar cover/thumbnail dari manga terpilih (item aktif di Carousel) sebagai latar belakang besar yang memanjang hingga ke atas layar.
+   - Lapisi latar belakang tersebut dengan efek gradient overlay gelap di bagian bawah dan atas agar teks judul ("Shinigami", dll.) serta tombol navigasi tetap terbaca jelas (high contrast).
+
+---
+### 4. EXECUTION & AUTOMATED TESTING
+- Langsung kerjakan perbaikan dan perubahan UI ini tanpa meminta konfirmasi ulang.
+- Setelah kode diperbarui, jalankan pengujian otomatis via terminal:
+  `./gradlew testDebugUnitTest`
+- Jika ditemukan error saat testing atau build, perbaiki kodenya dan jalankan test kembali sampai mendapatkan status BUILD SUCCESSFUL.

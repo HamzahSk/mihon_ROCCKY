@@ -80,7 +80,6 @@ class BrowseSourceViewModel(
     private val getIncognitoState: GetIncognitoState = Injekt.get(),
     // database for accessing history rows (genres)
     private val database: Database = Injekt.get(),
-    private val networkToLocalManga: tachiyomi.domain.manga.interactor.NetworkToLocalManga = Injekt.get(),
 ): StateViewModel<BrowseSourceViewModel.State>(State(Listing.valueOf(listingQuery))) {
 
     companion object {
@@ -200,13 +199,6 @@ class BrowseSourceViewModel(
                     // ignore failures saving search history
                 }
             }
-        }
-    }
-    
-    fun onMangaClick(manga: Manga, onClick: (Long) -> Unit) {
-        viewModelScope.launchIO {
-            val localManga = networkToLocalManga.await(manga)
-            onClick(localManga.id)
         }
     }
 
