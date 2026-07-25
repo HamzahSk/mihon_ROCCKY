@@ -69,6 +69,8 @@ class BrowseSourceViewModel(
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val coverCache: CoverCache = Injekt.get(),
     private val getRemoteManga: GetRemoteManga = Injekt.get(),
+    private val deleteSearchHistory: tachiyomi.domain.searchhistory.interactor.DeleteSearchHistory = Injekt.get(),
+
     private val getSearchHistory: GetSearchHistory = Injekt.get(),
     private val insertSearchHistory: InsertSearchHistory = Injekt.get(),
     private val getDuplicateLibraryManga: GetDuplicateLibraryManga = Injekt.get(),
@@ -416,6 +418,28 @@ class BrowseSourceViewModel(
         }
     }
 
+    /**
+     * Clears all search history entries for the active source.
+     */
+    fun clearSearchHistoryForSource() {
+        viewModelScope.launchIO {
+            try {
+                // Use the repository interactor to delete all entries for this source
+                // Note: SQLDelight provides a deleteAllBySource query
+                // We call the DeleteSearchHistory interactor for each known recent query to keep logic simple.
+                val history = getSearchHistory.subscribe(sourceId).firstOrNull().orEmpty()
+                for (q in history) {
+                    try {
+                        deleteSearchHistory.await(sourceId, q)
+                    } catch (_: Exception) {
+                        // ignore individual delete failures
+                    }
+                }
+            } catch (e: Exception) {
+                logcat(LogPriority.ERROR, e) { "Failed to clear search history for source $sourceId" }
+            }
+        }
+    }
     /**
      * Adds or removes a manga from the library.
      *
