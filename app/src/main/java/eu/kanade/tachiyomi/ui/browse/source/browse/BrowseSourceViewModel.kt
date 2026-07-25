@@ -54,6 +54,13 @@ import uy.kohesive.injekt.api.get
 import java.time.Instant
 import eu.kanade.tachiyomi.source.model.Filter as SourceModelFilter
 
+// Additional imports for recommendations
+import app.cash.sqldelight.async.coroutines.awaitAsList
+import tachiyomi.data.Database
+import tachiyomi.core.common.util.system.logcat
+import logcat.LogPriority
+import tachiyomi.data.history.HistoryMapper
+
 class BrowseSourceViewModel(
     private val sourceId: Long,
     listingQuery: String?,
@@ -72,7 +79,9 @@ class BrowseSourceViewModel(
     private val updateManga: UpdateManga = Injekt.get(),
     private val addTracks: AddTracks = Injekt.get(),
     private val getIncognitoState: GetIncognitoState = Injekt.get(),
-) : StateViewModel<BrowseSourceViewModel.State>(State(Listing.valueOf(listingQuery))) {
+    // database for accessing history rows (genres)
+    private val database: Database = Injekt.get(),
+): StateViewModel<BrowseSourceViewModel.State>(State(Listing.valueOf(listingQuery))) {
 
     companion object {
         val SOURCE_ID_KEY = CreationExtras.Key<Long>()
@@ -120,7 +129,7 @@ class BrowseSourceViewModel(
     }
 
     /**
-     * Flow of Pager flow tied to [State.listing]
+     * FLOW of Pager flow tied to [State.listing]
      */
     private val hideInLibraryItems = sourcePreferences.hideInLibraryItems.get()
     val mangaPagerFlowFlow = state.map { it.listing }
@@ -234,6 +243,125 @@ class BrowseSourceViewModel(
                 listing = listing,
                 toolbarQuery = listing.query,
             )
+        }
+    }
+
+    /**
+     * Build and apply recommended filters based on the latest history rows for this source.
+     * - Use up to the last 5 history rows from this source and read their stored genres.
+     * - Count genre frequency and pick up to 5 most common genres.
+     * - Attempt filtering with all chosen genres; if results are insufficient, drop least frequent genre and retry.
+     * - If source does not support genre filters, fallback to a textual search using the top genres joined.
+     */
+    fun applyRecommendationsFromHistory() {
+        viewModelScope.launchIO {
+            try {
+                val catalogueSource = source as? eu.kanade.tachiyomi.source.CatalogueSource
+                // Read last 5 history rows for this source to collect genres
+                val historyGenres: List<List<String>> = try {
+                    // Use sqldelight generated query; map rows to their genres list
+                    database.historyQueries.getHistoryBySource(sourceId, 5L) { _id: Long, chapter_id: Long, last_read: java.util.Date?, time_read: Long, genres: kotlin.collections.List<String>? ->
+                        genres ?: emptyList()
+                    }.awaitAsList()
+                } catch (e: Exception) {
+                    logcat(LogPriority.ERROR, e) { "Failed to read history for recommendations" }
+                    emptyList<List<String>>()
+                }
+
+                val flatGenres = historyGenres
+                    .flatMap { it }
+                    .map { it.trim() }
+                    .filter { it.isNotBlank() }
+                    .map { it.lowercase() }
+
+                if (flatGenres.isEmpty()) {
+                    // No genres to base on; fallback to nothing
+                    return@launchIO
+                }
+
+                // Count frequencies and select up to top 5
+                val topGenres = flatGenres.groupingBy { it }.eachCount()
+                    .entries
+                    .sortedByDescending { it.value }
+                    .map { it.key }
+                    .take(5)
+
+                if (catalogueSource == null) {
+                    // If not a catalogue source, fallback to textual search using top genres
+                    val query = topGenres.joinToString(" ")
+                    search(query)
+                    return@launchIO
+                }
+
+                // Try to apply filters progressively until we have enough results
+                var desired = 5
+                var activeGenres = topGenres.toMutableList()
+
+                var appliedFilters: FilterList? = null
+
+                while (activeGenres.isNotEmpty()) {
+                    val filterList = catalogueSource.getFilterList()
+                    var appliedCount = 0
+
+                    for (sourceFilter in filterList) {
+                        if (sourceFilter is SourceModelFilter.Group<*>) {
+                            for (filter in sourceFilter.state) {
+                                if (filter is SourceModelFilter<*> && activeGenres.any { ag -> ag.equals(filter.name, true) }) {
+                                    when (filter) {
+                                        is SourceModelFilter.TriState -> filter.state = 1
+                                        is SourceModelFilter.CheckBox -> filter.state = true
+                                        else -> {}
+                                    }
+                                    appliedCount++
+                                }
+                            }
+                        } else if (sourceFilter is SourceModelFilter.Select<*>) {
+                            val index = sourceFilter.values.filterIsInstance<String>()
+                                .indexOfFirst { activeGenres.any { ag -> ag.equals(it, true) } }
+                            if (index != -1) {
+                                sourceFilter.state = index
+                                appliedCount++
+                            }
+                        }
+                    }
+
+                    if (appliedCount > 0) {
+                        // See how many results this filter produces (first page)
+                        val textQuery = if (appliedCount == 0 && activeGenres.size == 1) activeGenres.first() else ""
+                        val searchPage = try {
+                            catalogueSource.getSearchManga(1, textQuery, filterList)
+                        } catch (e: Exception) {
+                            null
+                        }
+
+                        val results = searchPage?.mangas?.size ?: 0
+                        if (results >= desired) {
+                            appliedFilters = filterList
+                            break
+                        }
+                    }
+
+                    // Reduce active genres and try again
+                    activeGenres = if (activeGenres.size > 1) activeGenres.dropLast(1).toMutableList() else mutableListOf()
+                }
+
+                if (appliedFilters != null) {
+                    // Apply the successful filters to the UI listing
+                    mutableState.update {
+                        it.copy(
+                            filters = appliedFilters,
+                            listing = Listing.Search(query = null, filters = appliedFilters),
+                            toolbarQuery = null,
+                        )
+                    }
+                } else {
+                    // Fallback: use textual search combining top genres
+                    val query = topGenres.joinToString(" ")
+                    search(query)
+                }
+            } catch (e: Exception) {
+                logcat(LogPriority.ERROR, e) { "Failed to compute recommendations" }
+            }
         }
     }
 
@@ -379,3 +507,4 @@ class BrowseSourceViewModel(
         val isUserQuery get() = listing is Listing.Search && !listing.query.isNullOrEmpty()
     }
 }
+

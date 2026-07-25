@@ -195,6 +195,10 @@ data class BrowseSourceScreen(
         }
 
         LaunchedEffect(viewModel.source) {
+            // Trigger recommendations based on recent history for this source
+            if (viewModel.source !is StubSource) {
+                viewModel.applyRecommendationsFromHistory()
+            }
             assistUrl = (viewModel.source as? HttpSource)?.getHomeUrl()
         }
 
