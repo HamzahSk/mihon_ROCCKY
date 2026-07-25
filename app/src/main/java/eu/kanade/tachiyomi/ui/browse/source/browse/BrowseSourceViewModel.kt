@@ -249,7 +249,10 @@ class BrowseSourceViewModel(
                 val catalogueSource = source as? eu.kanade.tachiyomi.source.CatalogueSource
 
                 val historyGenres: List<List<String>> = try {
-                    database.historyQueries.getHistoryBySource(sourceId, 5L) { _id: Long, chapter_id: Long, last_read: java.util.Date?, time_read: Long, genres: kotlin.collections.List<String>? ->
+                    database.historyQueries.getHistoryBySource(
+                        sourceId = sourceId,
+                        limit = 5L,
+                    ) { _, _, _, _, genres ->
                         genres ?: emptyList()
                     }.awaitAsList()
                 } catch (e: Exception) {
