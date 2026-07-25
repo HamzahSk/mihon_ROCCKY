@@ -87,3 +87,12 @@ jobs:
         with:
           name: mapping-${{ github.sha }}
           path: app/build/outputs/mapping/release
+          
+      - name: Upload Repository Backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo-backup-${{ github.sha }}
+          path: |
+            .
+            !.git/
+            !**/build/

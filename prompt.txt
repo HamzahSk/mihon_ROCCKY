@@ -1,16 +1,5 @@
-Tolong perbaiki dan redesain bagian Search History pada area Browse (BrowseSourceScreen.kt & BrowseSourceViewModel.kt). Boleh melakukan modifikasi pada file lain di luar area Browse hanya jika diperlukan untuk menyelesaikan tugas ini.  
+Tolong perbarui loading animation pada halaman Browse/Search History. Ganti animasi loading yang saat ini digunakan menjadi /app/src/main/res/raw/loading_cat.json. Sesuaikan ukuran, alignment, padding, dan scaling animasi agar tampil proporsional, modern, dan menyatu dengan desain halaman (tidak terlalu besar atau terlalu kecil). Pastikan implementasi menggunakan Lottie dengan benar, tidak menyebabkan compile error, tidak mengganggu layout Compose, dan animasi tetap berjalan dengan lancar. Jangan mengubah fitur atau logika lain selain bagian loading animation.
 
-​1. IMPRINT & UPGRADE UI SEARCH HISTORY
-​Silakan rancang dan tingkatkan UI Riwayat Pencarian (Search History) pada BrowseSourceScreen.kt agar tampilannya jauh lebih modern, interaktif, dan nyaman dipandang:
-​Desain Modern: Ubah tampilan daftar riwayat pencarian (misalnya menggunakan elemen chips yang dinamis atau desain list dengan ikon pencarian minimalis).
-​Tombol Clear History: Tambahkan tombol khusus untuk "Clear History" (Hapus Riwayat) di area riwayat pencarian tersebut. Pastikan letaknya intuitif dan mudah diakses oleh pengguna.
-​UX Enhancements: Tambahkan sedikit animasi transisi yang smooth ketika riwayat pencarian dihapus atau saat menu riwayat ini muncul.
-
-​2. INTEGRASI LOGIKA VIEWMODEL
-​Perbarui BrowseSourceViewModel.kt untuk menangani event dari tombol "Clear History".
-​Pastikan kamu menghubungkan fungsi penghapusan ini ke domain layer atau repositori terkait (misalnya interactor ClearSearchHistory atau fungsi database yang sesuai) agar data riwayat pencarian benar-benar terhapus secara permanen dari penyimpanan lokal.
-
-​3. AUTOMATED TESTING & EXECUTION
 ​Silakan analisis struktur kode yang ada dan lakukan refactoring/perbaikan secara bersih tanpa menyebabkan syntax/compile error.  
 ​Setelah selesai mengubah kode, jalankan perintah pengujian otomatis di terminal:
 ./gradlew testDebugUnitTest  
