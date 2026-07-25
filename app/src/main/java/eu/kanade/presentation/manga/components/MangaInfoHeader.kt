@@ -337,7 +337,8 @@ fun ExpandableMangaDescription(
                 // 2. Mengatur posisi susunan genre ketika sinopsis dibuka (expanded)
                 if (expanded) {
                     FlowRow(
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
                         // Jika expanded = true, susunan tag berpindah ke tengah layar (Center)
                         horizontalArrangement = Arrangement.Center, 
                         verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall)
@@ -391,7 +392,13 @@ private fun MangaAndSourceTitlesLarge(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         MangaCover.Book(
-            modifier = Modifier.fillMaxWidth(0.65f),
+            modifier = Modifier
+                .fillMaxWidth(0.45f)
+                .shadow(
+                    elevation = 8.dp, // Memberikan bayangan kedalaman
+                    shape = MaterialTheme.shapes.medium // Mengikuti bentuk melengkung
+                )
+                .clip(MaterialTheme.shapes.medium), // Memotong sudut agar melengkung modern
             data = ImageRequest.Builder(LocalContext.current)
                 .data(manga)
                 .crossfade(true)
@@ -399,6 +406,7 @@ private fun MangaAndSourceTitlesLarge(
             contentDescription = stringResource(MR.strings.manga_cover),
             onClick = onCoverClick,
         )
+
         Spacer(modifier = Modifier.height(16.dp))
         MangaContentInfo(
             title = manga.title,
@@ -431,7 +439,12 @@ private fun MangaAndSourceTitlesSmall(
     ) {
         MangaCover.Book(
             modifier = Modifier
-                .fillMaxWidth(0.45f),
+                .fillMaxWidth(0.45f)
+                .shadow(
+                    elevation = 8.dp, // Memberikan bayangan kedalaman
+                    shape = MaterialTheme.shapes.medium // Mengikuti bentuk melengkung
+                )
+                .clip(MaterialTheme.shapes.medium), // Memotong sudut agar melengkung modern
             data = ImageRequest.Builder(LocalContext.current)
                 .data(manga)
                 .crossfade(true)
@@ -439,7 +452,7 @@ private fun MangaAndSourceTitlesSmall(
             contentDescription = stringResource(MR.strings.manga_cover),
             onClick = onCoverClick,
         )
-        
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(2.dp),
@@ -761,28 +774,21 @@ private fun RowScope.MangaActionButton(
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
 ) {
-    // Tombol menonjol menggunakan OutlinedButton dengan elevasi bayangan
-    androidx.compose.material3.OutlinedButton(
+    // Ubah ke FilledTonalButton untuk kesan modern yang menyatu dengan background
+    androidx.compose.material3.FilledTonalButton(
         onClick = onClick,
         modifier = Modifier.weight(1f),
-        shape = MaterialTheme.shapes.small,
-        colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
-            containerColor = MaterialTheme.colorScheme.surface, // Warna solid agar bayangan kontras
+        shape = MaterialTheme.shapes.medium, // Sudut melengkung modern
+        colors = androidx.compose.material3.ButtonDefaults.filledTonalButtonColors(
+            containerColor = color.copy(alpha = 0.1f), // Latar belakang transparan halus
             contentColor = color
         ),
-        border = androidx.compose.foundation.BorderStroke(
-            width = 1.dp,
-            color = color.copy(alpha = 0.25f)
-        ),
-        elevation = androidx.compose.material3.ButtonDefaults.buttonElevation(
-            defaultElevation = 3.dp, // Membuat tombol terasa naik menonjol
-            pressedElevation = 1.dp
-        ),
         contentPadding = PaddingValues(vertical = 10.dp)
+        // Hapus border dan elevation agar menjadi flat button yang bersih
     ) {
         Icon(
             imageVector = icon,
-            contentDescription = title, // Teks title dipindahkan ke deskripsi aksesibilitas sistem
+            contentDescription = title,
             tint = color,
             modifier = Modifier.size(22.dp),
         )

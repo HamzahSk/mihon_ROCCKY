@@ -844,7 +844,11 @@ private fun LazyListScope.sharedChapterItems(
                     } else {
                         null
                     },
-                    onCopyUrlClick = { onCopyChapterUrlClicked?.invoke(item.chapter) },
+                    onCopyUrlClick = if (!manga.isLocal()) {
+                        { onCopyChapterUrlClicked?.invoke(item.chapter) }
+                    } else {
+                        null
+                    },
                     onChapterSwipe = {
                         onChapterSwipe(item, it)
                     },
