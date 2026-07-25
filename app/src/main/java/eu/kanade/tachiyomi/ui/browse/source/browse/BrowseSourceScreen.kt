@@ -237,12 +237,21 @@ data class BrowseSourceScreen(
                         if (state.recommendations.isNotEmpty()) {
                             MangaCarouselRecommendations(
                                 mangas = state.recommendations,
-                                onMangaClick = { navigator.push(MangaScreen(it.id, true)) }
+                                mangaList = mangaList,
+                                onMangaClick = { manga ->
+                                    viewModel.onMangaClick(manga) { id ->
+                                        navigator.push(MangaScreen(id, true))
+                                    }
+                                }
                             )
                         } else {
                             MangaCarousel(
                                 mangaList = mangaList,
-                                onMangaClick = { navigator.push(MangaScreen(it.id, true)) }
+                                onMangaClick = { manga ->
+                                    viewModel.onMangaClick(manga) { id ->
+                                        navigator.push(MangaScreen(id, true))
+                                    }
+                                }
                             )
                         }
                     }
@@ -425,7 +434,6 @@ fun MangaCarousel(
     onMangaClick: (Manga) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Kita ambil maksimal 5 komik teratas dari data populer
     val itemCount = minOf(mangaList.itemCount, 5)
 
     if (itemCount > 0) {
@@ -440,7 +448,6 @@ fun MangaCarousel(
             contentPadding = PaddingValues(horizontal = 24.dp),
             pageSpacing = 12.dp
         ) { page ->
-            // Ambil flow-nya, lalu jadikan state agar nilainya bisa dibaca
             val mangaFlow = mangaList[page]
             val manga = mangaFlow?.collectAsState()?.value
 
@@ -455,16 +462,13 @@ fun MangaCarousel(
                     )
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        
-                        // Teks Judul Komik di dalam Carousel
                         AsyncImage(
-                            model = manga, // Base app Manga
+                            model = manga,
                             contentDescription = "Cover for ${manga.title}",
                             modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop // Agar gambar memenuhi ukuran Card
+                            contentScale = ContentScale.Crop
                         )
 
-                        // Teks Judul Komik di dalam Carousel
                         Text(
                             text = manga.title,
                             modifier = Modifier
@@ -483,6 +487,7 @@ fun MangaCarousel(
         }
     }
 }
+
 @Composable
 fun MangaCarouselRecommendations(
     mangas: List<Manga>,
