@@ -1,26 +1,17 @@
-Tolong perbaiki error crash dan redesain UI Carousel pada area Browse (BrowseSourceScreen.kt & BrowseSourceViewModel.kt). Boleh melakukan modifikasi pada file lain di luar area Browse hanya jika diperlukan untuk menyelesaikan tugas ini.
+Tolong perbaiki dan redesain bagian Search History pada area Browse (BrowseSourceScreen.kt & BrowseSourceViewModel.kt). Boleh melakukan modifikasi pada file lain di luar area Browse hanya jika diperlukan untuk menyelesaikan tugas ini.  
 
----
-### 1. MASALAH CRASH (FIX ERROR)
-Saat komik di Carousel diklik, aplikasi mengalami crash dengan error log berikut:
+​1. IMPRINT & UPGRADE UI SEARCH HISTORY
+​Silakan rancang dan tingkatkan UI Riwayat Pencarian (Search History) pada BrowseSourceScreen.kt agar tampilannya jauh lebih modern, interaktif, dan nyaman dipandang:
+​Desain Modern: Ubah tampilan daftar riwayat pencarian (misalnya menggunakan elemen chips yang dinamis atau desain list dengan ikon pencarian minimalis).
+​Tombol Clear History: Tambahkan tombol khusus untuk "Clear History" (Hapus Riwayat) di area riwayat pencarian tersebut. Pastikan letaknya intuitif dan mudah diakses oleh pengguna.
+​UX Enhancements: Tambahkan sedikit animasi transisi yang smooth ketika riwayat pencarian dihapus atau saat menu riwayat ini muncul.
 
-java.lang.Throwable: java.lang.NullPointerException: ResultSet returned null for mangas.sq:getMangaById
-	at rikka.sui.Sui.awaitAsOne(...)
-	at app.cash.sqldelight.async.coroutines.QueryExtensionsKt$awaitAsOne$1.invokeSuspend(...)
+​2. INTEGRASI LOGIKA VIEWMODEL
+​Perbarui BrowseSourceViewModel.kt untuk menangani event dari tombol "Clear History".
+​Pastikan kamu menghubungkan fungsi penghapusan ini ke domain layer atau repositori terkait (misalnya interactor ClearSearchHistory atau fungsi database yang sesuai) agar data riwayat pencarian benar-benar terhapus secara permanen dari penyimpanan lokal.
 
-Tolong selesaikan akar masalah dari error ini di level ViewModel dan Screen. Pastikan setiap data manga dari carousel disinkronkan/disimpan ke database lokal terlebih dahulu sebelum membuka halaman detail (MangaScreen) agar query SQLDelight tidak mengembalikan nilai null.
-
----
-### 2. IMPRINT & UPGRADE UI CAROUSEL
-Silakan rancang dan tingkatkan UI Carousel pada `BrowseSourceScreen.kt` agar tampilannya jauh lebih modern, impresif, dan nyaman dipandang:
-
-- Layout & Proporsi: Buat ukuran carousel lebih tinggi dan proporsional (mengikuti rasio sampul komik 2:3 / 3:4) agar thumbnail komik tampil utuh vertikal dan tidak terpotong secara tajam di bagian atas/bawah.
-- Immersive Header/Background: Buat tampilan carousel menyatu dengan bagian atas layar (full-bleed ke area status bar / top bar). Gunakan latar belakang poster/blur yang dinamis dari item carousel aktif dengan gradient overlay yang gelap/kontras agar judul dan navigasi tetap jelas terbaca.
-- Transition & Scroll: Atur agar perpindahan top bar saat di-scroll terasa mulus (smooth) dan alami.
-
----
-### 3. AUTOMATED TESTING & EXECUTION
-- Silakan analisis struktur kode yang ada dan lakukan refactoring/perbaikan secara bersih tanpa menyebabkan syntax/compile error.
-- Setelah selesai mengubah kode, jalankan perintah pengujian otomatis di terminal:
-  `./gradlew testDebugUnitTest`
-- Jika masih ada error atau kegagalan tes, perbaiki kodenya dan jalankan kembali sampai mendapatkan status BUILD SUCCESSFUL.
+​3. AUTOMATED TESTING & EXECUTION
+​Silakan analisis struktur kode yang ada dan lakukan refactoring/perbaikan secara bersih tanpa menyebabkan syntax/compile error.  
+​Setelah selesai mengubah kode, jalankan perintah pengujian otomatis di terminal:
+./gradlew testDebugUnitTest  
+​Jika masih ada error atau kegagalan tes, perbaiki kodenya dan jalankan kembali sampai mendapatkan status BUILD SUCCESSFUL.  
