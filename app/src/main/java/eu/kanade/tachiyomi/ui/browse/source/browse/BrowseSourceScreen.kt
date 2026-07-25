@@ -62,10 +62,11 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.LazyPagingItems
-
+import androidx.paging.LoadState
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.AsyncImage
@@ -442,6 +443,7 @@ fun MangaCarousel(
     modifier: Modifier = Modifier,
 ) {
     val itemCount = minOf(mangaList.itemCount, 5)
+    val isLoading = mangaList.loadState.refresh is LoadState.Loading
 
     if (itemCount > 0) {
         val pagerState = rememberPagerState(pageCount = { itemCount })
@@ -538,6 +540,18 @@ fun MangaCarousel(
                     }
                 }
             }
+        }
+    } else if (isLoading) {
+        // --- INI BAGIAN ANIMASI LOADING-NYA ---
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(320.dp), // Disamakan dengan tinggi carousel
+            contentAlignment = Alignment.Center // Biar loadingnya pas di tengah
+        ) {
+            CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }
