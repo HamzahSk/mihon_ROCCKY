@@ -165,11 +165,18 @@ data class BrowseSourceScreen(
         val recPagerState = rememberPagerState(pageCount = { recommendationsCount })
         val listPagerState = rememberPagerState(pageCount = { listCount })
 
-        val recManga = if (state.recommendations.isNotEmpty() && recPagerState.currentPage < state.recommendations.size) {
+        val recManga = if (
+            state.recommendations.isNotEmpty() && 
+            recPagerState.currentPage < state.recommendations.size
+        ) {
             state.recommendations[recPagerState.currentPage]
         } else null
         
-        val listManga = if (state.recommendations.isEmpty() && mangaList.itemCount > 0 && listPagerState.currentPage < mangaList.itemCount) {
+        val listManga = if (
+            state.recommendations.isEmpty() &&
+            mangaList.itemCount > 0 &&
+            listPagerState.currentPage < mangaList.itemCount
+        ) {
             mangaList.peek(listPagerState.currentPage)?.collectAsState()?.value
         } else null
 
