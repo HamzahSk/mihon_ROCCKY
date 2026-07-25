@@ -234,10 +234,17 @@ data class BrowseSourceScreen(
                             animationSpec = tween(durationMillis = 500)
                         )
                     ) {
-                        MangaCarousel(
-                            mangaList = mangaList,
-                            onMangaClick = { navigator.push(MangaScreen(it.id, true)) }
-                        )
+                        if (state.recommendations.isNotEmpty()) {
+                            MangaCarouselRecommendations(
+                                mangas = state.recommendations,
+                                onMangaClick = { navigator.push(MangaScreen(it.id, true)) }
+                            )
+                        } else {
+                            MangaCarousel(
+                                mangaList = mangaList,
+                                onMangaClick = { navigator.push(MangaScreen(it.id, true)) }
+                            )
+                        }
                     }
 
                     Row(
@@ -471,6 +478,60 @@ fun MangaCarousel(
                             overflow = TextOverflow.Ellipsis
                         )
                     }
+                }
+            }
+        }
+    }
+}
+@Composable
+fun MangaCarouselRecommendations(
+    mangas: List<Manga>,
+    onMangaClick: (Manga) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val itemCount = minOf(mangas.size, 5)
+    if (itemCount > 0) {
+        val pagerState = rememberPagerState(pageCount = { itemCount })
+
+        HorizontalPager(
+            state = pagerState,
+            modifier = modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .padding(vertical = 8.dp),
+            contentPadding = PaddingValues(horizontal = 24.dp),
+            pageSpacing = 12.dp
+        ) { page ->
+            val manga = mangas[page]
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onMangaClick(manga) },
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    AsyncImage(
+                        model = manga,
+                        contentDescription = "Cover for ${manga.title}",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+
+                    Text(
+                        text = manga.title,
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .background(Color.Black.copy(alpha = 0.6f))
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                            .fillMaxWidth(),
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         }

@@ -34,6 +34,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.core.viewmodel.StateViewModel
+import mihon.domain.manga.model.toDomainManga
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.mapAsCheckboxState
 import tachiyomi.core.common.util.lang.launchIO
@@ -255,9 +256,9 @@ class BrowseSourceViewModel(
         viewModelScope.launchIO {
             try {
                 val catalogueSource = source as? eu.kanade.tachiyomi.source.CatalogueSource
+
                 // Read last 5 history rows for this source to collect genres
                 val historyGenres: List<List<String>> = try {
-                    // Use sqldelight generated query; map rows to their genres list
                     database.historyQueries.getHistoryBySource(sourceId, 5L) { _id: Long, chapter_id: Long, last_read: java.util.Date?, time_read: Long, genres: kotlin.collections.List<String>? ->
                         genres ?: emptyList()
                     }.awaitAsList()
@@ -273,7 +274,8 @@ class BrowseSourceViewModel(
                     .map { it.lowercase() }
 
                 if (flatGenres.isEmpty()) {
-                    // No genres to base on; fallback to nothing
+                    // No genres to base on; ensure recommendations is empty
+                    mutableState.update { it.copy(recommendations = emptyList()) }
                     return@launchIO
                 }
 
@@ -284,79 +286,107 @@ class BrowseSourceViewModel(
                     .map { it.key }
                     .take(5)
 
-                if (catalogueSource == null) {
-                    // If not a catalogue source, fallback to textual search using top genres
-                    val query = topGenres.joinToString(" ")
-                    search(query)
-                    return@launchIO
-                }
-
-                // Try to apply filters progressively until we have enough results
-                var desired = 5
+                val desired = 5
+                val collected = linkedMapOf<String, Manga>()
                 var activeGenres = topGenres.toMutableList()
 
-                var appliedFilters: FilterList? = null
+                // Helper to add SManga results to collected map as domain Manga
+                fun addSmangas(smangas: List<eu.kanade.tachiyomi.source.model.SManga>?) {
+                    if (smangas == null) return
+                    for (s in smangas) {
+                        try {
+                            val dm = s.toDomainManga(source.id)
+                            if (!collected.containsKey(dm.url)) {
+                                collected[dm.url] = dm
+                            }
+                        } catch (_: Exception) {
+                            // ignore mapping errors
+                        }
+                    }
+                }
 
-                while (activeGenres.isNotEmpty()) {
-                    val filterList = catalogueSource.getFilterList()
-                    var appliedCount = 0
+                if (catalogueSource != null) {
+                    // Try applying filters based on genres and progressively drop least frequent
+                    while (activeGenres.isNotEmpty() && collected.size < desired) {
+                        val filterList = catalogueSource.getFilterList()
+                        var appliedCount = 0
 
-                    for (sourceFilter in filterList) {
-                        if (sourceFilter is SourceModelFilter.Group<*>) {
-                            for (filter in sourceFilter.state) {
-                                if (filter is SourceModelFilter<*> && activeGenres.any { ag -> ag.equals(filter.name, true) }) {
-                                    when (filter) {
-                                        is SourceModelFilter.TriState -> filter.state = 1
-                                        is SourceModelFilter.CheckBox -> filter.state = true
-                                        else -> {}
+                        for (sourceFilter in filterList) {
+                            if (sourceFilter is SourceModelFilter.Group<*>) {
+                                for (filter in sourceFilter.state) {
+                                    if (filter is SourceModelFilter<*> && activeGenres.any { ag -> ag.equals(filter.name, true) }) {
+                                        when (filter) {
+                                            is SourceModelFilter.TriState -> filter.state = 1
+                                            is SourceModelFilter.CheckBox -> filter.state = true
+                                            else -> {}
+                                        }
+                                        appliedCount++
                                     }
+                                }
+                            } else if (sourceFilter is SourceModelFilter.Select<*>) {
+                                val index = sourceFilter.values.filterIsInstance<String>()
+                                    .indexOfFirst { activeGenres.any { ag -> ag.equals(it, true) } }
+                                if (index != -1) {
+                                    sourceFilter.state = index
                                     appliedCount++
                                 }
                             }
-                        } else if (sourceFilter is SourceModelFilter.Select<*>) {
-                            val index = sourceFilter.values.filterIsInstance<String>()
-                                .indexOfFirst { activeGenres.any { ag -> ag.equals(it, true) } }
-                            if (index != -1) {
-                                sourceFilter.state = index
-                                appliedCount++
-                            }
                         }
-                    }
 
-                    if (appliedCount > 0) {
-                        // See how many results this filter produces (first page)
                         val textQuery = if (appliedCount == 0 && activeGenres.size == 1) activeGenres.first() else ""
+
                         val searchPage = try {
                             catalogueSource.getSearchManga(1, textQuery, filterList)
                         } catch (e: Exception) {
                             null
                         }
 
-                        val results = searchPage?.mangas?.size ?: 0
-                        if (results >= desired) {
-                            appliedFilters = filterList
-                            break
+                        addSmangas(searchPage?.mangas)
+
+                        if (collected.size >= desired) break
+
+                        // Drop least frequent and try again
+                        activeGenres = if (activeGenres.size > 1) activeGenres.dropLast(1).toMutableList() else mutableListOf()
+                    }
+
+                    // Fallback: if still not enough, combine popular and latest
+                    if (collected.size < desired) {
+                        try {
+                            val popular = catalogueSource.getPopularManga(1).mangas
+                            addSmangas(popular)
+                        } catch (_: Exception) {}
+
+                        if (collected.size < desired) {
+                            try {
+                                val latest = catalogueSource.getLatestUpdates(1).mangas
+                                addSmangas(latest)
+                            } catch (_: Exception) {}
                         }
                     }
-
-                    // Reduce active genres and try again
-                    activeGenres = if (activeGenres.size > 1) activeGenres.dropLast(1).toMutableList() else mutableListOf()
-                }
-
-                if (appliedFilters != null) {
-                    // Apply the successful filters to the UI listing
-                    mutableState.update {
-                        it.copy(
-                            filters = appliedFilters,
-                            listing = Listing.Search(query = null, filters = appliedFilters),
-                            toolbarQuery = null,
-                        )
-                    }
                 } else {
-                    // Fallback: use textual search combining top genres
+                    // Not a catalogue source: fallback to textual search using top genres
                     val query = topGenres.joinToString(" ")
-                    search(query)
+                    try {
+                        val page = source.getSearchManga(1, query, FilterList())
+                        addSmangas(page.mangas)
+                    } catch (_: Exception) {}
+
+                    // And combine popular/latest if available
+                    try {
+                        val popular = source.getPopularManga(1).mangas
+                        addSmangas(popular)
+                    } catch (_: Exception) {}
+
+                    try {
+                        if (source.supportsLatest) {
+                            val latest = source.getLatestUpdates(1).mangas
+                            addSmangas(latest)
+                        }
+                    } catch (_: Exception) {}
                 }
+
+                val finalList = collected.values.take(desired)
+                mutableState.update { it.copy(recommendations = finalList) }
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR, e) { "Failed to compute recommendations" }
             }
@@ -501,6 +531,9 @@ class BrowseSourceViewModel(
         val filters: FilterList = FilterList(),
         val toolbarQuery: String? = null,
         val dialog: Dialog? = null,
+        // Recommendations derived from recent history; stored separately so they don't
+        // modify the main listing/filters state when computed.
+        val recommendations: List<Manga> = emptyList(),
     ) {
         val isUserQuery get() = listing is Listing.Search && !listing.query.isNullOrEmpty()
     }
