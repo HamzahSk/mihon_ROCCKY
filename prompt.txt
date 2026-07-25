@@ -1,37 +1,26 @@
-Tolong perbaiki dan tingkatkan UI pada BrowseSourceScreen.kt dan BrowseSourceViewModel.kt berdasarkan instruksi detail di bawah ini.
+Tolong perbaiki error crash dan redesain UI Carousel pada area Browse (BrowseSourceScreen.kt & BrowseSourceViewModel.kt). Boleh melakukan modifikasi pada file lain di luar area Browse hanya jika diperlukan untuk menyelesaikan tugas ini.
 
 ---
-### 1. PERINGATAN & BATASAN
-- JANGAN mengubah file apa pun di luar area Browse (seperti MangaViewModel.kt). Fokus HANYA pada `BrowseSourceScreen.kt` dan `BrowseSourceViewModel.kt`.
+### 1. MASALAH CRASH (FIX ERROR)
+Saat komik di Carousel diklik, aplikasi mengalami crash dengan error log berikut:
+
+java.lang.Throwable: java.lang.NullPointerException: ResultSet returned null for mangas.sq:getMangaById
+	at rikka.sui.Sui.awaitAsOne(...)
+	at app.cash.sqldelight.async.coroutines.QueryExtensionsKt$awaitAsOne$1.invokeSuspend(...)
+
+Tolong selesaikan akar masalah dari error ini di level ViewModel dan Screen. Pastikan setiap data manga dari carousel disinkronkan/disimpan ke database lokal terlebih dahulu sebelum membuka halaman detail (MangaScreen) agar query SQLDelight tidak mengembalikan nilai null.
 
 ---
-### 2. FIX NPE & SYNTAX ERROR
-1. **Fix NullPointerException (Manga Click):**
-   - Aplikasi crash saat komik di Carousel diklik (`ResultSet returned null for mangas.sq:getMangaById`) karena data dari network belum masuk ke DB lokal.
-   - Di `BrowseSourceViewModel.kt`, pastikan dependency `networkToLocalManga: NetworkToLocalManga` ter-inject.
-   - Buat fungsi helper `onMangaClick(manga: Manga, onClick: (Long) -> Unit)` yang memanggil `val localManga = networkToLocalManga.await(manga)` di IO scope sebelum mengirim ID ke callback `onClick(localManga.id)`.
-   - Di `BrowseSourceScreen.kt`, gunakan `viewModel.onMangaClick(manga) { id -> navigator.push(MangaScreen(id, true)) }` pada listener klik carousel.
+### 2. IMPRINT & UPGRADE UI CAROUSEL
+Silakan rancang dan tingkatkan UI Carousel pada `BrowseSourceScreen.kt` agar tampilannya jauh lebih modern, impresif, dan nyaman dipandang:
 
-2. **Fix Syntax/Structure Error di `BrowseSourceScreen.kt`:**
-   - Rapikan struktur penutup kelas `BrowseSourceScreen`.
-   - Pastikan dua composable `MangaCarousel` dan `MangaCarouselRecommendations` berada di luar kelas `BrowseSourceScreen` (top-level functions) agar tidak terjadi syntax/compile error.
+- Layout & Proporsi: Buat ukuran carousel lebih tinggi dan proporsional (mengikuti rasio sampul komik 2:3 / 3:4) agar thumbnail komik tampil utuh vertikal dan tidak terpotong secara tajam di bagian atas/bawah.
+- Immersive Header/Background: Buat tampilan carousel menyatu dengan bagian atas layar (full-bleed ke area status bar / top bar). Gunakan latar belakang poster/blur yang dinamis dari item carousel aktif dengan gradient overlay yang gelap/kontras agar judul dan navigasi tetap jelas terbaca.
+- Transition & Scroll: Atur agar perpindahan top bar saat di-scroll terasa mulus (smooth) dan alami.
 
 ---
-### 3. UPGRADE UI CAROUSEL (Full-Bleed Header & Tall Aspect Ratio)
-Ubah tampilan Carousel Rekomendasi di `BrowseSourceScreen.kt` agar lebih tinggi dan tidak memotong thumbnail:
-1. **Carousel Lebih Tinggi Ke Bawah (Tall/Vertical Ratio):**
-   - Tingkatkan tinggi Carousel (ubah dari `200.dp` menjadi sekitar `320.dp` hingga `360.dp`).
-   - Atur proporsi gambar poster agar mengikuti aspek rasio sampul komik (sekitar `2:3` atau `3:4`) sehingga gambar thumbnail komik tampil lebih utuh vertikal dan TIDAK terpotong di bagian atas/bawahnya.
-2. **Full-Bleed Top Header:**
-   - Buat Carousel berada di posisi paling atas layar (menyatu/meliputi area status bar & top app bar) saat di-scroll ke posisi teratas.
-   - Saat halaman di-scroll ke bawah, Top Bar bertransisi kembali ke tampilan normal (solid background) secara mulus.
-3. **Background & Overlay Imersif:**
-   - Gunakan gambar cover/thumbnail dari manga terpilih (item aktif di Carousel) sebagai latar belakang besar yang memanjang hingga ke atas layar.
-   - Lapisi latar belakang tersebut dengan efek gradient overlay gelap di bagian bawah dan atas agar teks judul ("Shinigami", dll.) serta tombol navigasi tetap terbaca jelas (high contrast).
-
----
-### 4. EXECUTION & AUTOMATED TESTING
-- Langsung kerjakan perbaikan dan perubahan UI ini tanpa meminta konfirmasi ulang.
-- Setelah kode diperbarui, jalankan pengujian otomatis via terminal:
+### 3. AUTOMATED TESTING & EXECUTION
+- Silakan analisis struktur kode yang ada dan lakukan refactoring/perbaikan secara bersih tanpa menyebabkan syntax/compile error.
+- Setelah selesai mengubah kode, jalankan perintah pengujian otomatis di terminal:
   `./gradlew testDebugUnitTest`
-- Jika ditemukan error saat testing atau build, perbaiki kodenya dan jalankan test kembali sampai mendapatkan status BUILD SUCCESSFUL.
+- Jika masih ada error atau kegagalan tes, perbaiki kodenya dan jalankan kembali sampai mendapatkan status BUILD SUCCESSFUL.
