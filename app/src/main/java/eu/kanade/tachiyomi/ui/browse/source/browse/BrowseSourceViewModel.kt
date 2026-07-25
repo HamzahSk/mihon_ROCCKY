@@ -182,6 +182,9 @@ class BrowseSourceViewModel(
 
     fun setListing(listing: Listing) {
         mutableState.update { it.copy(listing = listing, toolbarQuery = null) }
+        if (listing !is Listing.Search) {
+            applyRecommendationsFromHistory()
+        }
     }
 
     fun setFilters(filters: FilterList) {
@@ -203,6 +206,7 @@ class BrowseSourceViewModel(
                     filters = filters ?: input.filters,
                 ),
                 toolbarQuery = query ?: input.query,
+                recommendations = emptyList(),
             )
         }
 
@@ -259,6 +263,7 @@ class BrowseSourceViewModel(
                 filters = defaultFilters,
                 listing = listing,
                 toolbarQuery = listing.query,
+                recommendations = emptyList(),
             )
         }
     }
