@@ -34,4 +34,12 @@ class SearchHistoryRepositoryImpl(
             // Tangani error
         }
     }
+
+    override suspend fun deleteAllBySource(sourceId: Long) {
+        try {
+            database.search_historyQueries.deleteAllBySource(sourceId)
+        } catch (e: Exception) {
+            // Tangani error
+        }
+    }
 }

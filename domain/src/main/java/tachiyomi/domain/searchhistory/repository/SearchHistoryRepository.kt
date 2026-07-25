@@ -9,4 +9,6 @@ interface SearchHistoryRepository {
   suspend fun insertSearchHistory(sourceId: Long, query: String)
 
   suspend fun deleteSearchHistory(sourceId: Long, query: String)
+
+  suspend fun deleteAllBySource(sourceId: Long)
 }

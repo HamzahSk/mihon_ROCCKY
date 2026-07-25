@@ -226,6 +226,7 @@ data class BrowseSourceScreen(
                         onHelpClick = onHelpClick,
                         onSettingsClick = { navigator.push(SourcePreferencesScreen(sourceId)) },
                         onSearch = viewModel::search,
+                        onClearHistory = { viewModel.clearSearchHistory() },
                         recentSearches = searchHistory,
                     )
                     

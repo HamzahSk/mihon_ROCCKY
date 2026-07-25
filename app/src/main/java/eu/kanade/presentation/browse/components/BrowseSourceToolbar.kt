@@ -1,6 +1,9 @@
 package eu.kanade.presentation.browse.components
 
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,24 +12,26 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.automirrored.filled.ViewList
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.ViewModule
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.AppBarTitle
@@ -54,10 +59,9 @@ fun BrowseSourceToolbar(
     onSettingsClick: () -> Unit,
     onSearch: (String) -> Unit,
     recentSearches: List<String> = emptyList(),
-    onClearHistory: (() -> Unit)? = null,
+    onClearHistory: () -> Unit = {},
     scrollBehavior: TopAppBarScrollBehavior? = null,
-)
-{
+) {
     // Avoid capturing unstable source in actions lambda
     val title = source?.name
     val isLocalSource = source is LocalSource
@@ -142,53 +146,49 @@ fun BrowseSourceToolbar(
         scrollBehavior = scrollBehavior,
     )
 
-    // Render recent searches as suggestion chips below toolbar when typing
-    if (searchQuery != null && recentSearches.isNotEmpty()) {
+    // Modern search history section with chips and clear button
+    AnimatedVisibility(
+        visible = searchQuery != null && recentSearches.isNotEmpty(),
+        enter = expandVertically(animationSpec = tween(durationMillis = 300)),
+        exit = shrinkVertically(animationSpec = tween(durationMillis = 300)),
+    ) {
         Column {
             Row(
                 modifier = Modifier
                     .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = MaterialTheme.padding.small)
-                    .animateContentSize(),
+                    .padding(horizontal = MaterialTheme.padding.small),
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
             ) {
                 recentSearches.forEach { s ->
-                    FilterChip(
-                        selected = false,
+                    SuggestionChip(
                         onClick = { onSearch(s) },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Outlined.Search,
-                                contentDescription = null,
-                                modifier = Modifier.size(FilterChipDefaults.IconSize),
-                            )
-                        },
                         label = {
                             Text(
                                 text = s,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
                                 style = MaterialTheme.typography.bodySmall,
+                                maxLines = 1,
                             )
                         },
-                        colors = FilterChipDefaults.filterChipColors(),
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Filled.History,
+                                contentDescription = null,
+                                modifier = Modifier.size(SuggestionChipDefaults.IconSize),
+                            )
+                        },
                     )
                 }
 
-                // Clear history action as a chip-like icon button at the end
-                onClearHistory?.let {
-                    FilterChip(
-                        selected = false,
-                        onClick = it,
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Outlined.Delete,
-                                contentDescription = stringResource(MR.strings.pref_clear_history),
-                                modifier = Modifier.size(FilterChipDefaults.IconSize),
-                            )
-                        },
-                        label = { Text(text = stringResource(MR.strings.pref_clear_history)) },
-                        colors = FilterChipDefaults.filterChipColors(),
+                // Clear history button
+                TextButton(
+                    onClick = onClearHistory,
+                    modifier = Modifier.padding(start = 4.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.DeleteSweep,
+                        contentDescription = stringResource(MR.strings.pref_clear_history),
+                        modifier = Modifier.size(18.dp),
                     )
                 }
             }
