@@ -48,6 +48,7 @@ import tachiyomi.domain.chapter.interactor.SetMangaDefaultChapterFlags
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.manga.interactor.GetDuplicateLibraryManga
 import tachiyomi.domain.manga.interactor.GetManga
+import tachiyomi.domain.manga.interactor.NetworkToLocalManga // <-- Import baru ditambahkan
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.manga.model.MangaWithChapterCount
 import tachiyomi.domain.manga.model.toMangaUpdate
@@ -80,6 +81,7 @@ class BrowseSourceViewModel(
     private val getIncognitoState: GetIncognitoState = Injekt.get(),
     // database for accessing history rows (genres)
     private val database: Database = Injekt.get(),
+    private val networkToLocalManga: NetworkToLocalManga = Injekt.get(), // <-- Interactor baru buat nge-fix error
 ): StateViewModel<BrowseSourceViewModel.State>(State(Listing.valueOf(listingQuery))) {
 
     companion object {
@@ -127,9 +129,6 @@ class BrowseSourceViewModel(
         }
     }
 
-    /**
-     * FLOW of Pager flow tied to [State.listing]
-     */
     private val hideInLibraryItems = sourcePreferences.hideInLibraryItems.get()
     val mangaPagerFlowFlow = state.map { it.listing }
         .distinctUntilChanged()
@@ -188,7 +187,6 @@ class BrowseSourceViewModel(
             )
         }
 
-        // Persist search query to history, unless incognito or blank
         if (!query.isNullOrBlank()) {
             viewModelScope.launch {
                 try {
@@ -245,19 +243,11 @@ class BrowseSourceViewModel(
         }
     }
 
-    /**
-     * Build and apply recommended filters based on the latest history rows for this source.
-     * - Use up to the last 5 history rows from this source and read their stored genres.
-     * - Count genre frequency and pick up to 5 most common genres.
-     * - Attempt filtering with all chosen genres; if results are insufficient, drop least frequent genre and retry.
-     * - If source does not support genre filters, fallback to a textual search using the top genres joined.
-     */
     fun applyRecommendationsFromHistory() {
         viewModelScope.launchIO {
             try {
                 val catalogueSource = source as? eu.kanade.tachiyomi.source.CatalogueSource
 
-                // Read last 5 history rows for this source to collect genres
                 val historyGenres: List<List<String>> = try {
                     database.historyQueries.getHistoryBySource(sourceId, 5L) { _id: Long, chapter_id: Long, last_read: java.util.Date?, time_read: Long, genres: kotlin.collections.List<String>? ->
                         genres ?: emptyList()
@@ -274,12 +264,10 @@ class BrowseSourceViewModel(
                     .map { it.lowercase() }
 
                 if (flatGenres.isEmpty()) {
-                    // No genres to base on; ensure recommendations is empty
                     mutableState.update { it.copy(recommendations = emptyList()) }
                     return@launchIO
                 }
 
-                // Count frequencies and select up to top 5
                 val topGenres = flatGenres.groupingBy { it }.eachCount()
                     .entries
                     .sortedByDescending { it.value }
@@ -290,14 +278,17 @@ class BrowseSourceViewModel(
                 val collected = linkedMapOf<String, Manga>()
                 var activeGenres = topGenres.toMutableList()
 
-                // Helper to add SManga results to collected map as domain Manga
-                fun addSmangas(smangas: List<eu.kanade.tachiyomi.source.model.SManga>?) {
+                // UPDATE: Fungsi addSmangas diubah jadi suspend fun dan pakai networkToLocalManga
+                suspend fun addSmangas(smangas: List<eu.kanade.tachiyomi.source.model.SManga>?) {
                     if (smangas == null) return
                     for (s in smangas) {
                         try {
-                            val dm = s.toDomainManga(source.id)
-                            if (!collected.containsKey(dm.url)) {
-                                collected[dm.url] = dm
+                            val networkManga = s.toDomainManga(source.id)
+                            // Menyimpan/mengambil data dari database agar dapet ID yang valid
+                            val localManga = networkToLocalManga.await(networkManga)
+                            
+                            if (!collected.containsKey(localManga.url)) {
+                                collected[localManga.url] = localManga
                             }
                         } catch (_: Exception) {
                             // ignore mapping errors
@@ -306,7 +297,6 @@ class BrowseSourceViewModel(
                 }
 
                 if (catalogueSource != null) {
-                    // Try applying filters based on genres and progressively drop least frequent
                     while (activeGenres.isNotEmpty() && collected.size < desired) {
                         val filterList = catalogueSource.getFilterList()
                         var appliedCount = 0
@@ -345,11 +335,9 @@ class BrowseSourceViewModel(
 
                         if (collected.size >= desired) break
 
-                        // Drop least frequent and try again
                         activeGenres = if (activeGenres.size > 1) activeGenres.dropLast(1).toMutableList() else mutableListOf()
                     }
 
-                    // Fallback: if still not enough, combine popular and latest
                     if (collected.size < desired) {
                         try {
                             val popular = catalogueSource.getPopularManga(1).mangas
@@ -364,14 +352,12 @@ class BrowseSourceViewModel(
                         }
                     }
                 } else {
-                    // Not a catalogue source: fallback to textual search using top genres
                     val query = topGenres.joinToString(" ")
                     try {
                         val page = source.getSearchManga(1, query, FilterList())
                         addSmangas(page.mangas)
                     } catch (_: Exception) {}
 
-                    // And combine popular/latest if available
                     try {
                         val popular = source.getPopularManga(1).mangas
                         addSmangas(popular)
@@ -393,11 +379,6 @@ class BrowseSourceViewModel(
         }
     }
 
-    /**
-     * Adds or removes a manga from the library.
-     *
-     * @param manga the manga to update.
-     */
     fun changeMangaFavorite(manga: Manga) {
         viewModelScope.launch {
             var new = manga.copy(
@@ -426,21 +407,16 @@ class BrowseSourceViewModel(
             val defaultCategory = categories.find { it.id == defaultCategoryId.toLong() }
 
             when {
-                // Default category set
                 defaultCategory != null -> {
                     moveMangaToCategories(manga, defaultCategory)
-
                     changeMangaFavorite(manga)
                 }
 
-                // Automatic 'Default' or no categories
                 defaultCategoryId == 0 || categories.isEmpty() -> {
                     moveMangaToCategories(manga)
-
                     changeMangaFavorite(manga)
                 }
 
-                // Choose a category
                 else -> {
                     val preselectedIds = getCategories.await(manga.id).map { it.id }
                     setDialog(
@@ -454,11 +430,6 @@ class BrowseSourceViewModel(
         }
     }
 
-    /**
-     * Get user categories.
-     *
-     * @return List of categories, not including the default category
-     */
     suspend fun getCategories(): List<Category> {
         return getCategories.subscribe()
             .firstOrNull()
@@ -508,7 +479,7 @@ class BrowseSourceViewModel(
                 return when (query) {
                     GetRemoteManga.QUERY_POPULAR -> Popular
                     GetRemoteManga.QUERY_LATEST -> Latest
-                    else -> Search(query = query, filters = FilterList()) // filters are filled in later
+                    else -> Search(query = query, filters = FilterList())
                 }
             }
         }
@@ -531,11 +502,8 @@ class BrowseSourceViewModel(
         val filters: FilterList = FilterList(),
         val toolbarQuery: String? = null,
         val dialog: Dialog? = null,
-        // Recommendations derived from recent history; stored separately so they don't
-        // modify the main listing/filters state when computed.
         val recommendations: List<Manga> = emptyList(),
     ) {
         val isUserQuery get() = listing is Listing.Search && !listing.query.isNullOrEmpty()
     }
 }
-

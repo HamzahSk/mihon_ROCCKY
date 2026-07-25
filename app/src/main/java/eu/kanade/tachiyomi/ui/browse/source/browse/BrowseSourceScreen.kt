@@ -3,6 +3,8 @@ package eu.kanade.tachiyomi.ui.browse.source.browse
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
@@ -25,6 +27,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -50,6 +53,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
@@ -153,16 +158,31 @@ data class BrowseSourceScreen(
 
         var isCarouselVisible by remember { mutableStateOf(true) }
         
-        // --- UPDATE KODE NESTED SCROLL CONNECTION ---
+        // --- LOGIC BUAT NGE-TRACK GAMBAR MANGA YG LAGI AKTIF ---
+        val recommendationsCount = minOf(state.recommendations.size, 5)
+        val listCount = minOf(mangaList.itemCount, 5).coerceAtLeast(0)
+        
+        val recPagerState = rememberPagerState(pageCount = { recommendationsCount })
+        val listPagerState = rememberPagerState(pageCount = { listCount })
+
+        val recManga = if (state.recommendations.isNotEmpty() && recPagerState.currentPage < state.recommendations.size) {
+            state.recommendations[recPagerState.currentPage]
+        } else null
+        
+        val listManga = if (state.recommendations.isEmpty() && mangaList.itemCount > 0 && listPagerState.currentPage < mangaList.itemCount) {
+            mangaList.peek(listPagerState.currentPage)?.collectAsState()?.value
+        } else null
+
+        val currentManga = recManga ?: listManga
+        // --------------------------------------------------------
+
         val nestedScrollConnection = remember {
             object : NestedScrollConnection {
                 override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                     val delta = available.y
                     if (delta < -10f) {
-                        // Scroll ke bawah -> list naik -> langsung sembunyikan carousel
                         isCarouselVisible = false
                     }
-                    // Kita hapus kondisi "else if (delta > 10f)" dari sini
                     return Offset.Zero
                 }
 
@@ -171,8 +191,6 @@ data class BrowseSourceScreen(
                     available: Offset,
                     source: NestedScrollSource
                 ): Offset {
-                    // available.y > 0f artinya user mencoba scroll ke atas (tarik layar ke bawah),
-                    // tetapi list komik sudah tidak bisa bergerak lagi alias MENTOK di paling atas.
                     if (available.y > 0f) {
                         isCarouselVisible = true
                     }
@@ -180,7 +198,6 @@ data class BrowseSourceScreen(
                 }
             }
         }
-        // --------------------------------------------
 
         val onHelpClick = { uriHandler.openUri(LocalSource.HELP_URL) }
         val onWebViewClick = f@{
@@ -195,7 +212,6 @@ data class BrowseSourceScreen(
         }
 
         LaunchedEffect(viewModel.source) {
-            // Trigger recommendations based on recent history for this source
             if (viewModel.source !is StubSource) {
                 viewModel.applyRecommendationsFromHistory()
             }
@@ -205,112 +221,153 @@ data class BrowseSourceScreen(
         Scaffold(
             modifier = Modifier.nestedScroll(nestedScrollConnection),
             topBar = {
-                Column(
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.surface)
-                        .pointerInput(Unit) {},
-                ) {
-                                
-                    BrowseSourceToolbar(
-                        searchQuery = state.toolbarQuery,
-                        onSearchQueryChange = viewModel::setToolbarQuery,
-                        source = viewModel.source,
-                        displayMode = viewModel.displayMode,
-                        onDisplayModeChange = { viewModel.displayMode = it },
-                        navigateUp = navigateUp,
-                        onWebViewClick = onWebViewClick,
-                        onHelpClick = onHelpClick,
-                        onSettingsClick = { navigator.push(SourcePreferencesScreen(sourceId)) },
-                        onSearch = viewModel::search,
-                        recentSearches = searchHistory,
-                    )
+                // BOX BUAT BIKIN LAYER BACKGROUND + FOREGROUND
+                Box(modifier = Modifier.fillMaxWidth()) {
                     
+                    // LAYER 1: Background Image Hero (Thumbnails)
                     AnimatedVisibility(
-                        visible = isCarouselVisible,
-                        enter = expandVertically(
-                            animationSpec = tween(durationMillis = 500)
-                        ),
-                        exit = shrinkVertically(
-                            animationSpec = tween(durationMillis = 500)
-                        )
+                        visible = isCarouselVisible && currentManga != null,
+                        enter = fadeIn(animationSpec = tween(500)),
+                        exit = fadeOut(animationSpec = tween(500)),
+                        modifier = Modifier.matchParentSize()
                     ) {
-                        if (state.recommendations.isNotEmpty()) {
-                            MangaCarouselRecommendations(
-                                mangas = state.recommendations,
-                                onMangaClick = { navigator.push(MangaScreen(it.id, true)) }
+                        if (currentManga != null) {
+                            AsyncImage(
+                                model = currentManga,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .alpha(0.8f) // Diterangin dikit biar gak terlalu gelap
                             )
-                        } else {
-                            MangaCarousel(
-                                mangaList = mangaList,
-                                onMangaClick = { navigator.push(MangaScreen(it.id, true)) }
+                            // Gradient Scrim biar text di Toolbar tetep jelas dibaca!
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        Brush.verticalGradient(
+                                            colors = listOf(
+                                                MaterialTheme.colorScheme.surface.copy(alpha = 0.9f), // Atas gelap
+                                                MaterialTheme.colorScheme.surface.copy(alpha = 0.3f), // Tengah transparan
+                                                MaterialTheme.colorScheme.surface                      // Bawah nge-blend
+                                            )
+                                        )
+                                    )
                             )
                         }
                     }
 
-                    Row(
+                    // LAYER 2: Konten Asli (Toolbar, Carousel, Chips)
+                    Column(
                         modifier = Modifier
-                            .horizontalScroll(rememberScrollState())
-                            .padding(horizontal = MaterialTheme.padding.small),
-                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                            .background(if (isCarouselVisible) Color.Transparent else MaterialTheme.colorScheme.surface)
+                            .pointerInput(Unit) {},
                     ) {
-                        FilterChip(
-                            selected = state.listing == Listing.Popular,
-                            onClick = {
-                                viewModel.resetFilters()
-                                viewModel.setListing(Listing.Popular)
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Outlined.Favorite,
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .size(FilterChipDefaults.IconSize),
+                        // Hack biar BrowseSourceToolbar jadi transparan kalau lg full atas
+                        val currentColorScheme = MaterialTheme.colorScheme
+                        val toolbarColorScheme = if (isCarouselVisible) {
+                            currentColorScheme.copy(
+                                surface = Color.Transparent,
+                                background = Color.Transparent,
+                                surfaceVariant = Color.Transparent
+                            )
+                        } else currentColorScheme
+
+                        MaterialTheme(colorScheme = toolbarColorScheme) {
+                            BrowseSourceToolbar(
+                                searchQuery = state.toolbarQuery,
+                                onSearchQueryChange = viewModel::setToolbarQuery,
+                                source = viewModel.source,
+                                displayMode = viewModel.displayMode,
+                                onDisplayModeChange = { viewModel.displayMode = it },
+                                navigateUp = navigateUp,
+                                onWebViewClick = onWebViewClick,
+                                onHelpClick = onHelpClick,
+                                onSettingsClick = { navigator.push(SourcePreferencesScreen(sourceId)) },
+                                onSearch = viewModel::search,
+                                recentSearches = searchHistory,
+                            )
+                        }
+                        
+                        AnimatedVisibility(
+                            visible = isCarouselVisible,
+                            enter = expandVertically(
+                                animationSpec = tween(durationMillis = 500)
+                            ),
+                            exit = shrinkVertically(
+                                animationSpec = tween(durationMillis = 500)
+                            )
+                        ) {
+                            if (state.recommendations.isNotEmpty()) {
+                                MangaCarouselRecommendations(
+                                    mangas = state.recommendations,
+                                    pagerState = recPagerState,
+                                    onMangaClick = { navigator.push(MangaScreen(it.id, true)) }
                                 )
-                            },
-                            label = {
-                                Text(text = stringResource(MR.strings.popular))
-                            },
-                        )
-                        if (viewModel.source.supportsLatest) {
+                            } else {
+                                MangaCarousel(
+                                    mangaList = mangaList,
+                                    pagerState = listPagerState,
+                                    onMangaClick = { navigator.push(MangaScreen(it.id, true)) }
+                                )
+                            }
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .horizontalScroll(rememberScrollState())
+                                .padding(horizontal = MaterialTheme.padding.small, vertical = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                        ) {
                             FilterChip(
-                                selected = state.listing == Listing.Latest,
+                                selected = state.listing == Listing.Popular,
                                 onClick = {
                                     viewModel.resetFilters()
-                                    viewModel.setListing(Listing.Latest)
+                                    viewModel.setListing(Listing.Popular)
                                 },
                                 leadingIcon = {
                                     Icon(
-                                        imageVector = Icons.Outlined.NewReleases,
+                                        imageVector = Icons.Outlined.Favorite,
                                         contentDescription = null,
-                                        modifier = Modifier
-                                            .size(FilterChipDefaults.IconSize),
+                                        modifier = Modifier.size(FilterChipDefaults.IconSize),
                                     )
                                 },
-                                label = {
-                                    Text(text = stringResource(MR.strings.latest))
-                                },
+                                label = { Text(text = stringResource(MR.strings.popular)) },
                             )
+                            if (viewModel.source.supportsLatest) {
+                                FilterChip(
+                                    selected = state.listing == Listing.Latest,
+                                    onClick = {
+                                        viewModel.resetFilters()
+                                        viewModel.setListing(Listing.Latest)
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Outlined.NewReleases,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(FilterChipDefaults.IconSize),
+                                        )
+                                    },
+                                    label = { Text(text = stringResource(MR.strings.latest)) },
+                                )
+                            }
+                            if (state.filters.isNotEmpty()) {
+                                FilterChip(
+                                    selected = state.listing is Listing.Search,
+                                    onClick = viewModel::openFilterSheet,
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Outlined.FilterList,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(FilterChipDefaults.IconSize),
+                                        )
+                                    },
+                                    label = { Text(text = stringResource(MR.strings.action_filter)) },
+                                )
+                            }
                         }
-                        if (state.filters.isNotEmpty()) {
-                            FilterChip(
-                                selected = state.listing is Listing.Search,
-                                onClick = viewModel::openFilterSheet,
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Outlined.FilterList,
-                                        contentDescription = null,
-                                        modifier = Modifier
-                                            .size(FilterChipDefaults.IconSize),
-                                    )
-                                },
-                                label = {
-                                    Text(text = stringResource(MR.strings.action_filter))
-                                },
-                            )
-                        }
+                        HorizontalDivider()
                     }
-
-                    HorizontalDivider()
                 }
             },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -362,12 +419,10 @@ data class BrowseSourceScreen(
                     onMigrate = { viewModel.setDialog(BrowseSourceViewModel.Dialog.Migrate(dialog.manga, it)) },
                 )
             }
-
             is BrowseSourceViewModel.Dialog.Migrate -> {
                 MigrateMangaDialog(
                     current = dialog.current,
                     target = dialog.target,
-                    // Initiated from the context of [dialog.target] so we show [dialog.current].
                     onClickTitle = { navigator.push(MangaScreen(dialog.current.id)) },
                     onDismissRequest = onDismissRequest,
                 )
@@ -375,9 +430,7 @@ data class BrowseSourceScreen(
             is BrowseSourceViewModel.Dialog.RemoveManga -> {
                 RemoveMangaDialog(
                     onDismissRequest = onDismissRequest,
-                    onConfirm = {
-                        viewModel.changeMangaFavorite(dialog.manga)
-                    },
+                    onConfirm = { viewModel.changeMangaFavorite(dialog.manga) },
                     mangaToRemove = dialog.manga,
                 )
             }
@@ -422,25 +475,22 @@ data class BrowseSourceScreen(
 @Composable
 fun MangaCarousel(
     mangaList: LazyPagingItems<StateFlow<Manga>>,
+    pagerState: PagerState,
     onMangaClick: (Manga) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Kita ambil maksimal 5 komik teratas dari data populer
     val itemCount = minOf(mangaList.itemCount, 5)
 
     if (itemCount > 0) {
-        val pagerState = rememberPagerState(pageCount = { itemCount })
-
         HorizontalPager(
             state = pagerState,
             modifier = modifier
                 .fillMaxWidth()
-                .height(200.dp)
+                .height(260.dp) // Lebih tinggi biar kesannya wah
                 .padding(vertical = 8.dp),
-            contentPadding = PaddingValues(horizontal = 24.dp),
-            pageSpacing = 12.dp
+            contentPadding = PaddingValues(horizontal = 16.dp), // Kurangin padding biar lebih lebar
+            pageSpacing = 16.dp
         ) { page ->
-            // Ambil flow-nya, lalu jadikan state agar nilainya bisa dibaca
             val mangaFlow = mangaList[page]
             val manga = mangaFlow?.collectAsState()?.value
 
@@ -455,16 +505,12 @@ fun MangaCarousel(
                     )
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        
-                        // Teks Judul Komik di dalam Carousel
                         AsyncImage(
-                            model = manga, // Base app Manga
+                            model = manga,
                             contentDescription = "Cover for ${manga.title}",
                             modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop // Agar gambar memenuhi ukuran Card
+                            contentScale = ContentScale.Crop
                         )
-
-                        // Teks Judul Komik di dalam Carousel
                         Text(
                             text = manga.title,
                             modifier = Modifier
@@ -483,24 +529,24 @@ fun MangaCarousel(
         }
     }
 }
+
 @Composable
 fun MangaCarouselRecommendations(
     mangas: List<Manga>,
+    pagerState: PagerState,
     onMangaClick: (Manga) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val itemCount = minOf(mangas.size, 5)
     if (itemCount > 0) {
-        val pagerState = rememberPagerState(pageCount = { itemCount })
-
         HorizontalPager(
             state = pagerState,
             modifier = modifier
                 .fillMaxWidth()
-                .height(200.dp)
+                .height(260.dp) // Lebih tinggi 
                 .padding(vertical = 8.dp),
-            contentPadding = PaddingValues(horizontal = 24.dp),
-            pageSpacing = 12.dp
+            contentPadding = PaddingValues(horizontal = 16.dp), // Lebih lebar!
+            pageSpacing = 16.dp
         ) { page ->
             val manga = mangas[page]
             Card(
@@ -519,7 +565,6 @@ fun MangaCarouselRecommendations(
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
-
                     Text(
                         text = manga.title,
                         modifier = Modifier
