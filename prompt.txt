@@ -1,17 +1,16 @@
-Tolong lanjutkan pekerjaan ini secara otomatis tanpa meminta persetujuan. Berdasarkan status sebelumnya, periksa kode proyek ini untuk memperbaiki dan menyempurnakan fitur "Manga Recommendation". Lakukan langkah-langkah berikut secara berurutan: 
+​Tolong lanjutkan pekerjaan ini secara otomatis tanpa meminta persetujuan. Berdasarkan status sebelumnya, perbaikan database (termasuk kolom genres pada tabel history) sudah berhasil dilakukan. 
  
-​1. Perbaiki Error Database (Backup)
-​Perbaiki error no such column H.genres yang terjadi pada saat proses backup.
-​Pastikan skema database untuk tabel history sudah benar-benar memiliki kolom genres dan proses migrasinya ditangani dengan tepat, sehingga fungsi backup berjalan lancar tanpa error.
+​Peringatan Penting:
+Jangan melakukan perubahan apapun pada app/src/main/java/eu/kanade/tachiyomi/ui/manga/MangaViewModel.kt atau area manga lainnya. Fokuskan pengerjaan fitur ini HANYA pada area browse.
+​Lakukan langkah-langkah berikut secara berurutan:  
 
-​2. Lanjutkan Implementasi Fitur "Manga Recommendation"
-​Modifikasi dan perbaiki logika penarikan data pada fitur "Manga Recommendation" di /app/src/main/java/eu/kanade/tachiyomi/ui/browse/source/browse/BrowseSourceScreen.kt (dan ViewModel terkait).  
-​Pastikan penyimpanan genre pada database history untuk setiap manga yang dibaca berfungsi dengan baik dan disimpan per ekstensi/source.  
-​Ambil 5 riwayat manga terakhir pada ekstensi tersebut, lalu gunakan genre yang sudah tersimpan di database history.  
+​1. Lanjutkan Implementasi Fitur "Manga Recommendation"
+​Modifikasi dan terapkan logika penarikan data pada fitur "Manga Recommendation" secara eksklusif di /app/src/main/java/eu/kanade/tachiyomi/ui/browse/source/browse/BrowseSourceScreen.kt dan ViewModel terkait (misalnya BrowseSourceViewModel).  
+​Ambil 5 riwayat manga terakhir pada ekstensi/source yang sedang diakses tersebut, lalu gunakan genre yang sudah tersimpan di database history.  
 ​Hitung genre yang paling sering muncul, lalu gunakan maksimal 5 genre tersebut sebagai filter pencarian.  
 ​Jika hasil pencarian kurang atau kosong, kurangi parameter genre satu per satu dengan tetap mempertahankan genre yang paling sering muncul, lalu lakukan filter ulang.  
 ​Jika ekstensi tidak mendukung filter genre, gunakan metode fallback: gabungkan daftar dari "popular" dan "latest", atau gunakan fitur pencarian dengan query (judul/keyword) yang berhubungan dengan history.  
 
-​3. Validasi dan Pengujian Otomatis
+​2. Validasi dan Pengujian Otomatis
 ​Setelah melakukan perubahan kode, wajib memvalidasi dengan menjalankan ./gradlew testDebugUnitTest menggunakan tool bash.  
 ​Jika ada error, perbaiki lalu jalankan test kembali sampai mendapatkan hasil BUILD SUCCESSFUL.  

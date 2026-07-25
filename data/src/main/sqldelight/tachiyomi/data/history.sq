@@ -26,6 +26,21 @@ FROM history H
 JOIN chapters C
 ON H.chapter_id = C._id
 WHERE C.manga_id = :mangaId AND C._id = H.chapter_id;
+-- Get last N history rows for a source (returns genres column)
+getHistoryBySource:
+SELECT
+H._id,
+H.chapter_id,
+H.last_read,
+H.time_read,
+H.genres
+FROM history H
+JOIN chapters C ON H.chapter_id = C._id
+JOIN mangas M ON C.manga_id = M._id
+WHERE M.source = :sourceId AND H.last_read > 0
+ORDER BY H.last_read DESC
+LIMIT :limit;
+
 
 getHistoryByChapterUrl:
 SELECT
