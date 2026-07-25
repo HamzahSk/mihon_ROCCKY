@@ -15,6 +15,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import androidx.paging.filter
 import androidx.paging.map
+import app.cash.sqldelight.async.coroutines.awaitAsList
 import eu.kanade.core.preference.asState
 import eu.kanade.domain.manga.interactor.UpdateManga
 import eu.kanade.domain.source.interactor.GetIncognitoState
@@ -31,10 +32,14 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import logcat.LogPriority
 import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.mapAsCheckboxState
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.system.logcat
+import tachiyomi.data.Database
+import tachiyomi.data.history.HistoryMapper
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.interactor.SetMangaCategories
 import tachiyomi.domain.category.model.Category
@@ -45,21 +50,14 @@ import tachiyomi.domain.manga.interactor.GetManga
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.manga.model.MangaWithChapterCount
 import tachiyomi.domain.manga.model.toMangaUpdate
-import tachiyomi.domain.source.interactor.GetRemoteManga
-import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.searchhistory.interactor.GetSearchHistory
 import tachiyomi.domain.searchhistory.interactor.InsertSearchHistory
+import tachiyomi.domain.source.interactor.GetRemoteManga
+import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.time.Instant
 import eu.kanade.tachiyomi.source.model.Filter as SourceModelFilter
-
-// Additional imports for recommendations
-import app.cash.sqldelight.async.coroutines.awaitAsList
-import tachiyomi.data.Database
-import tachiyomi.core.common.util.system.logcat
-import logcat.LogPriority
-import tachiyomi.data.history.HistoryMapper
 
 class BrowseSourceViewModel(
     private val sourceId: Long,
