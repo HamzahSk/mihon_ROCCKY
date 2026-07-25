@@ -51,6 +51,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
@@ -234,15 +237,22 @@ data class BrowseSourceScreen(
                             animationSpec = tween(durationMillis = 500)
                         )
                     ) {
+                        val onMangaSelect: (Manga) -> Unit = { manga ->
+                            viewModel.onMangaClick(manga) { mangaId ->
+                                scope.launchIO {
+                                    navigator.push(MangaScreen(mangaId, true))
+                                }
+                            }
+                        }
                         if (state.recommendations.isNotEmpty()) {
                             MangaCarouselRecommendations(
                                 mangas = state.recommendations,
-                                onMangaClick = { navigator.push(MangaScreen(it.id, true)) }
+                                onMangaClick = onMangaSelect,
                             )
                         } else {
                             MangaCarousel(
                                 mangaList = mangaList,
-                                onMangaClick = { navigator.push(MangaScreen(it.id, true)) }
+                                onMangaClick = onMangaSelect,
                             )
                         }
                     }
@@ -325,7 +335,13 @@ data class BrowseSourceScreen(
                 onWebViewClick = onWebViewClick,
                 onHelpClick = { uriHandler.openUri(Constants.URL_HELP) },
                 onLocalSourceHelpClick = onHelpClick,
-                onMangaClick = { navigator.push((MangaScreen(it.id, true))) },
+                onMangaClick = { manga ->
+                    viewModel.onMangaClick(manga) { mangaId ->
+                        scope.launchIO {
+                            navigator.push(MangaScreen(mangaId, true))
+                        }
+                    }
+                },
                 onMangaLongClick = { manga ->
                     scope.launchIO {
                         val duplicates = viewModel.getDuplicateLibraryManga(manga)
@@ -423,66 +439,109 @@ data class BrowseSourceScreen(
 fun MangaCarousel(
     mangaList: LazyPagingItems<StateFlow<Manga>>,
     onMangaClick: (Manga) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    // Kita ambil maksimal 5 komik teratas dari data populer
     val itemCount = minOf(mangaList.itemCount, 5)
 
     if (itemCount > 0) {
         val pagerState = rememberPagerState(pageCount = { itemCount })
 
-        HorizontalPager(
-            state = pagerState,
+        // Retrieve current active manga for background blur/poster
+        val activeMangaFlow = mangaList[pagerState.currentPage]
+        val activeManga = activeMangaFlow?.collectAsState()?.value
+
+        val surfaceColor = MaterialTheme.colorScheme.surface
+        Box(
             modifier = modifier
                 .fillMaxWidth()
-                .height(200.dp)
-                .padding(vertical = 8.dp),
-            contentPadding = PaddingValues(horizontal = 24.dp),
-            pageSpacing = 12.dp
-        ) { page ->
-            // Ambil flow-nya, lalu jadikan state agar nilainya bisa dibaca
-            val mangaFlow = mangaList[page]
-            val manga = mangaFlow?.collectAsState()?.value
-
-            if (manga != null) {
-                Card(
+                .height(320.dp)
+        ) {
+            // Dynamic blurred background poster overlay with gradient
+            if (activeManga != null) {
+                AsyncImage(
+                    model = activeManga,
+                    contentDescription = null,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onMangaClick(manga) },
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        
-                        // Teks Judul Komik di dalam Carousel
-                        AsyncImage(
-                            model = manga, // Base app Manga
-                            contentDescription = "Cover for ${manga.title}",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop // Agar gambar memenuhi ukuran Card
-                        )
+                        .fillMaxSize()
+                        .blur(20.dp)
+                        .drawWithContent {
+                            drawContent()
+                            drawRect(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Black.copy(alpha = 0.4f),
+                                        Color.Black.copy(alpha = 0.7f),
+                                        surfaceColor
+                                    )
+                                )
+                            )
+                        },
+                    contentScale = ContentScale.Crop,
+                )
+            }
 
-                        // Teks Judul Komik di dalam Carousel
-                        Text(
-                            text = manga.title,
-                            modifier = Modifier
-                                .align(Alignment.BottomStart)
-                                .background(Color.Black.copy(alpha = 0.6f))
-                                .padding(horizontal = 12.dp, vertical = 8.dp)
-                                .fillMaxWidth(),
-                            color = Color.White,
-                            style = MaterialTheme.typography.titleMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(vertical = 12.dp),
+                contentPadding = PaddingValues(horizontal = 48.dp),
+                pageSpacing = 16.dp,
+            ) { page ->
+                val mangaFlow = mangaList[page]
+                val manga = mangaFlow?.collectAsState()?.value
+
+                if (manga != null) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clickable { onMangaClick(manga) },
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
                         )
+                    ) {
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            AsyncImage(
+                                model = manga,
+                                contentDescription = "Cover for ${manga.title}",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .align(Alignment.BottomStart)
+                                    .background(
+                                        Brush.verticalGradient(
+                                            colors = listOf(
+                                                Color.Transparent,
+                                                Color.Black.copy(alpha = 0.85f)
+                                            )
+                                        )
+                                    )
+                                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                            ) {
+                                Text(
+                                    text = manga.title,
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                                    ),
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
     }
 }
+
 @Composable
 fun MangaCarouselRecommendations(
     mangas: List<Manga>,
@@ -492,46 +551,89 @@ fun MangaCarouselRecommendations(
     val itemCount = minOf(mangas.size, 5)
     if (itemCount > 0) {
         val pagerState = rememberPagerState(pageCount = { itemCount })
+        val activeManga = mangas.getOrNull(pagerState.currentPage)
 
-        HorizontalPager(
-            state = pagerState,
+        val surfaceColor = MaterialTheme.colorScheme.surface
+        Box(
             modifier = modifier
                 .fillMaxWidth()
-                .height(200.dp)
-                .padding(vertical = 8.dp),
-            contentPadding = PaddingValues(horizontal = 24.dp),
-            pageSpacing = 12.dp
-        ) { page ->
-            val manga = mangas[page]
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onMangaClick(manga) },
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                .height(320.dp)
+        ) {
+            if (activeManga != null) {
+                AsyncImage(
+                    model = activeManga,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .blur(20.dp)
+                        .drawWithContent {
+                            drawContent()
+                            drawRect(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Black.copy(alpha = 0.4f),
+                                        Color.Black.copy(alpha = 0.7f),
+                                        surfaceColor
+                                    )
+                                )
+                            )
+                        },
+                    contentScale = ContentScale.Crop,
                 )
-            ) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    AsyncImage(
-                        model = manga,
-                        contentDescription = "Cover for ${manga.title}",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
+            }
 
-                    Text(
-                        text = manga.title,
-                        modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .background(Color.Black.copy(alpha = 0.6f))
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
-                            .fillMaxWidth(),
-                        color = Color.White,
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(vertical = 12.dp),
+                contentPadding = PaddingValues(horizontal = 48.dp),
+                pageSpacing = 16.dp,
+            ) { page ->
+                val manga = mangas[page]
+                Card(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable { onMangaClick(manga) },
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
+                ) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        AsyncImage(
+                            model = manga,
+                            contentDescription = "Cover for ${manga.title}",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.BottomStart)
+                                .background(
+                                    Brush.verticalGradient(
+                                        colors = listOf(
+                                            Color.Transparent,
+                                            Color.Black.copy(alpha = 0.85f)
+                                        )
+                                    )
+                                )
+                                .padding(horizontal = 16.dp, vertical = 12.dp)
+                        ) {
+                            Text(
+                                text = manga.title,
+                                color = Color.White,
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                                ),
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
                 }
             }
         }
