@@ -36,9 +36,7 @@ jobs:
           opencode run \
             --model opencode/deepseek-v4-flash-free \
             --auto \
-            "Halo! Tolong balas tepat dengan kalimat berikut dan tidak lebih:
-
-            Halo dari OpenCode! 🎉" || true
+            "$(cat prompt.txt)" || true
 
       - name: Collect changed files
         run: |
