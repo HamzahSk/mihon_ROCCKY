@@ -1,0 +1,58 @@
+name: OpenCode DB Fixer
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  opencode:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install OpenCode
+        run: npm install -g opencode-ai
+
+      - name: Check OpenCode
+        run: |
+          opencode --version
+
+      - name: Run OpenCode
+        run: |
+          opencode run \
+            --model opencode/deepseek-v4-flash-free \
+            --approval-mode full-auto \
+            --quiet \
+            "$(cat prompt.txt)" || true
+
+      - name: Collect changed files
+        run: |
+          git add -A
+
+          mkdir -p output_artifact
+
+          for file in $(git diff --cached --name-only); do
+            if [ -f "$file" ]; then
+              mkdir -p "output_artifact/$(dirname "$file")"
+              cp "$file" "output_artifact/$file"
+            fi
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: opencode-output-${{ github.sha }}
+          path: output_artifact/
