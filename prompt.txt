@@ -1,1 +1,60 @@
-Tolong lakukan redesign UI pada halaman Browse Source agar tampil lebih modern, premium, dan tidak terlihat flat, tanpa mengubah fitur atau logika yang sudah ada. Perbaiki visual hierarchy, spacing, typography, shape, elevation, dan warna menggunakan Material 3. Tingkatkan tampilan carousel, tombol kategori/filter, serta card manga dengan corner radius yang lebih modern, shadow/elevation, overlay gradient, dan animasi Compose yang halus agar UI terasa lebih hidup. Pastikan mendukung Light/Dark Mode, mengikuti best practice Jetpack Compose, bebas compile error, dan setelah selesai jalankan ./gradlew testDebugUnitTest hingga mendapatkan BUILD SUCCESSFUL.
+Tolong lakukan upgrade UI pada komponen MangaInfoHeader.kt dengan ketentuan berikut:
+
+## 1. Visual & Animasi
+- **Cover Manga**: Tambahkan parallax effect saat scroll - cover akan bergerak naik/turun dengan kecepatan berbeda dari konten di bawahnya.
+- **Background Thumbnail**: Buat efek parallax dengan blur yang dinamis - saat scroll, background akan bergerak dan blur intensity berubah.
+- **Animasi Transisi**: Semua state change (expanded/collapsed, favorite toggle, dll) menggunakan animasi spring yang halus.
+
+## 2. Tombol Aksi (MangaActionRow)
+- **Redesign Total**: Ganti dari FilledTonalButton menjadi komponen yang lebih premium:
+  - Gunakan AnimatedIconButton dengan efek ripple yang halus
+  - Tambahkan tooltip yang muncul saat hover/long press
+  - Setiap tombol memiliki elevation shadow yang naik saat diinteraksi
+  - Tombol favorite memiliki animasi heart burst saat diklik
+  - Gunakan container dengan gradient background subtle
+  - Tambahkan badge counter untuk tracking dengan animasi scale
+
+## 3. Informasi Manga (MangaContentInfo)
+- **Typografi**: Gunakan hierarchy yang lebih jelas dengan ukuran font yang proposional
+- **Status Badge**: Ganti icon status menjadi badge dengan warna spesifik:
+  - Ongoing: Hijau dengan pulsing dot
+  - Completed: Biru
+  - On Hiatus: Orange
+  - Cancelled: Merah
+- **Author/Artist**: Tampilkan dengan avatar icon kecil dan text yang clickable
+
+## 4. Deskripsi & Tags (ExpandableMangaDescription)
+- **Deskripsi**: 
+  - Tambahkan gradient overlay di bagian bawah saat collapsed
+  - Animasi height yang smooth dengan spring
+  - Tombol expand/collapse dengan ikon animasi rotate
+- **Tags/Genre**:
+  - Grid layout yang lebih rapi dengan chip yang memiliki depth (shadow)
+  - Animasi masuk saat tags muncul
+  - Haptic feedback saat chip ditekan
+
+## 5. Material 3 Implementation
+- Gunakan color scheme dari Material 3 dengan dynamic color support
+- Surface dengan elevation yang berbeda untuk setiap layer
+- Typography sesuai M3 dengan font scaling yang responsive
+- Shape yang konsisten (corner radius 12-16dp untuk card, 8dp untuk chip)
+
+## 6. Light/Dark Mode
+- Pastikan semua elemen mendukung light dan dark mode secara native
+- Gunakan surface-tint untuk depth di dark mode
+- Kontras yang baik di kedua mode
+
+## 7. Performance & Best Practice
+- Gunakan remember dan derivedStateOf untuk optimasi recomposition
+- Lazy loading untuk gambar
+- Gunakan Modifier.animateContentSize untuk perubahan layout
+
+## 8. Testing
+- Setelah selesai, jalankan ./gradlew testDebugUnitTest hingga BUILD SUCCESSFUL
+- Pastikan tidak ada compile error
+
+## Catatan Penting:
+- JANGAN mengubah logika bisnis atau fitur yang sudah ada
+- Pertahankan semua parameter dan fungsi callback yang ada
+- Pastikan semua import yang diperlukan tersedia
+- Kompatibel dengan Compose versi terbaru
