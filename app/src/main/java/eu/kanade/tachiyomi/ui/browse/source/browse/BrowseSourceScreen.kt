@@ -266,25 +266,70 @@ data class BrowseSourceScreen(
                         }
                     }
 
-                    BrowseSourceListingControls(
-                        listing = state.listing,
-                        supportsLatest = viewModel.source.supportsLatest,
-                        hasFilters = state.filters.isNotEmpty(),
-                        onPopularClick = {
-                            viewModel.resetFilters()
-                            viewModel.setListing(Listing.Popular)
-                        },
-                        onLatestClick = {
-                            viewModel.resetFilters()
-                            viewModel.setListing(Listing.Latest)
-                        },
-                        onFilterClick = viewModel::openFilterSheet,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                    )
+                    Row(
+                        modifier = Modifier
+                            .horizontalScroll(rememberScrollState())
+                            .padding(horizontal = MaterialTheme.padding.small),
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                    ) {
+                        FilterChip(
+                            selected = state.listing == Listing.Popular,
+                            onClick = {
+                                viewModel.resetFilters()
+                                viewModel.setListing(Listing.Popular)
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.Favorite,
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(FilterChipDefaults.IconSize),
+                                )
+                            },
+                            label = {
+                                Text(text = stringResource(MR.strings.popular))
+                            },
+                        )
+                        if (viewModel.source.supportsLatest) {
+                            FilterChip(
+                                selected = state.listing == Listing.Latest,
+                                onClick = {
+                                    viewModel.resetFilters()
+                                    viewModel.setListing(Listing.Latest)
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Outlined.NewReleases,
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .size(FilterChipDefaults.IconSize),
+                                    )
+                                },
+                                label = {
+                                    Text(text = stringResource(MR.strings.latest))
+                                },
+                            )
+                        }
+                        if (state.filters.isNotEmpty()) {
+                            FilterChip(
+                                selected = state.listing is Listing.Search,
+                                onClick = viewModel::openFilterSheet,
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Outlined.FilterList,
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .size(FilterChipDefaults.IconSize),
+                                    )
+                                },
+                                label = {
+                                    Text(text = stringResource(MR.strings.action_filter))
+                                },
+                            )
+                        }
+                    }
 
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                    )
+                    HorizontalDivider()
                 }
             },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -402,103 +447,6 @@ data class BrowseSourceScreen(
     }
 }
 
-@Composable
-private fun BrowseSourceListingControls(
-    listing: Listing,
-    supportsLatest: Boolean,
-    hasFilters: Boolean,
-    onPopularClick: () -> Unit,
-    onLatestClick: () -> Unit,
-    onFilterClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
-        tonalElevation = 2.dp,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 12.dp)
-                .animateContentSize(),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            if (supportsLatest) {
-                SingleChoiceSegmentedButtonRow(
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    SegmentedButton(
-                        selected = listing == Listing.Popular,
-                        onClick = onPopularClick,
-                        shape = SegmentedButtonDefaults.itemShape(0, 2),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Favorite,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Text(text = stringResource(MR.strings.popular))
-                    }
-                    SegmentedButton(
-                        selected = listing == Listing.Latest,
-                        onClick = onLatestClick,
-                        shape = SegmentedButtonDefaults.itemShape(1, 2),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.NewReleases,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Text(text = stringResource(MR.strings.latest))
-                    }
-                }
-            } else {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.large,
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                ) {
-                    Text(
-                        text = stringResource(MR.strings.popular),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 14.dp),
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.SemiBold,
-                        ),
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-            ) {
-                if (hasFilters) {
-                    FilterChip(
-                        selected = listing is Listing.Search,
-                        onClick = onFilterClick,
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Outlined.FilterList,
-                                contentDescription = null,
-                                modifier = Modifier.size(FilterChipDefaults.IconSize),
-                            )
-                        },
-                        label = {
-                            Text(text = stringResource(MR.strings.action_filter))
-                        },
-                        shape = MaterialTheme.shapes.large,
-                    )
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun MangaCarouselRecommendations(
