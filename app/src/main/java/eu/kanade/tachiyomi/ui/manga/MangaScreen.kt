@@ -154,7 +154,7 @@ class MangaScreen(
                 if (source != null) {
                     try {
                         // Di Mihon/Tachiyomi, URL chapter biasanya digabung dari baseUrl source + path chapter
-                        // Kalau source.getChapterUrl(chapter) error minta SChapter, 
+                        // Kalau source.getChapterUrl(chapter) error minta SChapter,
                         // kamu bisa ganti jadi: source.getChapterUrl(chapter.toSChapter())
                         val url = "${source.baseUrl}${chapter.url}"
                         context.copyToClipboard(url, url)
@@ -194,12 +194,12 @@ class MangaScreen(
             onChapterSelected = viewModel::toggleSelection,
             onAllChapterSelected = viewModel::toggleAllSelection,
             onInvertSelection = viewModel::invertSelection,
-            
+
             onRecommendationClicked = { recommendation ->
                 // Menggunakan coroutine scope karena proses database berjalan di background
                 scope.launch {
                     val recommendedMangaId = viewModel.getRecommendationMangaId(recommendation)
-                    
+
                     if (recommendedMangaId != null) {
                         // Pindah ke halaman manga rekomendasi
                         navigator.push(MangaScreen(recommendedMangaId, true))

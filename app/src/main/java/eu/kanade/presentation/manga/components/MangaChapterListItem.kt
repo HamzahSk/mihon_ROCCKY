@@ -12,14 +12,14 @@ import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.outlined.BookmarkAdd
 import androidx.compose.material.icons.outlined.BookmarkRemove
+import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Done
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.FileDownloadOff
 import androidx.compose.material.icons.outlined.RemoveDone
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
@@ -32,8 +32,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
@@ -94,10 +94,9 @@ fun MangaChapterListItem(
         swipeThreshold = swipeActionThreshold,
         backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.surfaceContainerLowest,
     ) {
-    
-        val isScanlatorImageUrl = scanlator != null && 
-                (scanlator.startsWith("http://") || scanlator.startsWith("https://"))
-                
+        val isScanlatorImageUrl = scanlator != null &&
+            (scanlator.startsWith("http://") || scanlator.startsWith("https://"))
+
         Row(
             modifier = modifier
                 .selectedBackground(selected)
@@ -107,7 +106,7 @@ fun MangaChapterListItem(
                 )
                 // padding disesuaikan agar seimbang dengan adanya gambar di kiri
                 .padding(start = 12.dp, top = 12.dp, end = 8.dp, bottom = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             // --- BAGIAN BARU: Menampilkan Preview Gambar di Kiri ---
             if (isScanlatorImageUrl) {
@@ -118,7 +117,7 @@ fun MangaChapterListItem(
                         .padding(end = 12.dp)
                         .sizeIn(maxWidth = 48.dp, maxHeight = 64.dp) // Ukuran preview kecil & proporsional
                         .clip(MaterialTheme.shapes.small), // Sudut melengkung halus
-                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                 )
             }
 
@@ -198,7 +197,7 @@ fun MangaChapterListItem(
                     }
                 }
             }
-            
+
             // Tombol Copy tetap aman di sini
             if (onCopyUrlClick != null) {
                 IconButton(
@@ -206,12 +205,12 @@ fun MangaChapterListItem(
                     modifier = Modifier
                         .align(Alignment.CenterVertically) // Diubah ke tengah agar sejajar dengan tinggi baris baru
                         .padding(end = 4.dp)
-                        .sizeIn(maxHeight = 24.dp, maxWidth = 24.dp) 
+                        .sizeIn(maxHeight = 24.dp, maxWidth = 24.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.ContentCopy,
                         contentDescription = "Copy Chapter URL",
-                        tint = LocalContentColor.current.copy(alpha = SECONDARY_ALPHA)
+                        tint = LocalContentColor.current.copy(alpha = SECONDARY_ALPHA),
                     )
                 }
             }

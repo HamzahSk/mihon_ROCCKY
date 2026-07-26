@@ -1,5 +1,6 @@
 package eu.kanade.presentation.manga.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -42,7 +42,7 @@ fun MangaRecommendationsRow(
         Text(
             text = "Suggestions",
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         )
 
         if (isLoading) {
@@ -53,14 +53,14 @@ fun MangaRecommendationsRow(
         } else {
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 items(recommendations) { rec ->
                     Column(
                         modifier = Modifier
                             .width(104.dp)
                             .clip(RoundedCornerShape(6.dp)) // Opsional: Biar efek ripple kliknya rapi mengikuti bentuk
-                            .clickable { onRecommendationClicked(rec) }
+                            .clickable { onRecommendationClicked(rec) },
                     ) {
                         AsyncImage(
                             model = rec.thumbnailUrl,
@@ -69,14 +69,14 @@ fun MangaRecommendationsRow(
                                 .fillMaxWidth()
                                 .aspectRatio(0.7f) // Rasio standar cover manga
                                 .clip(RoundedCornerShape(6.dp)),
-                            contentScale = ContentScale.Crop
+                            contentScale = ContentScale.Crop,
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = rec.title,
                             style = MaterialTheme.typography.bodySmall,
                             maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }

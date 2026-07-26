@@ -78,7 +78,9 @@ class HistoryRepositoryImpl(
                 } catch (_: Exception) {
                     emptyList<String>()
                 }
-            } else emptyList()
+            } else {
+                emptyList()
+            }
 
             database.historyQueries.upsert(
                 historyUpdate.chapterId,

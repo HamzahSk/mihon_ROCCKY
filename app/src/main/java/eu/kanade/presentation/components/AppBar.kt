@@ -300,7 +300,6 @@ fun SearchToolbar(
                     .fillMaxWidth()
                     // TODO: show search history suggestions — injected by BrowseSourceToolbar via state
                     // This placeholder intentionally left: actual suggestions are shown by higher-level composables
-
                     .focusRequester(focusRequester)
                     .runOnEnterKeyPressed(action = searchAndClearFocus)
                     .showSoftKeyboard(remember { searchQuery.isEmpty() })

@@ -1,11 +1,10 @@
 package eu.kanade.tachiyomi.ui.browse.source.browse
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -19,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -551,7 +551,7 @@ fun MangaCarousel(
                 currentPage = pagerState.currentPage,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 8.dp)
+                    .padding(bottom = 8.dp),
             )
         }
     } else if (isLoading) {
@@ -672,7 +672,7 @@ fun MangaCarouselRecommendations(
                 currentPage = pagerState.currentPage,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 8.dp)
+                    .padding(bottom = 8.dp),
             )
         }
     }
@@ -688,7 +688,7 @@ private fun CarouselDotsIndicator(
         modifier = modifier
             .background(
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
             )
             .padding(horizontal = 10.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -698,7 +698,7 @@ private fun CarouselDotsIndicator(
             val isSelected = index == currentPage
             val width by animateDpAsState(
                 targetValue = if (isSelected) 18.dp else 8.dp,
-                label = "dot_width"
+                label = "dot_width",
             )
 
             Box(
@@ -712,7 +712,7 @@ private fun CarouselDotsIndicator(
                             MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                         },
                         shape = RoundedCornerShape(4.dp),
-                    )
+                    ),
             )
         }
     }

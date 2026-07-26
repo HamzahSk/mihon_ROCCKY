@@ -36,7 +36,6 @@ import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.data.track.EnhancedTracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.source.CatalogueSource
-import eu.kanade.tachiyomi.source.model.Filter as SourceModelFilter
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import eu.kanade.tachiyomi.util.chapter.getNextUnread
@@ -89,6 +88,7 @@ import tachiyomi.source.local.isLocal
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.math.floor
+import eu.kanade.tachiyomi.source.model.Filter as SourceModelFilter
 
 class MangaViewModel(
     private val context: Context,
@@ -259,9 +259,8 @@ class MangaViewModel(
 
             // Initial loading finished
             updateSuccessState { it.copy(isRefreshingData = false) }
-            
+
             fetchRecommendationsFromSource()
-            
         }
     }
 
@@ -1113,32 +1112,31 @@ class MangaViewModel(
             setExcludedScanlators.await(mangaId, excludedScanlators)
         }
     }
-    
+
     fun fetchRecommendationsFromSource() {
         val state = successState ?: return
-        
+
         // Jangan fetch ulang kalau sudah ada atau sedang loading
         if (state.recommendations.isNotEmpty() || state.isFetchingRecommendations) return
 
         viewModelScope.launchIO {
             updateSuccessState { it.copy(isFetchingRecommendations = true) }
-            
+
             try {
                 val catalogueSource = state.source as? CatalogueSource
                 val currentGenres = state.manga.genre?.map { it.trim() }?.filter { it.isNotBlank() } ?: emptyList()
-                
+
                 if (catalogueSource != null && currentGenres.isNotEmpty()) {
-                    
                     val currentGenresLower = currentGenres.map { it.lowercase() }.toSet()
-                    
-                    // Kita gunakan Pair untuk menyimpan <Rekomendasi, Skor Kemiripan Genre> 
+
+                    // Kita gunakan Pair untuk menyimpan <Rekomendasi, Skor Kemiripan Genre>
                     // dan Map dengan key URL agar tidak ada duplikat.
                     val collectedRecs = mutableMapOf<String, Pair<SourceRecommendation, Int>>()
-                    
+
                     var activeGenres = currentGenres.toList()
                     val maxAttempts = currentGenres.size
                     var attempts = 0
-                    
+
                     // Looping selama genre masih ada dan jumlah rekomendasi terkumpul < 10
                     while (activeGenres.isNotEmpty() && collectedRecs.size < 10 && attempts < maxAttempts) {
                         attempts++
@@ -1149,7 +1147,9 @@ class MangaViewModel(
                         for (sourceFilter in filterList) {
                             if (sourceFilter is SourceModelFilter.Group<*>) {
                                 for (filter in sourceFilter.state) {
-                                    if (filter is SourceModelFilter<*> && activeGenres.any { it.equals(filter.name, true) }) {
+                                    if (filter is SourceModelFilter<*> &&
+                                        activeGenres.any { it.equals(filter.name, true) }
+                                    ) {
                                         when (filter) {
                                             is SourceModelFilter.TriState -> filter.state = 1
                                             is SourceModelFilter.CheckBox -> filter.state = true
@@ -1170,21 +1170,28 @@ class MangaViewModel(
                         }
 
                         // 2. Tentukan query string (fallback) jika filter tidak mendukung dan hanya sisa 1 genre
-                        val textQuery = if (appliedFiltersCount == 0 && activeGenres.size == 1) activeGenres.first() else ""
+                        val textQuery = if (appliedFiltersCount == 0 &&
+                            activeGenres.size == 1
+                        ) {
+                            activeGenres.first()
+                        } else {
+                            ""
+                        }
 
                         // 3. Eksekusi pencarian
                         val searchPage = catalogueSource.getSearchManga(1, textQuery, filterList)
-                        
+
                         // 4. Proses hasil dan saring dari duplikat (komik yang sama atau yang sudah masuk list)
                         searchPage.mangas.forEach { sManga ->
                             if (sManga.url != state.manga.url && !collectedRecs.containsKey(sManga.url)) {
-                                val resultGenres = sManga.genre?.split(",")?.map { it.trim().lowercase() } ?: emptyList()
+                                val resultGenres =
+                                    sManga.genre?.split(",")?.map { it.trim().lowercase() } ?: emptyList()
                                 val matchScore = resultGenres.intersect(currentGenresLower).size
-                                
+
                                 val rec = SourceRecommendation(
                                     title = sManga.title,
                                     url = sManga.url,
-                                    thumbnailUrl = sManga.thumbnail_url
+                                    thumbnailUrl = sManga.thumbnail_url,
                                 )
                                 collectedRecs[sManga.url] = Pair(rec, matchScore)
                             }
@@ -1204,8 +1211,8 @@ class MangaViewModel(
                         .take(10)
                         .map { it.first }
 
-                    updateSuccessState { 
-                        it.copy(recommendations = finalRecs, isFetchingRecommendations = false) 
+                    updateSuccessState {
+                        it.copy(recommendations = finalRecs, isFetchingRecommendations = false)
                     }
                 } else {
                     // Fallback kalau tidak ada genre sama sekali
@@ -1217,17 +1224,17 @@ class MangaViewModel(
             }
         }
     }
-    
+
     suspend fun getRecommendationMangaId(recommendation: SourceRecommendation): Long? {
         val state = successState ?: return null
-        
+
         return try {
             // 1. Cek apakah manga rekomendasi ini sudah ada di database lokal
             val localManga = mangaRepository.getMangaByUrlAndSourceId(
-                url = recommendation.url, 
-                sourceId = state.source.id
+                url = recommendation.url,
+                sourceId = state.source.id,
             )
-            
+
             if (localManga != null) {
                 // Jika sudah ada, langsung kembalikan ID-nya
                 return localManga.id
@@ -1235,15 +1242,15 @@ class MangaViewModel(
 
             // 2. Jika belum ada, kita minta bantuan NetworkToLocalManga untuk membuat data baru di database
             val networkToLocalManga: NetworkToLocalManga = Injekt.get()
-            
+
             // Buat objek manga baru berdasarkan data rekomendasi
             val newManga = Manga.create().copy(
                 url = recommendation.url,
                 title = recommendation.title,
                 source = state.source.id,
-                thumbnailUrl = recommendation.thumbnailUrl
+                thumbnailUrl = recommendation.thumbnailUrl,
             )
-            
+
             // Simpan ke database dan kembalikan ID yang baru saja dibuat
             val insertedManga = networkToLocalManga(newManga)
             insertedManga.id
@@ -1252,7 +1259,6 @@ class MangaViewModel(
             null
         }
     }
-    
 
     sealed interface State {
         @Immutable
@@ -1359,10 +1365,9 @@ sealed class ChapterList {
     }
 }
 
-
 @Immutable
 data class SourceRecommendation(
     val title: String,
     val url: String,
-    val thumbnailUrl: String?
+    val thumbnailUrl: String?,
 )

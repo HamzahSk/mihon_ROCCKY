@@ -54,9 +54,9 @@ import eu.kanade.presentation.manga.components.MangaActionRow
 import eu.kanade.presentation.manga.components.MangaBottomActionMenu
 import eu.kanade.presentation.manga.components.MangaChapterListItem
 import eu.kanade.presentation.manga.components.MangaInfoBox
+import eu.kanade.presentation.manga.components.MangaRecommendationsRow
 import eu.kanade.presentation.manga.components.MangaToolbar
 import eu.kanade.presentation.manga.components.MissingChapterCountListItem
-import eu.kanade.presentation.manga.components.MangaRecommendationsRow
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.source.getNameForMangaInfo
@@ -432,15 +432,15 @@ private fun MangaScreenSmallImpl(
                             onEditNotes = onEditNotesClicked,
                         )
                     }
-                    
+
                     item(
-                        key = "RECOMMENDATIONS", 
+                        key = "RECOMMENDATIONS",
                         contentType = "RECOMMENDATIONS",
                     ) {
                         MangaRecommendationsRow(
                             recommendations = state.recommendations,
                             isLoading = state.isFetchingRecommendations,
-                            onRecommendationClicked = onRecommendationClicked
+                            onRecommendationClicked = onRecommendationClicked,
                         )
                     }
 
@@ -675,7 +675,7 @@ fun MangaScreenLargeImpl(
                         MangaRecommendationsRow(
                             recommendations = state.recommendations,
                             isLoading = state.isFetchingRecommendations,
-                            onRecommendationClicked = onRecommendationClicked
+                            onRecommendationClicked = onRecommendationClicked,
                         )
                     }
                 },

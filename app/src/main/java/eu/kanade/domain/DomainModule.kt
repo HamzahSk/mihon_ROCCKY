@@ -42,11 +42,11 @@ import tachiyomi.data.chapter.ChapterRepositoryImpl
 import tachiyomi.data.history.HistoryRepositoryImpl
 import tachiyomi.data.manga.MangaRepositoryImpl
 import tachiyomi.data.release.ReleaseServiceImpl
+import tachiyomi.data.searchhistory.SearchHistoryRepositoryImpl
 import tachiyomi.data.source.SourceRepositoryImpl
 import tachiyomi.data.source.StubSourceRepositoryImpl
 import tachiyomi.data.track.TrackRepositoryImpl
 import tachiyomi.data.updates.UpdatesRepositoryImpl
-import tachiyomi.data.searchhistory.SearchHistoryRepositoryImpl
 import tachiyomi.domain.category.interactor.CreateCategoryWithName
 import tachiyomi.domain.category.interactor.DeleteCategory
 import tachiyomi.domain.category.interactor.GetCategories
@@ -72,10 +72,6 @@ import tachiyomi.domain.history.interactor.GetTotalReadDuration
 import tachiyomi.domain.history.interactor.RemoveHistory
 import tachiyomi.domain.history.interactor.UpsertHistory
 import tachiyomi.domain.history.repository.HistoryRepository
-import tachiyomi.domain.searchhistory.repository.SearchHistoryRepository
-import tachiyomi.domain.searchhistory.interactor.GetSearchHistory
-import tachiyomi.domain.searchhistory.interactor.InsertSearchHistory
-import tachiyomi.domain.searchhistory.interactor.DeleteSearchHistory
 import tachiyomi.domain.manga.interactor.FetchInterval
 import tachiyomi.domain.manga.interactor.GetDuplicateLibraryManga
 import tachiyomi.domain.manga.interactor.GetFavorites
@@ -90,6 +86,10 @@ import tachiyomi.domain.manga.interactor.UpdateMangaNotes
 import tachiyomi.domain.manga.repository.MangaRepository
 import tachiyomi.domain.release.interactor.GetApplicationRelease
 import tachiyomi.domain.release.service.ReleaseService
+import tachiyomi.domain.searchhistory.interactor.DeleteSearchHistory
+import tachiyomi.domain.searchhistory.interactor.GetSearchHistory
+import tachiyomi.domain.searchhistory.interactor.InsertSearchHistory
+import tachiyomi.domain.searchhistory.repository.SearchHistoryRepository
 import tachiyomi.domain.source.interactor.GetRemoteManga
 import tachiyomi.domain.source.interactor.GetSourcesWithNonLibraryManga
 import tachiyomi.domain.source.repository.SourceRepository
@@ -183,12 +183,11 @@ class DomainModule : InjektModule {
         addFactory { GetExtensionsByType(get(), get()) }
         addFactory { GetExtensionSources(get()) }
         addFactory { GetExtensionLanguages(get(), get()) }
-        
+
         addSingletonFactory<SearchHistoryRepository> { SearchHistoryRepositoryImpl(get()) }
         addFactory { GetSearchHistory(get()) }
         addFactory { InsertSearchHistory(get()) }
         addFactory { DeleteSearchHistory(get()) }
-
 
         addSingletonFactory<UpdatesRepository> { UpdatesRepositoryImpl(get()) }
         addFactory { GetUpdates(get()) }

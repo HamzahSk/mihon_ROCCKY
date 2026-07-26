@@ -1,12 +1,27 @@
 package eu.kanade.presentation.manga.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,11 +33,16 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
@@ -34,6 +54,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.AttachMoney
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Done
 import androidx.compose.material.icons.outlined.DoneAll
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -41,18 +62,26 @@ import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Sync
-import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -69,11 +98,15 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -121,14 +154,22 @@ fun MangaInfoBox(
     isStubSource: Boolean,
     onCoverClick: () -> Unit,
     doSearch: (query: String, global: Boolean) -> Unit,
+    scrollOffset: Float = 0f,
     modifier: Modifier = Modifier,
 ) {
+    val backgroundColor = MaterialTheme.colorScheme.background
     Box(modifier = modifier) {
-        // Backdrop
-        val backdropGradientColors = listOf(
-            Color.Transparent,
-            MaterialTheme.colorScheme.background,
+        val parallaxFactor = 0.3f
+        val maxBlur = 25.dp
+        val minBlur = 8.dp
+        val scrollProgress = (scrollOffset / 800f).coerceIn(0f, 1f)
+
+        val backdropBlur by animateDpAsState(
+            targetValue = (minBlur + (maxBlur - minBlur) * (1f - scrollProgress)).coerceIn(minBlur, maxBlur),
+            animationSpec = spring(dampingRatio = 0.8f),
+            label = "backdropBlur",
         )
+
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
                 .data(manga)
@@ -138,17 +179,24 @@ fun MangaInfoBox(
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .matchParentSize()
+                .graphicsLayer {
+                    translationY = scrollOffset * parallaxFactor
+                }
                 .drawWithContent {
                     drawContent()
                     drawRect(
-                        brush = Brush.verticalGradient(colors = backdropGradientColors),
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                backgroundColor,
+                            ),
+                        ),
                     )
                 }
-                .blur(10.dp)
+                .blur(backdropBlur)
                 .alpha(0.4f),
         )
 
-        // Manga & source info
         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
             if (!isTabletUi) {
                 MangaAndSourceTitlesSmall(
@@ -158,6 +206,7 @@ fun MangaInfoBox(
                     isStubSource = isStubSource,
                     onCoverClick = onCoverClick,
                     doSearch = doSearch,
+                    scrollOffset = scrollOffset,
                 )
             } else {
                 MangaAndSourceTitlesLarge(
@@ -167,6 +216,7 @@ fun MangaInfoBox(
                     isStubSource = isStubSource,
                     onCoverClick = onCoverClick,
                     doSearch = doSearch,
+                    scrollOffset = scrollOffset,
                 )
             }
         }
@@ -182,14 +232,12 @@ fun MangaActionRow(
     onAddToLibraryClicked: () -> Unit,
     onWebViewClicked: (() -> Unit)?,
     onWebViewLongClicked: (() -> Unit)?,
-    onCopyUrlClicked: (() -> Unit)?, 
+    onCopyUrlClicked: (() -> Unit)?,
     onTrackingClicked: () -> Unit,
     onEditIntervalClicked: (() -> Unit)?,
     onEditCategory: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    val defaultActionButtonColor = MaterialTheme.colorScheme.onSurface.copy(alpha = DISABLED_ALPHA)
-
     val nextUpdateDays = remember(nextUpdate) {
         return@remember if (nextUpdate != null) {
             val now = Instant.now()
@@ -199,70 +247,100 @@ fun MangaActionRow(
         }
     }
 
-    // Kontainer luar pembungkus seluruh tombol
-    androidx.compose.material3.Surface(
+    val containerShape = MaterialTheme.shapes.medium
+
+    Surface(
         modifier = modifier
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
-        border = androidx.compose.foundation.BorderStroke(
+        shape = containerShape,
+        color = Color.Transparent,
+        border = BorderStroke(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
-        )
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+        ),
     ) {
-        Row(
-            modifier = Modifier.padding(vertical = 10.dp, horizontal = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp) // Memberi sela antar tombol kotak
+        Box(
+            modifier = Modifier
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                            MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.1f),
+                        ),
+                    ),
+                )
+                .fillMaxWidth(),
         ) {
-            // Tombol 1: Favorit
-            MangaActionButton(
-                title = if (favorite) stringResource(MR.strings.in_library) else stringResource(MR.strings.add_to_library),
-                icon = if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                color = if (favorite) MaterialTheme.colorScheme.primary else defaultActionButtonColor,
-                onClick = onAddToLibraryClicked,
-                onLongClick = onEditCategory
-            )
-
-            // Tombol 2: Update Interval
-            MangaActionButton(
-                title = when (nextUpdateDays) {
-                    null -> stringResource(MR.strings.not_applicable)
-                    0 -> stringResource(MR.strings.manga_interval_expected_update_soon)
-                    else -> pluralStringResource(MR.plurals.day, count = nextUpdateDays, nextUpdateDays)
-                },
-                icon = Icons.Default.HourglassEmpty,
-                color = if (isUserIntervalMode) MaterialTheme.colorScheme.primary else defaultActionButtonColor,
-                onClick = { onEditIntervalClicked?.invoke() }
-            )
-
-            // Tombol 3: Tracking
-            MangaActionButton(
-                title = if (trackingCount == 0) stringResource(MR.strings.manga_tracking_tab) else pluralStringResource(MR.plurals.num_trackers, count = trackingCount, trackingCount),
-                icon = if (trackingCount == 0) Icons.Outlined.Sync else Icons.Outlined.Done,
-                color = if (trackingCount == 0) defaultActionButtonColor else MaterialTheme.colorScheme.primary,
-                onClick = onTrackingClicked
-            )
-
-            // Tombol 4: WebView
-            if (onWebViewClicked != null) {
-                MangaActionButton(
-                    title = stringResource(MR.strings.action_web_view),
-                    icon = Icons.Outlined.Public,
-                    color = defaultActionButtonColor,
-                    onClick = onWebViewClicked,
-                    onLongClick = onWebViewLongClicked
+            Row(
+                modifier = Modifier
+                    .padding(vertical = 8.dp, horizontal = 4.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                MangaPremiumActionButton(
+                    title = if (favorite) {
+                        stringResource(
+                            MR.strings.in_library,
+                        )
+                    } else {
+                        stringResource(MR.strings.add_to_library)
+                    },
+                    icon = if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    isActive = favorite,
+                    activeColor = MaterialTheme.colorScheme.primary,
+                    onClick = onAddToLibraryClicked,
+                    onLongClick = onEditCategory,
                 )
-            }
 
-            // Tombol 5: Copy URL
-            if (onCopyUrlClicked != null) {
-                MangaActionButton(
-                    title = "Copy URL",
-                    icon = androidx.compose.material.icons.Icons.Outlined.ContentCopy, 
-                    color = defaultActionButtonColor,
-                    onClick = onCopyUrlClicked
+                MangaPremiumActionButton(
+                    title = when (nextUpdateDays) {
+                        null -> stringResource(MR.strings.not_applicable)
+                        0 -> stringResource(MR.strings.manga_interval_expected_update_soon)
+                        else -> pluralStringResource(MR.plurals.day, count = nextUpdateDays, nextUpdateDays)
+                    },
+                    icon = Icons.Default.HourglassEmpty,
+                    isActive = isUserIntervalMode,
+                    activeColor = MaterialTheme.colorScheme.primary,
+                    onClick = { onEditIntervalClicked?.invoke() },
                 )
+
+                MangaPremiumActionButton(
+                    title = if (trackingCount ==
+                        0
+                    ) {
+                        stringResource(MR.strings.manga_tracking_tab)
+                    } else {
+                        pluralStringResource(MR.plurals.num_trackers, count = trackingCount, trackingCount)
+                    },
+                    icon = if (trackingCount == 0) Icons.Outlined.Sync else Icons.Outlined.Done,
+                    isActive = trackingCount > 0,
+                    activeColor = MaterialTheme.colorScheme.primary,
+                    badge = trackingCount.takeIf { it > 0 },
+                    onClick = onTrackingClicked,
+                )
+
+                if (onWebViewClicked != null) {
+                    MangaPremiumActionButton(
+                        title = stringResource(MR.strings.action_web_view),
+                        icon = Icons.Outlined.Public,
+                        isActive = false,
+                        activeColor = MaterialTheme.colorScheme.primary,
+                        onClick = onWebViewClicked,
+                        onLongClick = onWebViewLongClicked,
+                    )
+                }
+
+                if (onCopyUrlClicked != null) {
+                    MangaPremiumActionButton(
+                        title = "Copy URL",
+                        icon = Icons.Outlined.ContentCopy,
+                        isActive = false,
+                        activeColor = MaterialTheme.colorScheme.primary,
+                        onClick = onCopyUrlClicked,
+                    )
+                }
             }
         }
     }
@@ -283,28 +361,79 @@ fun ExpandableMangaDescription(
         val (expanded, onExpanded) = rememberSaveable {
             mutableStateOf(defaultExpandState)
         }
-        val desc =
-            description.takeIf { !it.isNullOrBlank() } ?: stringResource(MR.strings.description_placeholder)
+        val desc = description.takeIf { !it.isNullOrBlank() } ?: stringResource(MR.strings.description_placeholder)
 
-        // 1. Menambahkan Judul "Sinopsis" (Setara H2) di atas deskripsi
         Text(
             text = stringResource(MR.strings.synopsis_placeholder),
-            style = MaterialTheme.typography.titleMedium, // Style H2 di Material Design 3
+            style = MaterialTheme.typography.titleMedium,
             modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .padding(top = 12.dp, bottom = 4.dp),
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
         )
 
-        MangaSummary(
-            description = desc,
-            expanded = expanded,
-            notes = notes,
-            onEditNotesClicked = onEditNotes,
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .clickableNoIndication { onExpanded(!expanded) },
-        )
+        val bgForScrim = MaterialTheme.colorScheme.background
+        val scrimGradientColors = remember(bgForScrim) {
+            listOf(Color.Transparent, bgForScrim.copy(alpha = 0.9f))
+        }
+
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .animateContentSize(animationSpec = spring(dampingRatio = 0.7f, stiffness = 300f))
+                    .clickableNoIndication { onExpanded(!expanded) },
+            ) {
+                MangaSummary(
+                    description = desc,
+                    expanded = expanded,
+                    notes = notes,
+                    onEditNotesClicked = onEditNotes,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
+
+            val caretRotation by animateFloatAsState(
+                targetValue = if (expanded) 180f else 0f,
+                animationSpec = spring(dampingRatio = 0.5f),
+                label = "caretRotation",
+            )
+
+            IconButton(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                onClick = { onExpanded(!expanded) },
+            ) {
+                Icon(
+                    painter = rememberAnimatedVectorPainter(
+                        AnimatedImageVector.animatedVectorResource(R.drawable.anim_caret_down),
+                        expanded,
+                    ),
+                    contentDescription = stringResource(
+                        if (expanded) MR.strings.manga_info_collapse else MR.strings.manga_info_expand,
+                    ),
+                    tint = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.graphicsLayer { rotationZ = caretRotation },
+                )
+            }
+        }
+
+        AnimatedVisibility(
+            visible = !expanded,
+            enter = fadeIn(animationSpec = spring()),
+            exit = fadeOut(animationSpec = spring()),
+            modifier = Modifier.padding(horizontal = 16.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .drawWithContent {
+                        drawRect(
+                            brush = Brush.verticalGradient(colors = scrimGradientColors),
+                        )
+                    },
+            )
+        }
+
         val tags = tagsProvider()
         if (!tags.isNullOrEmpty()) {
             Box(
@@ -316,6 +445,8 @@ fun ExpandableMangaDescription(
             ) {
                 var showMenu by remember { mutableStateOf(false) }
                 var tagSelected by remember { mutableStateOf("") }
+                val hapticFeedback = LocalHapticFeedback.current
+
                 DropdownMenu(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false },
@@ -335,21 +466,19 @@ fun ExpandableMangaDescription(
                         },
                     )
                 }
-                
-                // 2. Mengatur posisi susunan genre ketika sinopsis dibuka (expanded)
+
                 if (expanded) {
                     FlowRow(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        // Jika expanded = true, susunan tag berpindah ke tengah layar (Center)
-                        horizontalArrangement = Arrangement.Center, 
-                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall)
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
                     ) {
                         tags.forEach {
                             TagsChip(
                                 modifier = DefaultTagChipModifier,
                                 text = it,
                                 onClick = {
+                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                                     tagSelected = it
                                     showMenu = true
                                 },
@@ -366,6 +495,7 @@ fun ExpandableMangaDescription(
                                 modifier = DefaultTagChipModifier,
                                 text = it,
                                 onClick = {
+                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                                     tagSelected = it
                                     showMenu = true
                                 },
@@ -386,7 +516,10 @@ private fun MangaAndSourceTitlesLarge(
     isStubSource: Boolean,
     onCoverClick: () -> Unit,
     doSearch: (query: String, global: Boolean) -> Unit,
+    scrollOffset: Float = 0f,
 ) {
+    val coverParallaxOffset = scrollOffset * 0.5f
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -396,11 +529,12 @@ private fun MangaAndSourceTitlesLarge(
         MangaCover.Book(
             modifier = Modifier
                 .fillMaxWidth(0.45f)
+                .graphicsLayer { translationY = coverParallaxOffset }
                 .shadow(
-                    elevation = 8.dp, // Memberikan bayangan kedalaman
-                    shape = MaterialTheme.shapes.medium // Mengikuti bentuk melengkung
+                    elevation = 8.dp,
+                    shape = MaterialTheme.shapes.medium,
                 )
-                .clip(MaterialTheme.shapes.medium), // Memotong sudut agar melengkung modern
+                .clip(MaterialTheme.shapes.medium),
             data = ImageRequest.Builder(LocalContext.current)
                 .data(manga)
                 .crossfade(true)
@@ -431,7 +565,10 @@ private fun MangaAndSourceTitlesSmall(
     isStubSource: Boolean,
     onCoverClick: () -> Unit,
     doSearch: (query: String, global: Boolean) -> Unit,
+    scrollOffset: Float = 0f,
 ) {
+    val coverParallaxOffset = scrollOffset * 0.5f
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -442,11 +579,12 @@ private fun MangaAndSourceTitlesSmall(
         MangaCover.Book(
             modifier = Modifier
                 .fillMaxWidth(0.45f)
+                .graphicsLayer { translationY = coverParallaxOffset }
                 .shadow(
-                    elevation = 8.dp, // Memberikan bayangan kedalaman
-                    shape = MaterialTheme.shapes.medium // Mengikuti bentuk melengkung
+                    elevation = 8.dp,
+                    shape = MaterialTheme.shapes.medium,
                 )
-                .clip(MaterialTheme.shapes.medium), // Memotong sudut agar melengkung modern
+                .clip(MaterialTheme.shapes.medium),
             data = ImageRequest.Builder(LocalContext.current)
                 .data(manga)
                 .crossfade(true)
@@ -485,51 +623,56 @@ private fun ColumnScope.MangaContentInfo(
     textAlign: TextAlign? = LocalTextStyle.current.textAlign,
 ) {
     val context = LocalContext.current
+
     Text(
         text = title.ifBlank { stringResource(MR.strings.unknown_title) },
         style = MaterialTheme.typography.titleLarge,
         modifier = Modifier.clickableNoIndication(
             onLongClick = {
                 if (title.isNotBlank()) {
-                    context.copyToClipboard(
-                        title,
-                        title,
-                    )
+                    context.copyToClipboard(title, title)
                 }
             },
             onClick = { if (title.isNotBlank()) doSearch(title, true) },
         ),
         textAlign = textAlign,
+        maxLines = 3,
+        overflow = TextOverflow.Ellipsis,
     )
 
-    Spacer(modifier = Modifier.height(2.dp))
+    Spacer(modifier = Modifier.height(6.dp))
 
     Row(
         modifier = Modifier.secondaryItemAlpha(),
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            imageVector = Icons.Filled.PersonOutline,
-            contentDescription = null,
-            modifier = Modifier.size(16.dp),
-        )
+        Surface(
+            modifier = Modifier.size(20.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surfaceVariant,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.PersonOutline,
+                contentDescription = null,
+                modifier = Modifier
+                    .padding(2.dp)
+                    .size(16.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         Text(
             text = author?.takeIf { it.isNotBlank() }
                 ?: stringResource(MR.strings.unknown_author),
-            style = MaterialTheme.typography.titleSmall,
-            modifier = Modifier
-                .clickableNoIndication(
-                    onLongClick = {
-                        if (!author.isNullOrBlank()) {
-                            context.copyToClipboard(
-                                author,
-                                author,
-                            )
-                        }
-                    },
-                    onClick = { if (!author.isNullOrBlank()) doSearch(author, true) },
-                ),
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.clickableNoIndication(
+                onLongClick = {
+                    if (!author.isNullOrBlank()) {
+                        context.copyToClipboard(author, author)
+                    }
+                },
+                onClick = { if (!author.isNullOrBlank()) doSearch(author, true) },
+            ),
             textAlign = textAlign,
         )
     }
@@ -537,63 +680,44 @@ private fun ColumnScope.MangaContentInfo(
     if (!artist.isNullOrBlank() && author != artist) {
         Row(
             modifier = Modifier.secondaryItemAlpha(),
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                imageVector = Icons.Filled.Brush,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp),
-            )
+            Surface(
+                modifier = Modifier.size(20.dp),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceVariant,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Brush,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .padding(2.dp)
+                        .size(16.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             Text(
                 text = artist,
-                style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier
-                    .clickableNoIndication(
-                        onLongClick = { context.copyToClipboard(artist, artist) },
-                        onClick = { doSearch(artist, true) },
-                    ),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.clickableNoIndication(
+                    onLongClick = { context.copyToClipboard(artist, artist) },
+                    onClick = { doSearch(artist, true) },
+                ),
                 textAlign = textAlign,
             )
         }
     }
 
-    Spacer(modifier = Modifier.height(2.dp))
+    Spacer(modifier = Modifier.height(6.dp))
 
     Row(
-        modifier = Modifier.secondaryItemAlpha(),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Icon(
-            imageVector = when (status) {
-                SManga.ONGOING.toLong() -> Icons.Outlined.Schedule
-                SManga.COMPLETED.toLong() -> Icons.Outlined.DoneAll
-                SManga.LICENSED.toLong() -> Icons.Outlined.AttachMoney
-                SManga.PUBLISHING_FINISHED.toLong() -> Icons.Outlined.Done
-                SManga.CANCELLED.toLong() -> Icons.Outlined.Close
-                SManga.ON_HIATUS.toLong() -> Icons.Outlined.Pause
-                else -> Icons.Outlined.Block
-            },
-            contentDescription = null,
-            modifier = Modifier
-                .padding(end = 4.dp)
-                .size(16.dp),
-        )
+        StatusBadge(status = status)
+
         ProvideTextStyle(MaterialTheme.typography.bodyMedium) {
-            Text(
-                text = when (status) {
-                    SManga.ONGOING.toLong() -> stringResource(MR.strings.ongoing)
-                    SManga.COMPLETED.toLong() -> stringResource(MR.strings.completed)
-                    SManga.LICENSED.toLong() -> stringResource(MR.strings.licensed)
-                    SManga.PUBLISHING_FINISHED.toLong() -> stringResource(MR.strings.publishing_finished)
-                    SManga.CANCELLED.toLong() -> stringResource(MR.strings.cancelled)
-                    SManga.ON_HIATUS.toLong() -> stringResource(MR.strings.on_hiatus)
-                    else -> stringResource(MR.strings.unknown)
-                },
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-            )
-            DotSeparatorText()
             if (isStubSource) {
                 Icon(
                     imageVector = Icons.Filled.Warning,
@@ -607,13 +731,76 @@ private fun ColumnScope.MangaContentInfo(
             Text(
                 text = sourceName,
                 modifier = Modifier.clickableNoIndication {
-                    doSearch(
-                        sourceName,
-                        false,
-                    )
+                    doSearch(sourceName, false)
                 },
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
+            )
+        }
+    }
+}
+
+@Composable
+private fun StatusBadge(status: Long) {
+    val badgeColor = when (status) {
+        SManga.ONGOING.toLong() -> Color(0xFF4CAF50)
+        SManga.COMPLETED.toLong() -> Color(0xFF2196F3)
+        SManga.LICENSED.toLong() -> Color(0xFF9C27B0)
+        SManga.PUBLISHING_FINISHED.toLong() -> Color(0xFF607D8B)
+        SManga.CANCELLED.toLong() -> Color(0xFFF44336)
+        SManga.ON_HIATUS.toLong() -> Color(0xFFFF9800)
+        else -> Color(0xFF9E9E9E)
+    }
+
+    val badgeText = when (status) {
+        SManga.ONGOING.toLong() -> stringResource(MR.strings.ongoing)
+        SManga.COMPLETED.toLong() -> stringResource(MR.strings.completed)
+        SManga.LICENSED.toLong() -> stringResource(MR.strings.licensed)
+        SManga.PUBLISHING_FINISHED.toLong() -> stringResource(MR.strings.publishing_finished)
+        SManga.CANCELLED.toLong() -> stringResource(MR.strings.cancelled)
+        SManga.ON_HIATUS.toLong() -> stringResource(MR.strings.on_hiatus)
+        else -> stringResource(MR.strings.unknown)
+    }
+
+    val dotColor: Color = if (status == SManga.ONGOING.toLong()) {
+        val pulseAlpha = remember { Animatable(0.3f) }
+        LaunchedEffect(Unit) {
+            while (true) {
+                pulseAlpha.animateTo(
+                    targetValue = 1f,
+                    animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing),
+                )
+                pulseAlpha.animateTo(
+                    targetValue = 0.3f,
+                    animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing),
+                )
+            }
+        }
+        badgeColor.copy(alpha = pulseAlpha.value)
+    } else {
+        badgeColor
+    }
+
+    Surface(
+        shape = RoundedCornerShape(6.dp),
+        color = badgeColor.copy(alpha = if (isSystemInDarkTheme()) 0.25f else 0.15f),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(dotColor),
+            )
+            Text(
+                text = badgeText,
+                style = MaterialTheme.typography.labelSmall,
+                color = badgeColor,
             )
         }
     }
@@ -673,6 +860,7 @@ private fun MangaSummary(
     val loadImages = remember { preferences.imagesInDescription.get() }
     val animProgress by animateFloatAsState(
         targetValue = if (expanded) 1f else 0f,
+        animationSpec = spring(dampingRatio = 0.7f, stiffness = 300f),
         label = "summary",
     )
     var infoHeight by remember { mutableIntStateOf(0) }
@@ -681,8 +869,6 @@ private fun MangaSummary(
         contents = listOf(
             {
                 Text(
-                    // Shows at least 3 lines if no notes
-                    // when there are notes show 6
                     text = if (notes.isBlank()) "\n\n" else "\n\n\n\n\n",
                     style = MaterialTheme.typography.bodyMedium,
                 )
@@ -711,42 +897,19 @@ private fun MangaSummary(
                     }
                 }
             },
-            {
-                val colors = listOf(Color.Transparent, MaterialTheme.colorScheme.background)
-                Box(
-                    modifier = Modifier.background(Brush.verticalGradient(colors = colors)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_caret_down)
-                    Icon(
-                        painter = rememberAnimatedVectorPainter(image, !expanded),
-                        contentDescription = stringResource(
-                            if (expanded) MR.strings.manga_info_collapse else MR.strings.manga_info_expand,
-                        ),
-                        tint = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.background(Brush.radialGradient(colors = colors.asReversed())),
-                    )
-                }
-            },
         ),
-    ) { (shrunk, actual, scrim), constraints ->
+    ) { (shrunk, actual), constraints ->
         val shrunkHeight = shrunk.single()
             .measure(constraints)
             .height
         val heightDelta = infoHeight - shrunkHeight
-        val scrimHeight = 24.dp.roundToPx()
 
         val actualPlaceable = actual.single()
             .measure(constraints)
-        val scrimPlaceable = scrim.single()
-            .measure(Constraints.fixed(width = constraints.maxWidth, height = scrimHeight))
 
-        val currentHeight = shrunkHeight + ((heightDelta + scrimHeight) * animProgress).roundToInt()
+        val currentHeight = shrunkHeight + (heightDelta * animProgress).roundToInt()
         layout(constraints.maxWidth, currentHeight) {
             actualPlaceable.place(0, 0)
-
-            val scrimY = currentHeight - scrimHeight
-            scrimPlaceable.place(0, scrimY)
         }
     }
 }
@@ -761,7 +924,8 @@ private fun TagsChip(
 ) {
     CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
         SuggestionChip(
-            modifier = modifier,
+            modifier = modifier
+                .shadow(2.dp, shape = MaterialTheme.shapes.small),
             onClick = onClick,
             label = { Text(text = text, style = MaterialTheme.typography.bodySmall) },
         )
@@ -769,30 +933,133 @@ private fun TagsChip(
 }
 
 @Composable
-private fun RowScope.MangaActionButton(
+private fun RowScope.MangaPremiumActionButton(
     title: String,
     icon: ImageVector,
-    color: Color,
+    isActive: Boolean,
+    activeColor: Color,
+    badge: Int? = null,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
 ) {
-    // Ubah ke FilledTonalButton untuk kesan modern yang menyatu dengan background
-    androidx.compose.material3.FilledTonalButton(
-        onClick = onClick,
-        modifier = Modifier.weight(1f),
-        shape = MaterialTheme.shapes.medium, // Sudut melengkung modern
-        colors = androidx.compose.material3.ButtonDefaults.filledTonalButtonColors(
-            containerColor = color.copy(alpha = 0.1f), // Latar belakang transparan halus
-            contentColor = color
+    val density = LocalDensity.current
+    val tooltipState = rememberTooltipState()
+    val defaultColor = MaterialTheme.colorScheme.onSurface.copy(alpha = DISABLED_ALPHA)
+
+    val iconColor by animateColorAsState(
+        targetValue = if (isActive) activeColor else defaultColor,
+        animationSpec = spring(dampingRatio = 0.5f),
+        label = "iconColor",
+    )
+
+    var clickCount by remember { mutableIntStateOf(0) }
+    val heartScale = remember { Animatable(1f) }
+
+    LaunchedEffect(clickCount) {
+        if (clickCount > 0 && icon == Icons.Filled.Favorite) {
+            heartScale.snapTo(1f)
+            heartScale.animateTo(1.4f, spring(dampingRatio = 0.3f, stiffness = 300f))
+            heartScale.animateTo(1f, spring(dampingRatio = 0.5f))
+        }
+    }
+
+    val containerElevation by animateDpAsState(
+        targetValue = if (isActive) 4.dp else 1.dp,
+        animationSpec = spring(dampingRatio = 0.6f),
+        label = "containerElevation",
+    )
+
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+            TooltipAnchorPosition.Above,
         ),
-        contentPadding = PaddingValues(vertical = 10.dp)
-        // Hapus border dan elevation agar menjadi flat button yang bersih
+        tooltip = {
+            PlainTooltip {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
+        },
+        state = tooltipState,
+        focusable = false,
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = title,
-            tint = color,
-            modifier = Modifier.size(22.dp),
-        )
+        Surface(
+            modifier = Modifier
+                .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+                .shadow(
+                    elevation = containerElevation,
+                    shape = CircleShape,
+                    ambientColor = if (isActive) activeColor else Color.Transparent,
+                    spotColor = if (isActive) activeColor else Color.Transparent,
+                ),
+            shape = CircleShape,
+            color = if (isActive) {
+                activeColor.copy(alpha = 0.12f)
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+            },
+            tonalElevation = if (isActive) 2.dp else 0.dp,
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                IconButton(
+                    onClick = {
+                        if (icon == Icons.Filled.Favorite || icon == Icons.Outlined.FavoriteBorder) {
+                            clickCount++
+                        }
+                        onClick()
+                    },
+                    modifier = Modifier.size(48.dp),
+                    colors = IconButtonDefaults.iconButtonColors(
+                        contentColor = iconColor,
+                    ),
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = title,
+                        modifier = Modifier
+                            .size(22.dp)
+                            .then(
+                                if (icon == Icons.Filled.Favorite) {
+                                    Modifier.graphicsLayer {
+                                        scaleX = heartScale.value
+                                        scaleY = heartScale.value
+                                    }
+                                } else {
+                                    Modifier
+                                },
+                            ),
+                    )
+                }
+
+                if (badge != null) {
+                    val badgeScale by animateFloatAsState(
+                        targetValue = 1f,
+                        animationSpec = spring(dampingRatio = 0.5f, stiffness = 500f),
+                        label = "badgeScale",
+                    )
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .offset(x = (-2).dp, y = 2.dp)
+                            .graphicsLayer(scaleX = badgeScale, scaleY = badgeScale)
+                            .size(18.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.primary,
+                                shape = CircleShape,
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = badge.toString(),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 10.sp,
+                            ),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                        )
+                    }
+                }
+            }
+        }
     }
 }

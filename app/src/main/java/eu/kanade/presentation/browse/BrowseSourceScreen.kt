@@ -88,10 +88,10 @@ fun BrowseSourceContent(
             modifier = Modifier
                 .fillMaxSize() // Supaya mengambil seluruh sisa layar
                 .padding(contentPadding),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loading_cat))
-            
+
             LottieAnimation(
                 composition = composition,
                 modifier = Modifier.size(150.dp),

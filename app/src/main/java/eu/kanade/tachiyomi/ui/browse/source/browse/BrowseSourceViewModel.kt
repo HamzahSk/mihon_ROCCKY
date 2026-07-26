@@ -52,8 +52,8 @@ import tachiyomi.domain.manga.interactor.NetworkToLocalManga
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.manga.model.MangaWithChapterCount
 import tachiyomi.domain.manga.model.toMangaUpdate
-import tachiyomi.domain.searchhistory.interactor.GetSearchHistory
 import tachiyomi.domain.searchhistory.interactor.DeleteSearchHistory
+import tachiyomi.domain.searchhistory.interactor.GetSearchHistory
 import tachiyomi.domain.searchhistory.interactor.InsertSearchHistory
 import tachiyomi.domain.source.interactor.GetRemoteManga
 import tachiyomi.domain.source.service.SourceManager
@@ -85,7 +85,7 @@ class BrowseSourceViewModel(
     private val database: Database = Injekt.get(),
     // New: ensure network-to-local manga helper is injected so clicks create local entries first
     private val networkToLocalManga: NetworkToLocalManga = Injekt.get(),
-): StateViewModel<BrowseSourceViewModel.State>(State(Listing.valueOf(listingQuery))) {
+) : StateViewModel<BrowseSourceViewModel.State>(State(Listing.valueOf(listingQuery))) {
 
     companion object {
         val SOURCE_ID_KEY = CreationExtras.Key<Long>()
@@ -294,7 +294,13 @@ class BrowseSourceViewModel(
 
                 // Read last 5 history rows for this source to collect genres
                 val historyGenres: List<List<String>> = try {
-                    database.historyQueries.getHistoryBySource(sourceId, 5L) { _id: Long, chapter_id: Long, last_read: java.util.Date?, time_read: Long, genres: kotlin.collections.List<String>? ->
+                    database.historyQueries.getHistoryBySource(sourceId, 5L) {
+                            _id: Long,
+                            chapter_id: Long,
+                            last_read: java.util.Date?,
+                            time_read: Long,
+                            genres: kotlin.collections.List<String>?,
+                        ->
                         genres ?: emptyList()
                     }.awaitAsList()
                 } catch (e: Exception) {
@@ -349,7 +355,9 @@ class BrowseSourceViewModel(
                         for (sourceFilter in filterList) {
                             if (sourceFilter is SourceModelFilter.Group<*>) {
                                 for (filter in sourceFilter.state) {
-                                    if (filter is SourceModelFilter<*> && activeGenres.any { ag -> ag.equals(filter.name, true) }) {
+                                    if (filter is SourceModelFilter<*> &&
+                                        activeGenres.any { ag -> ag.equals(filter.name, true) }
+                                    ) {
                                         when (filter) {
                                             is SourceModelFilter.TriState -> filter.state = 1
                                             is SourceModelFilter.CheckBox -> filter.state = true
@@ -381,7 +389,8 @@ class BrowseSourceViewModel(
                         if (collected.size >= desired) break
 
                         // Drop least frequent and try again
-                        activeGenres = if (activeGenres.size > 1) activeGenres.dropLast(1).toMutableList() else mutableListOf()
+                        activeGenres =
+                            if (activeGenres.size > 1) activeGenres.dropLast(1).toMutableList() else mutableListOf()
                     }
 
                     // Fallback: if still not enough, combine popular and latest
@@ -573,4 +582,3 @@ class BrowseSourceViewModel(
         val isUserQuery get() = listing is Listing.Search && !listing.query.isNullOrEmpty()
     }
 }
-

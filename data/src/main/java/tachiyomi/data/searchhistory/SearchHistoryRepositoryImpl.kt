@@ -20,7 +20,7 @@ class SearchHistoryRepositoryImpl(
             database.search_historyQueries.insert(
                 sourceId = sourceId,
                 searchQuery = query,
-                dateSearched = System.currentTimeMillis()
+                dateSearched = System.currentTimeMillis(),
             )
         } catch (e: Exception) {
             // Tangani error dengan logcat seperti di HistoryRepositoryImpl
