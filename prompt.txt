@@ -49,9 +49,10 @@ Tolong lakukan upgrade UI pada komponen MangaInfoHeader.kt dengan ketentuan beri
 - Lazy loading untuk gambar
 - Gunakan Modifier.animateContentSize untuk perubahan layout
 
-## 8. Testing
-- Setelah selesai, jalankan ./gradlew testDebugUnitTest hingga BUILD SUCCESSFUL
-- Pastikan tidak ada compile error
+## 8. Testing & Formatting
+- Jalankan `./gradlew spotlessApply` untuk memastikan format kode sudah sesuai standar project.
+- Setelah selesai, jalankan `./gradlew testDebugUnitTest` hingga **BUILD SUCCESSFUL**.
+- Pastikan tidak ada compile error.
 
 ## Catatan Penting:
 - JANGAN mengubah logika bisnis atau fitur yang sudah ada
