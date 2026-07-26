@@ -1,6 +1,8 @@
 package eu.kanade.presentation.library.components
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -23,17 +25,19 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -46,8 +50,8 @@ import tachiyomi.presentation.core.util.selectedBackground
 import tachiyomi.domain.manga.model.MangaCover as MangaCoverModel
 
 object CommonMangaItemDefaults {
-    val GridHorizontalSpacer = 4.dp
-    val GridVerticalSpacer = 4.dp
+    val GridHorizontalSpacer = 6.dp
+    val GridVerticalSpacer = 6.dp
 
     @Suppress("ConstPropertyName")
     const val BrowseFavoriteCoverAlpha = 0.34f
@@ -127,14 +131,15 @@ private fun BoxScope.CoverTextOverlay(
 ) {
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp))
+            .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp))
             .background(
                 Brush.verticalGradient(
                     0f to Color.Transparent,
-                    1f to Color(0xAA000000),
+                    0.55f to Color.Black.copy(alpha = 0.18f),
+                    1f to MaterialTheme.colorScheme.scrim.copy(alpha = 0.92f),
                 ),
             )
-            .fillMaxHeight(0.33f)
+            .fillMaxHeight(0.42f)
             .fillMaxWidth()
             .align(Alignment.BottomCenter),
     )
@@ -145,13 +150,14 @@ private fun BoxScope.CoverTextOverlay(
         GridItemTitle(
             modifier = Modifier
                 .weight(1f)
-                .padding(8.dp),
+                .padding(10.dp),
             title = title,
             style = MaterialTheme.typography.titleSmall.copy(
                 color = Color.White,
+                fontWeight = FontWeight.SemiBold,
                 shadow = Shadow(
-                    color = Color.Black,
-                    blurRadius = 4f,
+                    color = Color.Black.copy(alpha = 0.75f),
+                    blurRadius = 6f,
                 ),
             ),
             minLines = 1,
@@ -217,9 +223,11 @@ fun MangaComfortableGridItem(
                 },
             )
             GridItemTitle(
-                modifier = Modifier.padding(4.dp),
+                modifier = Modifier.padding(top = 6.dp, start = 4.dp, end = 4.dp),
                 title = title,
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.SemiBold,
+                ),
                 minLines = 2,
                 maxLines = titleMaxLines,
             )
@@ -276,8 +284,6 @@ private fun GridItemTitle(
     Text(
         modifier = modifier,
         text = title,
-        fontSize = 12.sp,
-        lineHeight = 18.sp,
         minLines = minLines,
         maxLines = maxLines,
         overflow = TextOverflow.Ellipsis,
@@ -296,15 +302,33 @@ private fun GridItemSelectable(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
+    val shape = MaterialTheme.shapes.medium
+    val containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
+        if (isSelected) 3.dp else 1.dp,
+    )
     Box(
         modifier = modifier
-            .clip(MaterialTheme.shapes.small)
+            .shadow(
+                elevation = if (isSelected) 8.dp else 2.dp,
+                shape = shape,
+                clip = false,
+            )
+            .clip(shape)
+            .background(containerColor)
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick,
             )
-            .selectedOutline(isSelected = isSelected, color = MaterialTheme.colorScheme.secondary)
-            .padding(4.dp),
+            .border(
+                width = if (isSelected) 1.5.dp else 1.dp,
+                color = if (isSelected) {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)
+                } else {
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
+                },
+                shape = shape,
+            )
+            .animateContentSize(),
     ) {
         val contentColor = if (isSelected) {
             MaterialTheme.colorScheme.onSecondary
@@ -316,14 +340,6 @@ private fun GridItemSelectable(
         }
     }
 }
-
-/**
- * @see GridItemSelectable
- */
-private fun Modifier.selectedOutline(
-    isSelected: Boolean,
-    color: Color,
-) = drawBehind { if (isSelected) drawRect(color = color) }
 
 /**
  * Layout of list item.
@@ -347,7 +363,7 @@ fun MangaListItem(
                 onClick = onClick,
                 onLongClick = onLongClick,
             )
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         MangaCover.Square(
@@ -355,15 +371,18 @@ fun MangaListItem(
                 .fillMaxHeight()
                 .alpha(coverAlpha),
             data = coverData,
+            shape = MaterialTheme.shapes.medium,
         )
         Text(
             text = title,
             modifier = Modifier
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 14.dp)
                 .weight(1f),
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = FontWeight.Medium,
+            ),
         )
         BadgeGroup(content = badge)
         if (onClickContinueReading != null) {
