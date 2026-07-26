@@ -44,6 +44,7 @@ jobs:
       - name: Build
         run: ./gradlew assembleRelease -Pinclude-telemetry -Penable-updater
         env:
+          RUNNER_TEMP: ${{ runner.temp }}
           storeFileBase64: ${{ secrets.SIGNING_KEY }}
           storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyAlias: ${{ secrets.ALIAS }}
@@ -94,6 +95,7 @@ jobs:
       - name: Build
         run: ./gradlew assembleFoss -Penable-updater
         env:
+          RUNNER_TEMP: ${{ runner.temp }}
           storeFileBase64: ${{ secrets.SIGNING_KEY }}
           storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyAlias: ${{ secrets.ALIAS }}
