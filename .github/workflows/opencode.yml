@@ -35,8 +35,7 @@ jobs:
         run: |
           opencode run \
             --model opencode/deepseek-v4-flash-free \
-            --approval-mode full-auto \
-            --quiet \
+            --auto \
             "$(cat prompt.txt)" || true
 
       - name: Collect changed files
