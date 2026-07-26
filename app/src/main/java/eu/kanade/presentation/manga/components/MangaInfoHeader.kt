@@ -143,15 +143,15 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 object MangaInfoHeaderDefaults {
-    val SpringFast = spring<Float>(
+    val SPRING_FAST = spring<Float>(
         dampingRatio = Spring.DampingRatioMediumBouncy,
         stiffness = Spring.StiffnessMedium,
     )
-    val SpringMedium = spring<Float>(
+    val SPRING_MEDIUM = spring<Float>(
         dampingRatio = Spring.DampingRatioNoBouncy,
         stiffness = Spring.StiffnessMedium,
     )
-    val SpringSlow = spring<Float>(
+    val SPRING_SLOW = spring<Float>(
         dampingRatio = Spring.DampingRatioLowBouncy,
         stiffness = Spring.StiffnessLow,
     )
@@ -313,7 +313,7 @@ fun MangaActionRow(
 
     val containerElevation by animateFloatAsState(
         targetValue = if (favorite) 4f else 1f,
-        animationSpec = MangaInfoHeaderDefaults.SpringMedium,
+        animationSpec = MangaInfoHeaderDefaults.SPRING_MEDIUM,
         label = "containerElevation",
     )
 
@@ -477,7 +477,7 @@ fun ExpandableMangaDescription(
                     ) {
                         tags.forEach { tag ->
                             TagsChip(
-                                modifier = DEFAULT_TAG_CHIP_MODIFIER,
+                                modifier = DefaultTagChipModifier,
                                 text = tag,
                                 onClick = {
                                     tagSelected = tag
@@ -493,7 +493,7 @@ fun ExpandableMangaDescription(
                     ) {
                         items(items = tags) { tag ->
                             TagsChip(
-                                modifier = DEFAULT_TAG_CHIP_MODIFIER,
+                                modifier = DefaultTagChipModifier,
                                 text = tag,
                                 onClick = {
                                     tagSelected = tag
@@ -526,7 +526,7 @@ private fun MangaAndSourceTitlesLarge(
     ) {
         val coverElevation by animateFloatAsState(
             targetValue = 8.dp.value,
-            animationSpec = MangaInfoHeaderDefaults.SpringMedium,
+            animationSpec = MangaInfoHeaderDefaults.SPRING_MEDIUM,
             label = "coverElevation",
         )
 
@@ -582,7 +582,7 @@ private fun MangaAndSourceTitlesSmall(
     ) {
         val coverElevation by animateFloatAsState(
             targetValue = 8.dp.value,
-            animationSpec = MangaInfoHeaderDefaults.SpringMedium,
+            animationSpec = MangaInfoHeaderDefaults.SPRING_MEDIUM,
             label = "coverElevation",
         )
 
@@ -889,7 +889,7 @@ private fun MangaSummary(
     val loadImages = remember { preferences.imagesInDescription.get() }
     val animProgress by animateFloatAsState(
         targetValue = if (expanded) 1f else 0f,
-        animationSpec = MangaInfoHeaderDefaults.SpringMedium,
+        animationSpec = MangaInfoHeaderDefaults.SPRING_MEDIUM,
         label = "summary",
     )
     var infoHeight by remember { mutableIntStateOf(0) }
@@ -941,7 +941,7 @@ private fun MangaSummary(
                     val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_caret_down)
                     val rotation by animateFloatAsState(
                         targetValue = if (expanded) 180f else 0f,
-                        animationSpec = MangaInfoHeaderDefaults.SpringMedium,
+                        animationSpec = MangaInfoHeaderDefaults.SPRING_MEDIUM,
                         label = "expandRotation",
                     )
                     Icon(
@@ -986,7 +986,7 @@ private fun MangaSummary(
     }
 }
 
-private val DEFAULT_TAG_CHIP_MODIFIER = Modifier.padding(vertical = 4.dp)
+private val DefaultTagChipModifier = Modifier.padding(vertical = 4.dp)
 
 @Composable
 private fun TagsChip(
@@ -1036,7 +1036,7 @@ private fun RowScope.MangaActionButton(
 
     val elevation by animateFloatAsState(
         targetValue = if (isPressed) 6f else if (isSelected) 3f else 1f,
-        animationSpec = MangaInfoHeaderDefaults.SpringFast,
+        animationSpec = MangaInfoHeaderDefaults.SPRING_FAST,
         label = "buttonElevation",
     )
 
