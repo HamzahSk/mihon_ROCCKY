@@ -70,6 +70,11 @@ import androidx.paging.LoadState
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.AsyncImage
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
+import eu.kanade.tachiyomi.R
 import eu.kanade.core.util.ifSourcesLoaded
 import eu.kanade.presentation.browse.BrowseSourceContent
 import eu.kanade.presentation.browse.MissingSourceScreen
@@ -550,8 +555,12 @@ fun MangaCarousel(
                 .height(320.dp), // Disamakan dengan tinggi carousel
             contentAlignment = Alignment.Center // Biar loadingnya pas di tengah
         ) {
-            CircularProgressIndicator(
-                color = MaterialTheme.colorScheme.primary
+            val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loading_cat))
+            
+            LottieAnimation(
+                composition = composition,
+                modifier = Modifier.size(150.dp), // Ukuran kucingnya dibuat 150dp agar pas
+                iterations = LottieConstants.IterateForever,
             )
         }
     }
