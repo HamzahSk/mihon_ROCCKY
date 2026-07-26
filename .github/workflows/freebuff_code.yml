@@ -1,0 +1,65 @@
+name: Freebuff Auto-Fixer & Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  freebuff-fix-and-test:
+    name: Let Freebuff Fix & Test DB History
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Install Freebuff
+        run: npm install -g freebuff
+
+      - name: Run Freebuff to Fix and Verify
+        run: |
+          # Mengirimkan isi prompt.txt langsung ke Freebuff secara non-interaktif
+          cat prompt.txt | freebuff || true
+
+      - name: Collect Changed and New Files
+        run: |
+          # 1. Masukkan semua perubahan dan file baru ke staging area
+          git add -A
+          
+          # 2. Buat folder penampung sementara
+          mkdir -p output_artifact
+          
+          # 3. Looping semua file yang berubah, buat struktur foldernya, dan copy filenya
+          for file in $(git diff --name-only --cached); do
+            # Pastikan itu benar-benar file, bukan folder yang terhapus
+            if [ -f "$file" ]; then
+              mkdir -p "output_artifact/$(dirname "$file")"
+              cp "$file" "output_artifact/$file"
+            fi
+          done
+          
+          echo "File yang berhasil diubah/dibuat beserta strukturnya:"
+          git diff --name-status --cached
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: freebuff-db-fixed-files-${{ github.sha }}
+          path: output_artifact/
+          
