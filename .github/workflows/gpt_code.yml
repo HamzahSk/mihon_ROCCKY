@@ -30,7 +30,7 @@ jobs:
       - name: Run OMP to Fix and Verify
         env:
           # Pastikan API Key Bluesminds milikmu ditaruh di GitHub Secrets demi keamanan!
-          BLUESMINDS_API_KEY: sk-dHDsiQJRGgbPOeZnfJoVwpxeM56eXI5Yusp5L3vpQWEx0J3x
+          BLUESMINDS_API_KEY: ${{ secrets.APIKEY_VSLLM }}
           
         run: |
           mkdir -p ~/.omp/agent
