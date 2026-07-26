@@ -1,6 +1,16 @@
 package eu.kanade.presentation.history
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
+import eu.kanade.tachiyomi.R
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -8,6 +18,7 @@ import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -27,7 +38,6 @@ import tachiyomi.presentation.core.components.ListGroupHeader
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
-import tachiyomi.presentation.core.screens.LoadingScreen
 import java.time.LocalDate
 
 @Composable
@@ -66,7 +76,19 @@ fun HistoryScreen(
     ) { contentPadding ->
         state.list.let {
             if (it == null) {
-                LoadingScreen(Modifier.padding(contentPadding))
+                val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loading_cat))
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(contentPadding),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    LottieAnimation(
+                        composition = composition,
+                        modifier = Modifier.size(120.dp),
+                        iterations = LottieConstants.IterateForever,
+                    )
+                }
             } else if (it.isEmpty()) {
                 val msg = if (!state.searchQuery.isNullOrEmpty()) {
                     MR.strings.no_results_found

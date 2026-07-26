@@ -307,6 +307,7 @@ dependencies {
     implementation(libs.reorderable)
     implementation(libs.bundles.markdown)
     implementation(libs.materialKolor)
+    implementation(libs.lottie.compose)
 
     // Logging
     implementation(libs.logcat)

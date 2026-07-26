@@ -71,6 +71,7 @@ tapmoc = "0.4.2"
 unifile = "08f224c8f9"
 voyager = "2.2.21-1.10.3"
 xmlutil = "1.0.1"
+lottie = "6.6.2"
 
 [libraries]
 aboutLibraries-compose = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutLibraries" }
@@ -182,6 +183,7 @@ unifile = { module = "com.github.mihon:unifile", version.ref = "unifile" }
 voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
 voyager-tabNavigator = { module = "cafe.adriel.voyager:voyager-tab-navigator", version.ref = "voyager" }
 voyager-transitions = { module = "cafe.adriel.voyager:voyager-transitions", version.ref = "voyager" }
+lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottie" }
 xmlutil-core = { module = "io.github.pdvrieze.xmlutil:core-android", version.ref = "xmlutil" }
 xmlutil-serialization = { module = "io.github.pdvrieze.xmlutil:serialization", version.ref = "xmlutil" }
 
