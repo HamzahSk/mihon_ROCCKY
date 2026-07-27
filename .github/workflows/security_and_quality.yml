@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write # Diubah ke WRITE agar git-auto-commit-action bisa push hasil perbaikan format
   security-events: write # Dibutuhkan jika mengupload hasil scan keamanan
 
 jobs:
@@ -61,8 +61,13 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Check Code Format (Spotless)
-        run: ./gradlew spotlessCheck
+      - name: Auto-fix Code Format (Spotless)
+        run: ./gradlew spotlessApply
+
+      - name: Commit changes (If format was fixed)
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "style: auto-fix formatting via Spotless"
 
       - name: Run Android Lint (Check potential bugs & performance issues)
         run: ./gradlew lintDebug
@@ -87,4 +92,3 @@ jobs:
         with:
           name: unit-test-report-${{ github.sha }}
           path: app/build/reports/tests/testDebugUnitTest
-          
