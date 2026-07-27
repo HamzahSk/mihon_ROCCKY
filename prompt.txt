@@ -1,28 +1,50 @@
 ## Context & Status
-- **Status Perbaikan Sebelumnya:** - Penyesuaian skala/dimensi bitmap (`bitmapWidth`/`bitmapHeight`) dan logika *overlay* teks di `ReaderActivity.kt` sudah berhasil diperbaiki.
-  - Eksekusi OCR otomatis via `triggerOcrForCurrentPage()` di `ReaderViewModel.kt` sudah diimplementasikan.
-- **Acuan Referensi:** Dokumentasi standar integrasi ML Kit dan Text Recognition telah disimpan di file `DOCS_MLKIT.md` pada root/home proyek.
-
-## Issue Saat Ini
-1. **Pemeriksaan Integrasi ML Kit:** Perlu dipastikan pipeline ekstraksi teks dari *bitmap* hasil tangkapan layar sudah menggunakan acuan *best practice* dari ML Kit yang tertera pada `DOCS_MLKIT.md`.
-2. **Indikator Sistem Android Hilang:** Perekaman layar via `MediaProjection` dan `VirtualDisplay` perlu diverifikasi kembali agar sistem Android menampilkan indikator *screen capture* (perekaman/cast) aktif di *status bar*, bukan bergantung pada metode *fallback view capture*.
+- **Status Saat Ini:** Fitur `MediaProjection` berhasil meminta izin, notifikasi sistem muncul, dan tidak ada *crash*.
+- **Issue:** Setelah fitur aktif, tidak ada perubahan apa-apa pada layar (teks OCR tidak muncul dan tidak ada *overlay* teks ber-background).
+- **Akar Masalah:** Terdapat kebocoran/buffer overflow pada `ImageReader` di dalam `ScreenCaptureHelper.kt`. Saat ini `setOnImageAvailableListener` hanya melakukan *logging* tanpa mengeksekusi `acquireLatestImage()` dan `close()`. Akibatnya, kapasitas buffer (`maxImages = 2`) langsung penuh dalam hitungan milidetik, perekaman layar macet (*freeze*), dan pipeline OCR tidak mendapatkan *bitmap* gambar.
 
 ## Tugas & Spesifikasi Perbaikan
 
-Tolong selesaikan perbaikan ini dengan mengikuti petunjuk berikut:
+Fokus perbaiki file **`ScreenCaptureHelper.kt`** dengan langkah-langkah berikut:
 
-1. **Baca File Referensi `DOCS_MLKIT.md`:**
-   - Wajib baca file `DOCS_MLKIT.md` yang berada di root/home proyek sebelum melakukan perubahan kode.
-   - Pelajari struktur pembuatan `TextRecognitionHelper`, penggunaan `InputImage`, serta penanganan *recognizer* (termasuk opsi dukungan multi-bahasa seperti Jepang/Mandarin/Korea jika diperlukan).
+1. **Buat Variabel Penampung Global:**
+   - Tambahkan variabel `private var latestBitmap: Bitmap? = null` di dalam *class* `ScreenCaptureHelper`.
 
-2. **Verifikasi Pipeline OCR ML Kit:**
-   - Pastikan *bitmap* yang ditangkap oleh `ImageReader` diubah menjadi `InputImage` dan diproses menggunakan `TextRecognition.getClient()` sesuai acuan di `DOCS_MLKIT.md`.
-   - Pastikan *listener* sukses/gagal menangani hasil rekognisi teks dan mengumpankannya kembali ke `ReaderViewModel`.
+2. **Perbarui `setOnImageAvailableListener` (Wajib Kuras Buffer):**
+   - Ubah logika *listener* agar selalu mengambil *frame* terbaru, mengonversinya ke `Bitmap`, dan **langsung menutup** objek `Image` agar buffer tidak penuh.
+   - Contoh logika:
+     ```kotlin
+     imageReader?.setOnImageAvailableListener({ reader ->
+         try {
+             val image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
+             val bitmap = bitmapFromImage(image)
+             image.close() // WAJIB: Tutup image agar buffer ImageReader tidak macet
+             
+             latestBitmap?.recycle() // Bersihkan memory bitmap lama
+             latestBitmap = bitmap
+         } catch (e: Exception) {
+             logcat(LogPriority.ERROR, e) { "Error in ImageReader listener" }
+         }
+     }, Handler(callbackThread!!.looper))
+     ```
 
-3. **Perbaiki `MediaProjection` & `VirtualDisplay`:**
-   - Pastikan `VirtualDisplay` terhubung secara riil dengan `Surface` dari `ImageReader`, sehingga OS Android secara resmi mengaktifkan indikator *screen recording* di *status bar*.
-   - Hindari penggunaan *fallback view capture* secara penuh jika izin `MediaProjection` sudah diberikan oleh pengguna (`RESULT_OK`).
+3. **Sesuaikan `captureBitmap()`:**
+   - Karena *listener* sekarang yang bertugas membaca *frame* secara asinkron, ubah fungsi `captureBitmap()` agar sekadar me-return *copy* dari `latestBitmap`.
+   - Contoh logika:
+     ```kotlin
+     suspend fun captureBitmap(): Bitmap? = withContext(Dispatchers.IO) {
+         val bmp = latestBitmap
+         if (bmp == null || bmp.isRecycled) {
+             return@withContext null
+         }
+         // Return copy agar aman digunakan oleh OCR engine tanpa takut ter-recycle oleh listener
+         bmp.copy(bmp.config, false)
+     }
+     ```
 
-4. **Testing & Clean Code (WAJIB):**
-   - Jalankan `./gradlew spotlessApply` untuk merapikan format kode.
-   - Jalankan `./gradlew testDebugUnitTest` dan pastikan **BUILD SUCCESSFUL**.
+4. **Perbarui `release()`:**
+   - Pastikan `latestBitmap?.recycle()` dan `latestBitmap = null` dipanggil saat `release()` dieksekusi agar tidak *memory leak*.
+
+5. **Testing (WAJIB):**
+   - Jalankan `./gradlew spotlessApply`.
+   - Jalankan `./gradlew testDebugUnitTest` dan pastikan BUILD SUCCESSFUL.
