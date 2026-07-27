@@ -100,7 +100,7 @@ jobs:
     name: Android UI Tests & Crash Detection
     # Catatan: Sangat disarankan menggunakan macOS runner untuk emulator 
     # karena mendukung Hardware Acceleration (HAXM), sehingga jauh lebih cepat dan stabil.
-    runs-on: macos-latest 
+    runs-on: macos-13
 
     steps:
       - name: Checkout Code
@@ -120,7 +120,7 @@ jobs:
         with:
           api-level: 29 # Seringkali API 29 lebih stabil di runner CI daripada API 30
           target: google_apis
-          arch: aarch64 
+          arch: x86_64
           profile: Nexus 6
           disable-animations: true # Wajib dinyalakan agar UI test tidak flaky
           force-avd-creation: false
