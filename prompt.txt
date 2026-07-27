@@ -1,31 +1,27 @@
-Tolong tambahkan fitur **Manga Live Translator (Tahap 1: OCR Detection)** pada komponen viewer/reader manga dengan ketentuan sebagai berikut:
+Tolong lakukan analisis dan perbaikan (bug fixing) pada fitur OCR Reader yang mengalami crash saat tombol Translate diklik.
 
-## 1. UI & Penempatan Tombol
-- **Tombol Action Baru**: Tambahkan tombol "Translate" di samping tombol *Favorite* / *Save* (misalnya di action bar atau toolbar reader).
-- **Indikator Status**: 
-  - Tombol memiliki state (Active/Inactive) dengan indikator visual yang jelas (misalnya perubahan warna ikon atau badge pulsing) saat fitur auto-translate sedang aktif.
-  - Tambahkan animasi transisi halus saat status tombol berubah.
+## 1. Detail Error & Context Crash
+Aplikasi mengalami crash `NullPointerException` pada file `OcrEngineImpl.kt` saat diinstansiasi dari tombol UI Compose (`ReaderActivity$AppBars`):
 
-## 2. Logika Deteksi OCR (Auto-Detect saat Scroll Berhenti)
-- **Scroll Detection**: Buat listener/observer pada scroll state di halaman baca manga.
-- **Debounce / Interval**: Jalankan proses deteksi OCR hanya saat pengguna **berhenti melakukan scroll** selama **1,25 detik** (`debounce(1250ms)`).
-- **Proses OCR**:
-  - Ambil *frame/image* yang saat ini sedang tampil di layar (*visible viewport*).
-  - Gunakan SDK OCR (seperti Google ML Kit Text Recognition) untuk mendeteksi area dan teks pada panel komik.
-  - Buat overlay transparan di atas gambar komik untuk menggambarkan/menuliskan ulang teks (*text overlay*) tepat di lokasi bounding box teks yang terdeteksi.
+- **Error Stacktrace:**
+  `java.lang.NullPointerException: Attempt to read from field 'com.google.mlkit.vision.text.internal.zzp com.google.mlkit.vision.text.internal.zzo.zza' on a null object reference`
+  `at eu.kanade.tachiyomi.ui.reader.translate.OcrEngineImpl.<init>(OcrEngineImpl.kt)`
 
-## 3. Arsitektur & Persiapan Integrasi (Tahap 1)
-- **Persiapan Modul API Translator**:
-  - Buat abstraksi / Interface khusus untuk service pemroses teks (misal: `MangaTranslatorEngine`).
-  - Untuk tahap ini, hasil keluaran dari OCR cukup dituliskan kembali (mock/raw text) pada overlay tanpa diproses ke API penerjemah eksternal terlebih dahulu.
-  - Pastikan struktur data fleksibel agar siap diintegrasikan dengan API Translator (seperti Google Translate / DeepL API) pada tahap selanjutnya.
+## 2. Tugas & Analisis
+Tolong periksa file `OcrEngineImpl.kt` dan komponen pembilangnya di `ReaderActivity`:
 
-## 4. Performa & Best Practice (Jetpack Compose / Android)
-- **Resource Management**: Proses OCR harus berjalan secara *asynchronous* (menggunakan Coroutines / Background Thread) agar UI tidak *lag* atau *stuttering* saat pengguna membaca.
-- **Batal Otomatis (Cancellation)**: Jika pengguna mulai melakukan scroll kembali sebelum interval 1,25 detik selesai (atau saat OCR sedang berjalan), batalkan job OCR sebelumnya (*cancel ongoing job*).
-- **Memory Optimization**: Bersihkan (*recycle/dispose*) cache gambar bitmap dan overlay saat halaman/chapter ditutup atau berpindah.
+1. **Inisialisasi `TextRecognizer`**:
+   - Pastikan inisialisasi ML Kit `TextRecognition.getClient(...)` **tidak dilakukan secara synchronous** langsung di dalam constructor utama `OcrEngineImpl`.
+   - Gunakan pendekatan `by lazy` atau bungkus dengan safe initialization/try-catch agar tidak melempar NullPointerException jika Context atau ML Kit Engine belum siap.
 
-## 5. Catatan Penting
-- **JANGAN** mengubah atau merusak fungsi tombol *Favorite*, *Save*, maupun fitur navigasi reader yang sudah ada.
-- Pertahankan semua parameter dan *callback* event yang sudah berjalan pada layar reader.
-- Pastikan ketersediaan izin (*permissions*) yang dibutuhkan jika mengambil *frame* dari layar.
+2. **Pengelolaan Context**:
+   - Pastikan `Context` yang di-pass ke `OcrEngineImpl` adalah `ApplicationContext` atau `Activity Context` yang valid dan tidak bernilai `null`.
+
+3. **Inisialisasi di Compose Layer (`ReaderActivity$AppBars`)**:
+   - Jangan membuat instansi baru `OcrEngineImpl` langsung di dalam event `onClick` Compose secara langsung tanpa `CoroutineScope` / Dependency Injection (Injekt).
+   - Gunakan `remember` atau kelola `OcrEngineImpl` di dalam `ViewModel` / Lifecycle-aware Scope agar instansinya aman dan tidak terus-menerus dibuat ulang setiap tombol diklik.
+
+4. **Error Handling**:
+   - Tambahkan blok `runCatching` / `try-catch` saat memanggil method OCR agar jika library ML Kit gagal memuat model, aplikasi tidak langsung crash total (*graceful degradation* dengan fallback notification/toast).
+
+Tolong berikan perbaikan kode lengkap untuk file `OcrEngineImpl.kt` dan contoh pemanggilannya di UI Reader (`ReaderActivity`).
