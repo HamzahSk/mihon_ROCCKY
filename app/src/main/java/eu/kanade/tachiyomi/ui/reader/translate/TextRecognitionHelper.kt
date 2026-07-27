@@ -23,16 +23,22 @@ enum class OcrLanguage {
 
 class TextRecognitionHelper {
 
-    private val latinRecognizer: TextRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-    private val japaneseRecognizer: TextRecognizer = TextRecognition.getClient(
-        JapaneseTextRecognizerOptions.Builder().build(),
-    )
-    private val chineseRecognizer: TextRecognizer = TextRecognition.getClient(
-        ChineseTextRecognizerOptions.Builder().build(),
-    )
-    private val koreanRecognizer: TextRecognizer = TextRecognition.getClient(
-        KoreanTextRecognizerOptions.Builder().build(),
-    )
+    // Gunakan "by lazy" agar tidak langsung crash saat inisialisasi awal
+    private val latinRecognizer: TextRecognizer by lazy {
+        TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+    }
+    
+    private val japaneseRecognizer: TextRecognizer by lazy {
+        TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build())
+    }
+    
+    private val chineseRecognizer: TextRecognizer by lazy {
+        TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build())
+    }
+    
+    private val koreanRecognizer: TextRecognizer by lazy {
+        TextRecognition.getClient(KoreanTextRecognizerOptions.Builder().build())
+    }
 
     private fun getRecognizer(language: OcrLanguage): TextRecognizer {
         return when (language) {
@@ -71,6 +77,8 @@ class TextRecognitionHelper {
     }
 
     fun close() {
+        // Kita juga bisa mengecek apakah variabelnya sudah diinisialisasi atau belum
+        // untuk menghindari crash saat menutup aplikasi
         latinRecognizer.close()
         japaneseRecognizer.close()
         chineseRecognizer.close()

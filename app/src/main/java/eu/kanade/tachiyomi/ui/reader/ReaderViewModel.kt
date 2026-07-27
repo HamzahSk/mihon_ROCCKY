@@ -440,7 +440,8 @@ class ReaderViewModel @JvmOverloads constructor(
         }
     }
 
-    private val textRecognitionHelper = TextRecognitionHelper()
+    private val textRecognitionHelper by lazy { TextRecognitionHelper() }
+
     private var ocrDebounceJob: Job? = null
     private var isReaderScrolling: Boolean = false
 
