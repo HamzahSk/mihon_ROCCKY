@@ -1,23 +1,28 @@
 ## Context & Status
-- **Status Saat Ini:** Fitur `MediaProjection` berhasil meminta izin, notifikasi sistem muncul, dan tidak terjadi *crash*.
-- **Issue:** Setelah fitur aktif, tidak ada proses OCR yang berjalan. Tidak ada teks yang terdeteksi, tidak ada *overlay* teks dengan background, dan tidak ada indikasi bahwa *frame* hasil `MediaProjection` berhasil diproses.
-- **Referensi Proyek:** Terdapat direktori `/ImageTextExtractor-main/` pada *root* proyek yang berisi implementasi OCR yang sudah berfungsi sebagai referensi.
+- **Status Perbaikan Sebelumnya:** - Penyesuaian skala/dimensi bitmap (`bitmapWidth`/`bitmapHeight`) dan logika *overlay* teks di `ReaderActivity.kt` sudah berhasil diperbaiki.
+  - Eksekusi OCR otomatis via `triggerOcrForCurrentPage()` di `ReaderViewModel.kt` sudah diimplementasikan.
+- **Acuan Referensi:** Dokumentasi standar integrasi ML Kit dan Text Recognition telah disimpan di file `DOCS_MLKIT.md` pada root/home proyek.
 
-## Tugas & Instruksi untuk AI
+## Issue Saat Ini
+1. **Pemeriksaan Integrasi ML Kit:** Perlu dipastikan pipeline ekstraksi teks dari *bitmap* hasil tangkapan layar sudah menggunakan acuan *best practice* dari ML Kit yang tertera pada `DOCS_MLKIT.md`.
+2. **Indikator Sistem Android Hilang:** Perekaman layar via `MediaProjection` dan `VirtualDisplay` perlu diverifikasi kembali agar sistem Android menampilkan indikator *screen capture* (perekaman/cast) aktif di *status bar*, bukan bergantung pada metode *fallback view capture*.
 
-1. **Analisis & Perbandingan**
-   - Bandingkan seluruh alur `MediaProjection` pada proyek utama dengan implementasi di `/ImageTextExtractor-main/`, mulai dari pembuatan `VirtualDisplay`, `ImageReader`, pengambilan `Image`, konversi ke `Bitmap`, proses OCR, hingga pengiriman hasil ke *overlay*.
-   - Identifikasi setiap perbedaan implementasi yang berpotensi menyebabkan *frame* tidak pernah diterima atau tidak pernah diproses.
+## Tugas & Spesifikasi Perbaikan
 
-2. **Identifikasi Akar Masalah**
-   - Periksa apakah terdapat kesalahan pada konfigurasi `ImageReader`, ukuran atau format buffer, `VirtualDisplay`, *listener* (`OnImageAvailableListener`), proses `acquireLatestImage()/acquireNextImage()`, pelepasan (`close()`) objek `Image`, maupun alur pemrosesan OCR.
-   - Pastikan tidak ada kebocoran buffer, *buffer* penuh karena `Image` tidak ditutup, atau kondisi lain yang menyebabkan callback berhenti menerima *frame*.
-   - Gunakan implementasi di `/ImageTextExtractor-main/` sebagai acuan untuk menemukan penyebab utama.
+Tolong selesaikan perbaikan ini dengan mengikuti petunjuk berikut:
 
-3. **Perbaikan**
-   - Perbaiki seluruh kode yang bermasalah hingga alur `MediaProjection → ImageReader → OCR → Overlay` berjalan dengan benar.
-   - Jangan menggunakan *workaround* atau menonaktifkan fitur. Pertahankan arsitektur yang ada dan lakukan perbaikan pada akar penyebabnya.
+1. **Baca File Referensi `DOCS_MLKIT.md`:**
+   - Wajib baca file `DOCS_MLKIT.md` yang berada di root/home proyek sebelum melakukan perubahan kode.
+   - Pelajari struktur pembuatan `TextRecognitionHelper`, penggunaan `InputImage`, serta penanganan *recognizer* (termasuk opsi dukungan multi-bahasa seperti Jepang/Mandarin/Korea jika diperlukan).
 
-4. **Verifikasi & Testing (WAJIB)**
-   - Jalankan `./gradlew spotlessApply` untuk memformat ulang kode.
-   - Jalankan `./gradlew testDebugUnitTest` dan pastikan hasil akhirnya `BUILD SUCCESSFUL`.
+2. **Verifikasi Pipeline OCR ML Kit:**
+   - Pastikan *bitmap* yang ditangkap oleh `ImageReader` diubah menjadi `InputImage` dan diproses menggunakan `TextRecognition.getClient()` sesuai acuan di `DOCS_MLKIT.md`.
+   - Pastikan *listener* sukses/gagal menangani hasil rekognisi teks dan mengumpankannya kembali ke `ReaderViewModel`.
+
+3. **Perbaiki `MediaProjection` & `VirtualDisplay`:**
+   - Pastikan `VirtualDisplay` terhubung secara riil dengan `Surface` dari `ImageReader`, sehingga OS Android secara resmi mengaktifkan indikator *screen recording* di *status bar*.
+   - Hindari penggunaan *fallback view capture* secara penuh jika izin `MediaProjection` sudah diberikan oleh pengguna (`RESULT_OK`).
+
+4. **Testing & Clean Code (WAJIB):**
+   - Jalankan `./gradlew spotlessApply` untuk merapikan format kode.
+   - Jalankan `./gradlew testDebugUnitTest` dan pastikan **BUILD SUCCESSFUL**.
