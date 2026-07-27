@@ -1076,4 +1076,5 @@
     <string name="action_translate">Translate</string>
     <string name="action_translate_active">Auto-translate active</string>
     <string name="action_translate_inactive">Auto-translate inactive</string>
+    <string name="translate_permission_denied">Screen capture permission is required for auto-translate feature</string>
 </resources>

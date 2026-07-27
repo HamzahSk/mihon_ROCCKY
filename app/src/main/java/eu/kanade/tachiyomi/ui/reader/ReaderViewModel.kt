@@ -1,6 +1,10 @@
 package eu.kanade.tachiyomi.ui.reader
 
+import android.app.Activity
 import android.app.Application
+import android.content.Context
+import android.content.Intent
+import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import androidx.annotation.IntRange
 import androidx.compose.runtime.Immutable
@@ -37,6 +41,7 @@ import eu.kanade.tachiyomi.ui.reader.translate.MangaTranslatorEngine
 import eu.kanade.tachiyomi.ui.reader.translate.OcrEngineImpl
 import eu.kanade.tachiyomi.ui.reader.translate.OcrRegion
 import eu.kanade.tachiyomi.ui.reader.translate.OcrResult
+import eu.kanade.tachiyomi.ui.reader.translate.ScreenCaptureHelper
 import eu.kanade.tachiyomi.ui.reader.translate.captureVisibleBitmap
 import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.util.chapter.filterDownloaded
@@ -155,6 +160,9 @@ class ReaderViewModel @JvmOverloads constructor(
     private var ocrJob: Job? = null
     private var currentPageOcrResults: List<OcrResult> = emptyList()
     private var currentOcrPageIndex: Int = -1
+    private var screenCaptureHelper: ScreenCaptureHelper? = null
+    private var mediaProjectionResultCode: Int = Activity.RESULT_CANCELED
+    private var mediaProjectionData: Intent? = null
 
     private val unfilteredChapterList by lazy {
         val manga = manga!!
@@ -266,6 +274,10 @@ class ReaderViewModel @JvmOverloads constructor(
         }
         ocrJob?.cancel()
         translateEngine?.release()
+        screenCaptureHelper?.release()
+        screenCaptureHelper = null
+        mediaProjectionResultCode = Activity.RESULT_CANCELED
+        mediaProjectionData = null
     }
 
     /**
@@ -805,30 +817,115 @@ class ReaderViewModel @JvmOverloads constructor(
     }
 
     fun toggleTranslateMode() {
-        val newMode = !state.value.translateMode
-        mutableState.update { it.copy(translateMode = newMode) }
-        if (!newMode) {
-            ocrJob?.cancel()
-            ocrJob = null
-            currentPageOcrResults = emptyList()
-            currentOcrPageIndex = -1
-            mutableState.update { it.copy(ocrResults = emptyList()) }
-            translateEngine?.release()
-            translateEngine = null
+        if (state.value.translateMode) {
+            disableTranslateMode()
         } else {
-            translateEngine = runCatching {
-                OcrEngineImpl(Injekt.get<Application>())
-            }.onFailure { e ->
-                logcat(LogPriority.ERROR, e) { "Failed to create OCR engine" }
-                mutableState.update { it.copy(translateMode = false) }
+            requestAndEnableTranslateMode()
+        }
+    }
+
+    private fun requestAndEnableTranslateMode() {
+        if (screenCaptureHelper != null) {
+            enableTranslateMode()
+        } else if (mediaProjectionData != null) {
+            recreateScreenCaptureHelper()
+            if (screenCaptureHelper != null) {
+                enableTranslateMode()
+            } else {
+                requestMediaProjectionPermission()
+            }
+        } else {
+            requestMediaProjectionPermission()
+        }
+    }
+
+    private fun requestMediaProjectionPermission() {
+        mutableState.update { it.copy(mediaProjectionPermissionRequested = true) }
+        eventChannel.trySend(Event.RequestMediaProjectionPermission)
+    }
+
+    private fun recreateScreenCaptureHelper() {
+        try {
+            val app = Injekt.get<Application>()
+            val mpm = app.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+            val mp = mpm.getMediaProjection(mediaProjectionResultCode, mediaProjectionData)
+            val metrics = app.resources.displayMetrics
+            val helper = ScreenCaptureHelper(mp, metrics.widthPixels, metrics.heightPixels, metrics.densityDpi)
+            helper.startCapture()
+            screenCaptureHelper = helper
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, e) { "Failed to recreate MediaProjection" }
+            mediaProjectionResultCode = Activity.RESULT_CANCELED
+            mediaProjectionData = null
+        }
+    }
+
+    private fun enableTranslateMode() {
+        mutableState.update { it.copy(translateMode = true) }
+        translateEngine = runCatching {
+            OcrEngineImpl(Injekt.get<Application>())
+        }.onFailure { e ->
+            logcat(LogPriority.ERROR, e) { "Failed to create OCR engine" }
+            disableTranslateMode()
+            eventChannel.trySend(Event.OcrError)
+        }.getOrNull()
+    }
+
+    private fun disableTranslateMode() {
+        mutableState.update { it.copy(translateMode = false) }
+        ocrJob?.cancel()
+        ocrJob = null
+        currentPageOcrResults = emptyList()
+        currentOcrPageIndex = -1
+        mutableState.update { it.copy(ocrResults = emptyList()) }
+        translateEngine?.release()
+        translateEngine = null
+        screenCaptureHelper?.release()
+        screenCaptureHelper = null
+        mutableState.update {
+            it.copy(
+                mediaProjectionPermissionRequested = false,
+                translatePermissionGranted = false,
+            )
+        }
+    }
+
+    fun onMediaProjectionResult(resultCode: Int, data: Intent?) {
+        if (resultCode == Activity.RESULT_OK && data != null) {
+            mediaProjectionResultCode = resultCode
+            mediaProjectionData = data
+            recreateScreenCaptureHelper()
+            if (screenCaptureHelper != null) {
+                mutableState.update {
+                    it.copy(
+                        mediaProjectionPermissionRequested = false,
+                        translatePermissionGranted = true,
+                    )
+                }
+                enableTranslateMode()
+            } else {
+                mutableState.update {
+                    it.copy(
+                        mediaProjectionPermissionRequested = false,
+                        translatePermissionGranted = false,
+                    )
+                }
                 eventChannel.trySend(Event.OcrError)
-            }.getOrNull()
+            }
+        } else {
+            mutableState.update {
+                it.copy(
+                    mediaProjectionPermissionRequested = false,
+                    translatePermissionGranted = false,
+                )
+            }
+            eventChannel.trySend(Event.TranslatePermissionDenied)
         }
     }
 
     fun onViewerScrollStopped(pageIndex: Int, view: android.view.View?) {
         if (!state.value.translateMode) return
-        if (view == null) return
+        if (view == null && screenCaptureHelper == null) return
 
         ocrJob?.cancel()
         ocrJob = viewModelScope.launchNonCancellable {
@@ -839,9 +936,10 @@ class ReaderViewModel @JvmOverloads constructor(
             val engine = translateEngine ?: return@launchNonCancellable
 
             try {
-                val bitmap = view.captureVisibleBitmap()
-                if (bitmap.width <= 0 || bitmap.height <= 0) {
-                    bitmap.recycle()
+                val bitmap = screenCaptureHelper?.captureBitmap() ?: view?.captureVisibleBitmap()
+
+                if (bitmap == null || bitmap.width <= 0 || bitmap.height <= 0) {
+                    bitmap?.recycle()
                     return@launchNonCancellable
                 }
 
@@ -1034,6 +1132,8 @@ class ReaderViewModel @JvmOverloads constructor(
 
         val translateMode: Boolean = false,
         val ocrResults: List<OcrResult> = emptyList(),
+        val mediaProjectionPermissionRequested: Boolean = false,
+        val translatePermissionGranted: Boolean = false,
     ) {
         val currentChapter: ReaderChapter?
             get() = viewerChapters?.currChapter
@@ -1061,5 +1161,7 @@ class ReaderViewModel @JvmOverloads constructor(
         data class CopyImage(val uri: Uri) : Event
 
         data object OcrError : Event
+        data object RequestMediaProjectionPermission : Event
+        data object TranslatePermissionDenied : Event
     }
 }
