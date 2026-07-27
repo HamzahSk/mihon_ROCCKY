@@ -77,7 +77,7 @@ class ScreenCaptureHelper(
 
         logcat {
             "VirtualDisplay created: ${virtualDisplay != null} " +
-                "(${captureWidth}x${captureHeight} @ ${captureDensityDpi}dpi)"
+                "(${captureWidth}x$captureHeight @ ${captureDensityDpi}dpi)"
         }
     }
 

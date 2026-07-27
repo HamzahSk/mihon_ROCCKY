@@ -835,7 +835,7 @@ class ReaderViewModel @JvmOverloads constructor(
             ScreenCaptureService.start(Injekt.get<Application>())
             viewModelScope.launchNonCancellable {
                 kotlinx.coroutines.delay(500L)
-                if (!state.value.mediaProjectionPermissionRequested) {
+                if (state.value.mediaProjectionPermissionRequested) {
                     ScreenCaptureService.stop(Injekt.get<Application>())
                     return@launchNonCancellable
                 }
@@ -918,7 +918,9 @@ class ReaderViewModel @JvmOverloads constructor(
                 val bitmap = helper.captureBitmap()
 
                 if (bitmap == null || bitmap.width <= 0 || bitmap.height <= 0) {
-                    logcat(LogPriority.WARN) { "triggerOcrForCurrentPage: bitmap is ${if (bitmap == null) "null" else "invalid"}" }
+                    logcat(LogPriority.WARN) {
+                        "triggerOcrForCurrentPage: bitmap is ${if (bitmap == null) "null" else "invalid"}"
+                    }
                     bitmap?.recycle()
                     return@launchNonCancellable
                 }
@@ -929,17 +931,19 @@ class ReaderViewModel @JvmOverloads constructor(
                 }
 
                 logcat { "triggerOcrForCurrentPage: OCR returned ${results.size} results" }
+                val bmpWidth = bitmap.width
+                val bmpHeight = bitmap.height
                 bitmap.recycle()
 
                 withUIContext {
                     currentPageOcrResults = results
-                    currentOcrCaptureWidth = bitmap.width
-                    currentOcrCaptureHeight = bitmap.height
+                    currentOcrCaptureWidth = bmpWidth
+                    currentOcrCaptureHeight = bmpHeight
                     mutableState.update {
                         it.copy(
                             ocrResults = results,
-                            ocrCaptureWidth = bitmap.width.toFloat(),
-                            ocrCaptureHeight = bitmap.height.toFloat(),
+                            ocrCaptureWidth = bmpWidth.toFloat(),
+                            ocrCaptureHeight = bmpHeight.toFloat(),
                         )
                     }
                 }
@@ -1031,19 +1035,25 @@ class ReaderViewModel @JvmOverloads constructor(
                 val bitmap = screenCaptureHelper?.captureBitmap()
 
                 if (bitmap == null || bitmap.width <= 0 || bitmap.height <= 0) {
-                    logcat(LogPriority.DEBUG) { "onViewerScrollStopped: screen capture returned ${if (bitmap == null) "null" else "invalid bitmap"}, trying view capture" }
+                    logcat(LogPriority.DEBUG) {
+                        "onViewerScrollStopped: screen capture returned ${if (bitmap == null) "null" else "invalid bitmap"}, trying view capture"
+                    }
                     view?.captureVisibleBitmap()?.let { viewBitmap ->
-                        if (viewBitmap.width > 0 && viewBitmap.height > 0) {
-                            logcat { "onViewerScrollStopped: using view capture (${viewBitmap.width}x${viewBitmap.height})" }
+                        val vbWidth = viewBitmap.width
+                        val vbHeight = viewBitmap.height
+                        if (vbWidth > 0 && vbHeight > 0) {
+                            logcat { "onViewerScrollStopped: using view capture (${vbWidth}x$vbHeight)" }
                             val viewResults = withIOContext { engine.detectText(viewBitmap) }
                             viewBitmap.recycle()
                             withUIContext {
                                 currentPageOcrResults = viewResults
+                                currentOcrCaptureWidth = vbWidth
+                                currentOcrCaptureHeight = vbHeight
                                 mutableState.update {
                                     it.copy(
                                         ocrResults = viewResults,
-                                        ocrCaptureWidth = viewBitmap.width.toFloat(),
-                                        ocrCaptureHeight = viewBitmap.height.toFloat(),
+                                        ocrCaptureWidth = vbWidth.toFloat(),
+                                        ocrCaptureHeight = vbHeight.toFloat(),
                                     )
                                 }
                             }
@@ -1060,17 +1070,19 @@ class ReaderViewModel @JvmOverloads constructor(
                 }
 
                 logcat { "onViewerScrollStopped: OCR returned ${results.size} results" }
+                val bmpWidth = bitmap.width
+                val bmpHeight = bitmap.height
                 bitmap.recycle()
 
                 withUIContext {
                     currentPageOcrResults = results
-                    currentOcrCaptureWidth = bitmap.width
-                    currentOcrCaptureHeight = bitmap.height
+                    currentOcrCaptureWidth = bmpWidth
+                    currentOcrCaptureHeight = bmpHeight
                     mutableState.update {
                         it.copy(
                             ocrResults = results,
-                            ocrCaptureWidth = bitmap.width.toFloat(),
-                            ocrCaptureHeight = bitmap.height.toFloat(),
+                            ocrCaptureWidth = bmpWidth.toFloat(),
+                            ocrCaptureHeight = bmpHeight.toFloat(),
                         )
                     }
                 }
