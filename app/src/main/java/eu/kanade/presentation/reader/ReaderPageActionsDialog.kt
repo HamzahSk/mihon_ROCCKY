@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.TextSnippet
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Photo
 import androidx.compose.material.icons.outlined.Save
@@ -31,6 +32,7 @@ fun ReaderPageActionsDialog(
     onSetAsCover: () -> Unit,
     onShare: (Boolean) -> Unit,
     onSave: () -> Unit,
+    onOcr: () -> Unit = {},
 ) {
     var showSetCoverDialog by remember { mutableStateOf(false) }
 
@@ -69,6 +71,15 @@ fun ReaderPageActionsDialog(
                 icon = Icons.Outlined.Save,
                 onClick = {
                     onSave()
+                    onDismissRequest()
+                },
+            )
+            ActionButton(
+                modifier = Modifier.weight(1f),
+                title = stringResource(MR.strings.action_recognize_text),
+                icon = Icons.AutoMirrored.Outlined.TextSnippet,
+                onClick = {
+                    onOcr()
                     onDismissRequest()
                 },
             )

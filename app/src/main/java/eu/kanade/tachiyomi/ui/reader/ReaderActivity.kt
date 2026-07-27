@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.reader
 
 import android.annotation.SuppressLint
+import android.app.Activity.RESULT_OK
 import android.app.assist.AssistContent
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -10,6 +11,7 @@ import android.graphics.Color
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
+import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -20,6 +22,7 @@ import android.view.View.LAYER_TYPE_HARDWARE
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -126,6 +129,26 @@ class ReaderActivity : BaseActivity() {
 
     val viewModel by viewModels<ReaderViewModel>()
     private var assistUrl: String? = null
+
+    private var screenCaptureManager: ScreenCaptureManager? = null
+
+    private val mediaProjectionLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) { result ->
+        if (result.resultCode == RESULT_OK && result.data != null) {
+            val metrics = resources.displayMetrics
+            screenCaptureManager?.startCapture(
+                resultCode = result.resultCode,
+                data = result.data!!,
+                densityDpi = metrics.densityDpi,
+                width = metrics.widthPixels,
+                height = metrics.heightPixels,
+                onBitmapCaptured = { bitmap ->
+                    viewModel.triggerOcrForCurrentPage(bitmap)
+                },
+            )
+        }
+    }
 
     /**
      * Configuration at reader level, like background color or forced orientation.
@@ -244,6 +267,15 @@ class ReaderActivity : BaseActivity() {
                     is ReaderViewModel.Event.SetCoverResult -> {
                         onSetAsCoverResult(event.result)
                     }
+                    is ReaderViewModel.Event.OcrResult -> {
+                        showOcrResultDialog(event.text)
+                    }
+                    is ReaderViewModel.Event.OcrError -> {
+                        toast("No text found")
+                    }
+                    is ReaderViewModel.Event.OcrScreenCaptureNeeded -> {
+                        requestOcrScreenCapture()
+                    }
                 }
             }
             .launchIn(lifecycleScope)
@@ -329,6 +361,7 @@ class ReaderActivity : BaseActivity() {
                     onSetAsCover = viewModel::setAsCover,
                     onShare = viewModel::shareImage,
                     onSave = viewModel::saveImage,
+                    onOcr = { this@ReaderActivity.requestOcrScreenCapture() },
                 )
             }
             null -> {}
@@ -789,6 +822,34 @@ class ReaderActivity : BaseActivity() {
                 Error -> MR.strings.notification_cover_update_failed
             },
         )
+    }
+
+    fun requestOcrScreenCapture() {
+        val projectionManager = getSystemService<MediaProjectionManager>()
+        if (projectionManager == null) {
+            toast("Screen capture not available")
+            return
+        }
+        screenCaptureManager = ScreenCaptureManager(projectionManager)
+        val intent = screenCaptureManager!!.createCaptureIntent()
+        mediaProjectionLauncher.launch(intent)
+    }
+
+    private fun showOcrResultDialog(text: String) {
+        runOnUiThread {
+            if (!isFinishing) {
+                android.app.AlertDialog.Builder(this)
+                    .setTitle("OCR Result")
+                    .setMessage(text)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .setNeutralButton("Copy") { _, _ ->
+                        val clipboard = getSystemService<ClipboardManager>()
+                        clipboard?.setPrimaryClip(ClipData.newPlainText("OCR", text))
+                        toast("Copied to clipboard")
+                    }
+                    .show()
+            }
+        }
     }
 
     /**

@@ -309,6 +309,9 @@ dependencies {
     implementation(libs.materialKolor)
     implementation(libs.lottie.compose)
 
+    // ML Kit Text Recognition
+    implementation(libs.mlkit.text.recognition)
+
     // Logging
     implementation(libs.logcat)
 
