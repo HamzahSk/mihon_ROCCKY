@@ -13,8 +13,8 @@ import eu.kanade.tachiyomi.ui.reader.translate.OcrResult
 @Composable
 fun TextOverlay(
     results: List<OcrResult>,
-    imageWidth: Float,
-    imageHeight: Float,
+    bitmapWidth: Float,
+    bitmapHeight: Float,
     modifier: Modifier = Modifier,
 ) {
     if (results.isEmpty()) return
@@ -22,8 +22,8 @@ fun TextOverlay(
     Canvas(
         modifier = modifier.fillMaxSize(),
     ) {
-        val scaleX = size.width / maxOf(imageWidth, 1f)
-        val scaleY = size.height / maxOf(imageHeight, 1f)
+        val scaleX = size.width / maxOf(bitmapWidth, 1f)
+        val scaleY = size.height / maxOf(bitmapHeight, 1f)
 
         for (result in results) {
             val left = result.boundingBox.left * scaleX

@@ -469,8 +469,8 @@ class ReaderActivity : BaseActivity() {
         if (state.translateMode && state.ocrResults.isNotEmpty()) {
             TextOverlay(
                 results = state.ocrResults,
-                imageWidth = binding.viewerContainer.width.toFloat().coerceAtLeast(1f),
-                imageHeight = binding.viewerContainer.height.toFloat().coerceAtLeast(1f),
+                bitmapWidth = state.ocrCaptureWidth.coerceAtLeast(1f),
+                bitmapHeight = state.ocrCaptureHeight.coerceAtLeast(1f),
             )
         }
     }

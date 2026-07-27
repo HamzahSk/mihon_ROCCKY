@@ -7,8 +7,12 @@ import android.hardware.display.VirtualDisplay
 import android.media.Image
 import android.media.ImageReader
 import android.media.projection.MediaProjection
+import android.os.Handler
+import android.os.HandlerThread
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import logcat.LogPriority
+import tachiyomi.core.common.util.system.logcat
 
 class ScreenCaptureHelper(
     private val mediaProjection: MediaProjection,
@@ -18,14 +22,36 @@ class ScreenCaptureHelper(
 ) {
     private var imageReader: ImageReader? = null
     private var virtualDisplay: VirtualDisplay? = null
+    private var callbackThread: HandlerThread? = null
+
+    var captureWidth: Int = defaultWidth
+        private set
+    var captureHeight: Int = defaultHeight
+        private set
 
     fun startCapture(
         captureWidth: Int = defaultWidth,
         captureHeight: Int = defaultHeight,
         captureDensityDpi: Int = defaultDensityDpi,
     ) {
-        if (virtualDisplay != null) return
+        if (virtualDisplay != null) {
+            logcat { "ScreenCaptureHelper: startCapture called but already running" }
+            return
+        }
+
+        this.captureWidth = captureWidth
+        this.captureHeight = captureHeight
+
+        callbackThread = HandlerThread("ScreenCapture-Callback").apply { start() }
+
         imageReader = ImageReader.newInstance(captureWidth, captureHeight, PixelFormat.RGBA_8888, 2)
+        imageReader?.setOnImageAvailableListener(
+            {
+                logcat(LogPriority.DEBUG) { "ImageReader: new frame available" }
+            },
+            Handler(callbackThread!!.looper),
+        )
+
         virtualDisplay = mediaProjection.createVirtualDisplay(
             "OCR-ScreenCapture",
             captureWidth,
@@ -33,14 +59,45 @@ class ScreenCaptureHelper(
             captureDensityDpi,
             DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
             imageReader!!.surface,
-            null,
-            null,
+            object : VirtualDisplay.Callback() {
+                override fun onPaused() {
+                    logcat { "VirtualDisplay: paused" }
+                }
+
+                override fun onResumed() {
+                    logcat { "VirtualDisplay: resumed" }
+                }
+
+                override fun onStopped() {
+                    logcat { "VirtualDisplay: stopped" }
+                }
+            },
+            Handler(callbackThread!!.looper),
         )
+
+        logcat {
+            "VirtualDisplay created: ${virtualDisplay != null} " +
+                "(${captureWidth}x${captureHeight} @ ${captureDensityDpi}dpi)"
+        }
     }
 
     suspend fun captureBitmap(): Bitmap? = withContext(Dispatchers.IO) {
-        val reader = imageReader ?: return@withContext null
-        reader.acquireLatestImage()?.use { image -> bitmapFromImage(image) }
+        val reader = imageReader ?: run {
+            logcat(LogPriority.WARN) { "captureBitmap: ImageReader is null" }
+            return@withContext null
+        }
+
+        val image = reader.acquireLatestImage()
+        if (image == null) {
+            logcat(LogPriority.DEBUG) { "captureBitmap: no new frame available" }
+            return@withContext null
+        }
+
+        image.use { img ->
+            val bitmap = bitmapFromImage(img)
+            logcat { "captureBitmap: success (${bitmap.width}x${bitmap.height})" }
+            bitmap
+        }
     }
 
     private fun bitmapFromImage(image: Image): Bitmap {
@@ -76,10 +133,13 @@ class ScreenCaptureHelper(
     }
 
     fun release() {
+        callbackThread?.quitSafely()
+        callbackThread = null
         virtualDisplay?.release()
         virtualDisplay = null
         imageReader?.close()
         imageReader = null
         mediaProjection.stop()
+        logcat { "ScreenCaptureHelper: released" }
     }
 }

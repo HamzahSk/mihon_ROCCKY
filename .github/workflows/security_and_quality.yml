@@ -98,9 +98,10 @@ jobs:
     name: Android UI Tests & Crash Detection
     runs-on: ubuntu-latest
     
+    # RAHASIA 1: Batasi memori JVM agar tidak memakan RAM Emulator
     env:
       JAVA_TOOL_OPTIONS: -Xmx4g
-    timeout-minutes: 30 
+    timeout-minutes: 30 # Mencegah tagihan menit GitHub bengkak jika stuck
 
     steps:
       - name: Checkout Code
@@ -115,11 +116,7 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v5
 
-      # --- TAMBAHAN BARU: Build APK sebelum emulator jalan ---
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug
-      # -------------------------------------------------------
-
+      # RAHASIA 2: Gunakan sistem Cache AVD (Mempercepat booting hingga 3x lipat)
       - name: AVD Cache
         uses: actions/cache@v4
         id: avd-cache
@@ -127,30 +124,34 @@ jobs:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
+          # Key unik berdasarkan konfigurasi emulator kita
           key: avd-34-aosp_atd-x86_64
 
+      # RAHASIA 3: Script KVM standar dari dokumentasi
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      # RAHASIA 4: Generate Snapshot (Hanya berjalan jika cache belum ada/baru pertama kali)
       - name: Generate AVD Snapshot for Caching
         if: steps.avd-cache.outputs.cache-hit != 'true'
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
-          target: aosp_atd 
+          target: aosp_atd # Menggunakan ATD (Automated Test Device) yang jauh lebih ringan
           arch: x86_64
           profile: Nexus 6
-          cores: 2 
-          ram-size: 2048M 
+          cores: 2 # Pembatasan CPU
+          ram-size: 2048M # Pembatasan RAM
           sdcard-path-or-size: 100M
           force-avd-creation: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: false
           script: echo "Generated AVD snapshot for caching."
 
+      # RAHASIA 5: Jalankan Tes dari Snapshot (-no-snapshot-save)
       - name: Run Android Emulator & Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -167,8 +168,9 @@ jobs:
           script: |
             adb shell input keyevent 82
             
-            # Install APK hasil build dari step sebelumnya
-            adb install app/build/outputs/apk/debug/app-debug.apk 
+            # --- TAMBAHAN BARU: Install APK ke dalam emulator ---
+            # Pastikan path ini sesuai dengan lokasi output APK di project kamu
+            adb install app/build/outputs/apk/debug/app-x86_64-debug.apk || adb install app/build/outputs/apk/debug/app-universal-debug.apk
             
             # Jalankan monkey test
             adb shell monkey -p eu.kanade.tachiyomi -v 5000 || true
@@ -176,11 +178,12 @@ jobs:
             # Ambil log error
             adb logcat -d *:E > emulator-crash-log.txt
             
-            # Screenshot 
+            # Screenshot
             adb shell screencap -p /sdcard/screencap.png || true
             adb pull /sdcard/screencap.png /tmp/android-emulator-screenshot.png || true
             
             echo "Test and log extraction completed."
+
 
       - name: Upload Emulator Crash Log
         if: always()
