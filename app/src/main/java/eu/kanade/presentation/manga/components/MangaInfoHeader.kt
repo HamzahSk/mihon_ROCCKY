@@ -5,11 +5,8 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -82,6 +79,7 @@ import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -145,6 +143,10 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import kotlin.math.roundToInt
 
+private const val PARALLAX_FACTOR = 0.6f
+private const val BACKGROUND_PARALLAX_FACTOR = 0.3f
+private const val MAX_SCROLL_FOR_PARALLAX = 800f
+
 @Composable
 fun MangaInfoBox(
     isTabletUi: Boolean,
@@ -158,18 +160,24 @@ fun MangaInfoBox(
     modifier: Modifier = Modifier,
 ) {
     val backgroundColor = MaterialTheme.colorScheme.background
+
+    val scrollProgress by remember(scrollOffset) {
+        derivedStateOf {
+            (scrollOffset / MAX_SCROLL_FOR_PARALLAX).coerceIn(0f, 1f)
+        }
+    }
+
+    val backdropBlur by animateDpAsState(
+        targetValue = with(LocalDensity.current) {
+            val minBlur = 8.dp
+            val maxBlur = 25.dp
+            (minBlur + (maxBlur - minBlur) * (1f - scrollProgress)).coerceIn(minBlur, maxBlur)
+        },
+        animationSpec = spring(dampingRatio = 0.8f),
+        label = "backdropBlur",
+    )
+
     Box(modifier = modifier) {
-        val parallaxFactor = 0.3f
-        val maxBlur = 25.dp
-        val minBlur = 8.dp
-        val scrollProgress = (scrollOffset / 800f).coerceIn(0f, 1f)
-
-        val backdropBlur by animateDpAsState(
-            targetValue = (minBlur + (maxBlur - minBlur) * (1f - scrollProgress)).coerceIn(minBlur, maxBlur),
-            animationSpec = spring(dampingRatio = 0.8f),
-            label = "backdropBlur",
-        )
-
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
                 .data(manga)
@@ -180,7 +188,9 @@ fun MangaInfoBox(
             modifier = Modifier
                 .matchParentSize()
                 .graphicsLayer {
-                    translationY = scrollOffset * parallaxFactor
+                    translationY = scrollOffset * BACKGROUND_PARALLAX_FACTOR
+                    scaleX = 1f + scrollProgress * 0.05f
+                    scaleY = 1f + scrollProgress * 0.05f
                 }
                 .drawWithContent {
                     drawContent()
@@ -357,7 +367,7 @@ fun ExpandableMangaDescription(
     onEditNotes: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier) {
+    Column(modifier = modifier.animateContentSize(animationSpec = spring())) {
         val (expanded, onExpanded) = rememberSaveable {
             mutableStateOf(defaultExpandState)
         }
@@ -473,13 +483,13 @@ fun ExpandableMangaDescription(
                         horizontalArrangement = Arrangement.Center,
                         verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
                     ) {
-                        tags.forEach {
+                        tags.forEachIndexed { index, tag ->
                             TagsChip(
                                 modifier = DefaultTagChipModifier,
-                                text = it,
+                                text = tag,
                                 onClick = {
                                     hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    tagSelected = it
+                                    tagSelected = tag
                                     showMenu = true
                                 },
                             )
@@ -490,7 +500,7 @@ fun ExpandableMangaDescription(
                         contentPadding = PaddingValues(horizontal = MaterialTheme.padding.medium),
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
                     ) {
-                        items(items = tags) {
+                        items(items = tags, key = { it }) {
                             TagsChip(
                                 modifier = DefaultTagChipModifier,
                                 text = it,
@@ -518,7 +528,12 @@ private fun MangaAndSourceTitlesLarge(
     doSearch: (query: String, global: Boolean) -> Unit,
     scrollOffset: Float = 0f,
 ) {
-    val coverParallaxOffset = scrollOffset * 0.5f
+    val coverParallaxOffset = scrollOffset * PARALLAX_FACTOR
+    val scrollProgress by remember(scrollOffset) {
+        derivedStateOf {
+            (scrollOffset / MAX_SCROLL_FOR_PARALLAX).coerceIn(0f, 1f)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -529,7 +544,10 @@ private fun MangaAndSourceTitlesLarge(
         MangaCover.Book(
             modifier = Modifier
                 .fillMaxWidth(0.45f)
-                .graphicsLayer { translationY = coverParallaxOffset }
+                .graphicsLayer {
+                    translationY = coverParallaxOffset
+                    rotationX = scrollProgress * 2f
+                }
                 .shadow(
                     elevation = 8.dp,
                     shape = MaterialTheme.shapes.medium,
@@ -567,7 +585,12 @@ private fun MangaAndSourceTitlesSmall(
     doSearch: (query: String, global: Boolean) -> Unit,
     scrollOffset: Float = 0f,
 ) {
-    val coverParallaxOffset = scrollOffset * 0.5f
+    val coverParallaxOffset = scrollOffset * PARALLAX_FACTOR
+    val scrollProgress by remember(scrollOffset) {
+        derivedStateOf {
+            (scrollOffset / MAX_SCROLL_FOR_PARALLAX).coerceIn(0f, 1f)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -579,7 +602,10 @@ private fun MangaAndSourceTitlesSmall(
         MangaCover.Book(
             modifier = Modifier
                 .fillMaxWidth(0.45f)
-                .graphicsLayer { translationY = coverParallaxOffset }
+                .graphicsLayer {
+                    translationY = coverParallaxOffset
+                    rotationX = scrollProgress * 2f
+                }
                 .shadow(
                     elevation = 8.dp,
                     shape = MaterialTheme.shapes.medium,
@@ -626,7 +652,7 @@ private fun ColumnScope.MangaContentInfo(
 
     Text(
         text = title.ifBlank { stringResource(MR.strings.unknown_title) },
-        style = MaterialTheme.typography.titleLarge,
+        style = MaterialTheme.typography.headlineSmall,
         modifier = Modifier.clickableNoIndication(
             onLongClick = {
                 if (title.isNotBlank()) {
@@ -640,7 +666,7 @@ private fun ColumnScope.MangaContentInfo(
         overflow = TextOverflow.Ellipsis,
     )
 
-    Spacer(modifier = Modifier.height(6.dp))
+    Spacer(modifier = Modifier.height(8.dp))
 
     Row(
         modifier = Modifier.secondaryItemAlpha(),
@@ -664,7 +690,7 @@ private fun ColumnScope.MangaContentInfo(
         Text(
             text = author?.takeIf { it.isNotBlank() }
                 ?: stringResource(MR.strings.unknown_author),
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.clickableNoIndication(
                 onLongClick = {
                     if (!author.isNullOrBlank()) {
@@ -699,7 +725,7 @@ private fun ColumnScope.MangaContentInfo(
             }
             Text(
                 text = artist,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.clickableNoIndication(
                     onLongClick = { context.copyToClipboard(artist, artist) },
                     onClick = { doSearch(artist, true) },
@@ -709,7 +735,7 @@ private fun ColumnScope.MangaContentInfo(
         }
     }
 
-    Spacer(modifier = Modifier.height(6.dp))
+    Spacer(modifier = Modifier.height(8.dp))
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
