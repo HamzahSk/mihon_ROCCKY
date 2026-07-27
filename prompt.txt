@@ -1,35 +1,18 @@
-# Prompt: Perbaikan Bug "Unknown Error" Auto Translator (Foreground Service) & Verifikasi
-
 ## Context & Status
-- **Status Sebelumnya:** Alur pemanggilan pop-up dialog izin `MediaProjection API` sudah berhasil diimplementasikan menggunakan `ActivityResultLauncher`.
-- **Issue Saat Ini:** Saat pengguna memilih "Mulai Sekarang" (`RESULT_OK`), aplikasi memunculkan pesan "Unknown Error" (kemungkinan besar akibat *silent crash* berupa `SecurityException`). Hal ini terjadi karena sistem Android modern mewajibkan adanya **Foreground Service dengan tipe `mediaProjection`** yang berjalan **sebelum** aplikasi memanggil `MediaProjectionManager.getMediaProjection()`.
+- **Status Sebelumnya:** Implementasi `Foreground Service` tipe `mediaProjection` berhasil dan masalah "Unknown Error" saat menyetujui izin sudah teratasi.
+- **Issue Saat Ini:** Meskipun tidak ada *crash*, sistem Android tidak menampilkan pesan atau indikator *cast* bahwa aplikasi sedang melakukan *screen capture*. Selain itu, tidak ada perubahan sama sekali pada gambar komik (hasil translasi atau overlay tidak muncul) saat fitur aktif.
 
----
+## Analisis Potensi Masalah
+- **Indikator Sistem Hilang:** Objek `VirtualDisplay` mungkin belum dibuat atau *flags* pada `MediaProjection` belum terkonfigurasi dengan benar, sehingga sistem tidak mendeteksi adanya aktivitas perekaman layar yang riil.
+- **Translasi Tidak Muncul:** Pipeline penangkapan *frame* via `ImageReader` kemungkinan tidak mendapatkan data *bitmap*, atau hasil dari proses OCR tidak pernah diteruskan kembali ke UI untuk dirender.
 
 ## Tugas & Spesifikasi Perbaikan
 
-Tolong perbaiki bug tersebut dengan mengimplementasikan `Foreground Service` dan pastikan kodenya terverifikasi dengan langkah-langkah berikut:
+Tolong periksa dan perbaiki alur *screen capture* serta *rendering* translasi dengan langkah-langkah berikut:
 
-1. **Tambahkan Permission dan Service di `AndroidManifest.xml`:**
-   - Tambahkan permission `FOREGROUND_SERVICE` dan `FOREGROUND_SERVICE_MEDIA_PROJECTION`.
-   - Daftarkan `ScreenCaptureService` dengan atribut `android:foregroundServiceType="mediaProjection"`.
-
-2. **Buat Class `ScreenCaptureService`:**
-   - Buat class baru turunan `Service`.
-   - Di dalam `onStartCommand()`, buat *Notification Channel* dan tampilkan *Notification* persisten.
-   - Panggil `startForeground(ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)` dengan penanganan versi Android yang sesuai (API 29+).
-
-3. **Sesuaikan Logika di `ReaderViewModel.kt`:**
-   - Saat pop-up izin mengembalikan `RESULT_OK`, jalankan `ScreenCaptureService` terlebih dahulu.
-   - Berikan jeda (*delay* via coroutines) agar service dipastikan sudah berjalan, barulah eksekusi pembuatan `ScreenCaptureHelper` dan lanjutkan proses OCR.
-   - Pastikan service dihentikan (`stopService`) jika proses translasi dimatikan atau terjadi error.
-
-4. **Testing & Formatting (WAJIB):**
-   - Jalankan `./gradlew spotlessApply` untuk memastikan format kode sudah sesuai standar project.
-   - Setelah selesai, jalankan `./gradlew testDebugUnitTest` hingga **BUILD SUCCESSFUL**.
-   - Pastikan tidak ada *compile error* atau potensi `NullPointerException` / `SecurityException` yang terlewat. Jangan selesaikan tugas sebelum dipastikan *build* berhasil.
-
-5. **Output yang Diharapkan:**
-   - File `ScreenCaptureService.kt` baru.
-   - Perubahan pada `AndroidManifest.xml`.
-   - Perbaikan pada `ReaderViewModel.kt`.
+1. **Verifikasi Implementasi `VirtualDisplay`:** Pastikan `MediaProjection.createVirtualDisplay()` dipanggil dengan parameter yang tepat (lebar, tinggi, *density*, dan *flag* seperti `DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR`).
+2. **Koneksi `ImageReader`:** Pastikan `ImageReader` terhubung dengan benar ke `Surface` dari `VirtualDisplay` agar aplikasi bisa mulai membaca *frame* layar secara berkala.
+3. **Pengecekan Pipeline OCR:** Tambahkan *log debug* (Logcat) pada *listener* `ImageReader` untuk mengonfirmasi bahwa *bitmap* gambar benar-benar ditangkap, lalu pastikan *bitmap* tersebut dikirim ke modul OCR tanpa masalah.
+4. **Perbaikan Rendering UI (Overlay):** Pastikan hasil teks yang sudah diproses oleh OCR dikirim kembali ke Main/UI Thread dan berhasil digambar pada kanvas atau *overlay* di atas gambar komik.
+5. **Verifikasi Notifikasi:** Cek kembali implementasi notifikasi pada *Foreground Service* untuk memastikan propertinya memicu sistem Android memunculkan indikator perekaman aktif.
+6. **Testing Output:** Pastikan *build* sukses, indikator *screen recording* dari OS muncul di *status bar*, dan teks terjemahan berhasil muncul pada layar komik.

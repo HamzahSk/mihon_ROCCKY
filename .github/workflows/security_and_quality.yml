@@ -168,17 +168,22 @@ jobs:
           script: |
             adb shell input keyevent 82
             
+            # --- TAMBAHAN BARU: Install APK ke dalam emulator ---
+            # Pastikan path ini sesuai dengan lokasi output APK di project kamu
+            adb install app/build/outputs/apk/debug/app-debug.apk 
+            
             # Jalankan monkey test
             adb shell monkey -p eu.kanade.tachiyomi -v 5000 || true
             
             # Ambil log error
             adb logcat -d *:E > emulator-crash-log.txt
             
-            # Screenshot (Ditambahkan || true karena target aosp_atd kadang tidak mendukung screencap)
+            # Screenshot
             adb shell screencap -p /sdcard/screencap.png || true
             adb pull /sdcard/screencap.png /tmp/android-emulator-screenshot.png || true
             
             echo "Test and log extraction completed."
+
 
       - name: Upload Emulator Crash Log
         if: always()
