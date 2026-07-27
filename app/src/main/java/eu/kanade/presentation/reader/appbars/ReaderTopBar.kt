@@ -25,12 +25,12 @@ fun ReaderTopBar(
     onOpenInWebView: (() -> Unit)?,
     onOpenInBrowser: (() -> Unit)?,
     onShare: (() -> Unit)?,
-    translateEnabled: Boolean = false,
-    onToggleTranslate: () -> Unit = {},
+    translateActive: Boolean,
+    onToggleTranslate: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val translateTint by animateColorAsState(
-        targetValue = if (translateEnabled) Color(0xFF4CAF50) else Color.White,
+    val translateIconTint by animateColorAsState(
+        targetValue = if (translateActive) Color(0xFF4FC3F7) else Color.White,
         animationSpec = tween(durationMillis = 300),
         label = "translateTint",
     )
@@ -63,9 +63,15 @@ fun ReaderTopBar(
                     )
                     add(
                         AppBar.Action(
-                            title = "Translate",
+                            title = stringResource(
+                                if (translateActive) {
+                                    MR.strings.action_translate_active
+                                } else {
+                                    MR.strings.action_translate_inactive
+                                },
+                            ),
                             icon = Icons.Outlined.Translate,
-                            iconTint = translateTint,
+                            iconTint = translateIconTint,
                             onClick = onToggleTranslate,
                         ),
                     )

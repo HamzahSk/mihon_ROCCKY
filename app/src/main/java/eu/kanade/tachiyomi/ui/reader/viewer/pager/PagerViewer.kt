@@ -62,6 +62,8 @@ abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
      */
     private var awaitingIdleViewerChapters: ViewerChapters? = null
 
+    override var onScrollStopped: ((pageIndex: Int, view: View) -> Unit)? = null
+
     /**
      * Whether the view pager is currently in idle mode. It sets the awaiting chapters if setting
      * this field to true.
@@ -80,6 +82,8 @@ abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
             }
         }
 
+    private var lastIdlePagePosition: Int = -1
+
     private val pagerListener = object : ViewPager.SimpleOnPageChangeListener() {
         override fun onPageSelected(position: Int) {
             if (!activity.isScrollingThroughPages) {
@@ -89,7 +93,20 @@ abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
         }
 
         override fun onPageScrollStateChanged(state: Int) {
+            val wasIdle = isIdle
             isIdle = state == ViewPager.SCROLL_STATE_IDLE
+            if (!wasIdle && isIdle) {
+                val pos = pager.currentItem
+                if (pos != lastIdlePagePosition) {
+                    lastIdlePagePosition = pos
+                    val holder = adapter.items.getOrNull(pos)
+                    val pageIndex = when (holder) {
+                        is ReaderPage -> holder.index
+                        else -> pos
+                    }
+                    onScrollStopped?.invoke(pageIndex, pager)
+                }
+            }
         }
     }
 
