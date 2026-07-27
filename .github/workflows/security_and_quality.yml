@@ -1,0 +1,90 @@
+name: Security & Code Quality Audit
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+  schedule:
+    # Menjalankan pemindaian keamanan otomatis setiap hari Senin jam 00:00 UTC
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write # Dibutuhkan jika mengupload hasil scan keamanan
+
+jobs:
+  # 1. ANALISIS KEAMANAN & VULNERABILITY SCAN
+  security-scan:
+    name: Security & Vulnerability Audit
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Dependency Review (PR Only)
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+
+      - name: Scan Repository with Trivy (Security Vulnerabilities)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+
+  # 2. DETEKSI BUG, ERROR & KUALITAS KODE (LINT & TEST)
+  code-quality-and-test:
+    name: Lint, Static Analysis & Tests
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Check Code Format (Spotless)
+        run: ./gradlew spotlessCheck
+
+      - name: Run Android Lint (Check potential bugs & performance issues)
+        run: ./gradlew lintDebug
+
+      - name: Run Unit Tests
+        id: run_tests
+        run: ./gradlew testDebugUnitTest
+
+      - name: Verify SQLDelight Migrations
+        run: ./gradlew verifySqlDelightMigration
+
+      - name: Upload Lint Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-lint-report-${{ github.sha }}
+          path: app/build/reports/lint-results-debug.html
+
+      - name: Upload Test Report (If Failed or Passed)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report-${{ github.sha }}
+          path: app/build/reports/tests/testDebugUnitTest
+          
