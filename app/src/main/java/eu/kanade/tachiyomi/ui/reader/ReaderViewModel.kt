@@ -1032,36 +1032,57 @@ class ReaderViewModel @JvmOverloads constructor(
             val engine = translateEngine ?: return@launchNonCancellable
 
             try {
-                val bitmap = screenCaptureHelper?.captureBitmap()
+                // Prefer MediaProjection capture when available. Avoid falling back to view capture
+                // if MediaProjection permission has been granted to ensure the OS shows the
+                // system-level screen capture indicator.
+                var bitmap = screenCaptureHelper?.captureBitmap()
 
                 if (bitmap == null || bitmap.width <= 0 || bitmap.height <= 0) {
                     logcat(LogPriority.DEBUG) {
-                        "onViewerScrollStopped: screen capture returned ${if (bitmap == null) "null" else "invalid bitmap"}, trying view capture"
+                        "onViewerScrollStopped: screen capture returned ${if (bitmap == null) "null" else "invalid bitmap"}"
                     }
-                    view?.captureVisibleBitmap()?.let { viewBitmap ->
-                        val vbWidth = viewBitmap.width
-                        val vbHeight = viewBitmap.height
-                        if (vbWidth > 0 && vbHeight > 0) {
-                            logcat { "onViewerScrollStopped: using view capture (${vbWidth}x$vbHeight)" }
-                            val viewResults = withIOContext { engine.detectText(viewBitmap) }
-                            viewBitmap.recycle()
-                            withUIContext {
-                                currentPageOcrResults = viewResults
-                                currentOcrCaptureWidth = vbWidth
-                                currentOcrCaptureHeight = vbHeight
-                                mutableState.update {
-                                    it.copy(
-                                        ocrResults = viewResults,
-                                        ocrCaptureWidth = vbWidth.toFloat(),
-                                        ocrCaptureHeight = vbHeight.toFloat(),
-                                    )
-                                }
-                            }
-                        } else {
-                            viewBitmap.recycle()
+
+                    // If media projection is active (permission granted), do not use view fallback.
+                    if (screenCaptureHelper != null && state.value.translatePermissionGranted) {
+                        // Try to recreate the helper and retry once before giving up.
+                        logcat(LogPriority.WARN) {
+                            "onViewerScrollStopped: MediaProjection active but no frame available; retrying capture once"
                         }
+                        recreateScreenCaptureHelper()
+                        bitmap = screenCaptureHelper?.captureBitmap()
+                        if (bitmap == null || bitmap.width <= 0 || bitmap.height <= 0) {
+                            logcat(LogPriority.ERROR) {
+                                "onViewerScrollStopped: screen capture failed despite permission — aborting OCR"
+                            }
+                            return@launchNonCancellable
+                        }
+                    } else {
+                        // Legacy fallback: capture the view bitmap if MediaProjection not available.
+                        view?.captureVisibleBitmap()?.let { viewBitmap ->
+                            val vbWidth = viewBitmap.width
+                            val vbHeight = viewBitmap.height
+                            if (vbWidth > 0 && vbHeight > 0) {
+                                logcat { "onViewerScrollStopped: using view capture (${vbWidth}x$vbHeight)" }
+                                val viewResults = withIOContext { engine.detectText(viewBitmap) }
+                                viewBitmap.recycle()
+                                withUIContext {
+                                    currentPageOcrResults = viewResults
+                                    currentOcrCaptureWidth = vbWidth
+                                    currentOcrCaptureHeight = vbHeight
+                                    mutableState.update {
+                                        it.copy(
+                                            ocrResults = viewResults,
+                                            ocrCaptureWidth = vbWidth.toFloat(),
+                                            ocrCaptureHeight = vbHeight.toFloat(),
+                                        )
+                                    }
+                                }
+                            } else {
+                                viewBitmap.recycle()
+                            }
+                        }
+                        return@launchNonCancellable
                     }
-                    return@launchNonCancellable
                 }
 
                 logcat { "onViewerScrollStopped: bitmap captured (${bitmap.width}x${bitmap.height}), running OCR" }

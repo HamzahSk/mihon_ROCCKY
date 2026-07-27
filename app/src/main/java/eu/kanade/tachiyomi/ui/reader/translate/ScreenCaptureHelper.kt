@@ -10,6 +10,7 @@ import android.media.projection.MediaProjection
 import android.os.Handler
 import android.os.HandlerThread
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
@@ -23,7 +24,6 @@ class ScreenCaptureHelper(
     private var imageReader: ImageReader? = null
     private var virtualDisplay: VirtualDisplay? = null
     private var callbackThread: HandlerThread? = null
-    private var latestBitmap: Bitmap? = null
 
     var captureWidth: Int = defaultWidth
         private set
@@ -46,18 +46,12 @@ class ScreenCaptureHelper(
         callbackThread = HandlerThread("ScreenCapture-Callback").apply { start() }
 
         imageReader = ImageReader.newInstance(captureWidth, captureHeight, PixelFormat.RGBA_8888, 2)
-        imageReader?.setOnImageAvailableListener({ reader ->
-            try {
-                val image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
-                val bitmap = bitmapFromImage(image)
-                image.close()
-
-                latestBitmap?.recycle()
-                latestBitmap = bitmap
-            } catch (e: Exception) {
-                logcat(LogPriority.ERROR, e) { "Error in ImageReader listener" }
-            }
-        }, Handler(callbackThread!!.looper))
+        imageReader?.setOnImageAvailableListener(
+            {
+                logcat(LogPriority.DEBUG) { "ImageReader: new frame available" }
+            },
+            Handler(callbackThread!!.looper),
+        )
 
         virtualDisplay = mediaProjection.createVirtualDisplay(
             "OCR-ScreenCapture",
@@ -88,43 +82,60 @@ class ScreenCaptureHelper(
         }
     }
 
-    suspend fun captureBitmap(): Bitmap? = withContext(Dispatchers.IO) {
-        val bmp = latestBitmap
-        if (bmp == null || bmp.isRecycled) {
+    suspend fun captureBitmap(timeoutMs: Long = 500L): Bitmap? = withContext(Dispatchers.IO) {
+        val reader = imageReader ?: run {
+            logcat(LogPriority.WARN) { "captureBitmap: ImageReader is null" }
             return@withContext null
         }
-        bmp.copy(bmp.config ?: Bitmap.Config.ARGB_8888, false)
+
+        val deadline = System.currentTimeMillis() + timeoutMs
+        var image = reader.acquireLatestImage()
+        while (image == null && System.currentTimeMillis() < deadline) {
+            // Wait briefly for the virtual display to produce a frame.
+            delay(16L)
+            image = reader.acquireLatestImage()
+        }
+
+        if (image == null) {
+            logcat(LogPriority.DEBUG) { "captureBitmap: no new frame available after ${timeoutMs}ms" }
+            return@withContext null
+        }
+
+        image.use { img ->
+            val bitmap = bitmapFromImage(img)
+            logcat { "captureBitmap: success (${bitmap.width}x${bitmap.height})" }
+            bitmap
+        }
     }
 
     private fun bitmapFromImage(image: Image): Bitmap {
         val plane = image.planes[0]
         val buffer = plane.buffer
         val rowStride = plane.rowStride
+        val pixelStride = plane.pixelStride
         val imgWidth = image.width
         val imgHeight = image.height
 
         val bitmap = Bitmap.createBitmap(imgWidth, imgHeight, Bitmap.Config.ARGB_8888)
-        val pixels = IntArray(imgWidth * imgHeight)
-        
-        buffer.rewind()
-        for (row in 0 until imgHeight) {
-            // Pindah ke posisi awal baris ini
-            buffer.position(row * rowStride)
-            for (col in 0 until imgWidth) {
-                val r = buffer.get().toInt() and 0xFF
-                val g = buffer.get().toInt() and 0xFF
-                val b = buffer.get().toInt() and 0xFF
-                
-                // Kita abaikan alpha bawaan dari buffer karena sering kali 0 (transparan)
-                buffer.get() 
-                
-                // PAKSA ALPHA MENJADI 255 (0xFF) AGAR GAMBAR SOLID
-                val a = 0xFF 
-                
-                pixels[row * imgWidth + col] = (a shl 24) or (r shl 16) or (g shl 8) or b
+
+        if (rowStride == imgWidth * pixelStride) {
+            buffer.rewind()
+            bitmap.copyPixelsFromBuffer(buffer)
+        } else {
+            val pixels = IntArray(imgWidth * imgHeight)
+            buffer.rewind()
+            for (row in 0 until imgHeight) {
+                buffer.position(row * rowStride)
+                for (col in 0 until imgWidth) {
+                    val r = buffer.get().toInt() and 0xFF
+                    val g = buffer.get().toInt() and 0xFF
+                    val b = buffer.get().toInt() and 0xFF
+                    val a = buffer.get().toInt() and 0xFF
+                    pixels[row * imgWidth + col] = (a shl 24) or (r shl 16) or (g shl 8) or b
+                }
             }
+            bitmap.setPixels(pixels, 0, imgWidth, 0, 0, imgWidth, imgHeight)
         }
-        bitmap.setPixels(pixels, 0, imgWidth, 0, 0, imgWidth, imgHeight)
 
         return bitmap
     }
@@ -136,8 +147,6 @@ class ScreenCaptureHelper(
         virtualDisplay = null
         imageReader?.close()
         imageReader = null
-        latestBitmap?.recycle()
-        latestBitmap = null
         mediaProjection.stop()
         logcat { "ScreenCaptureHelper: released" }
     }
