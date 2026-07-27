@@ -68,7 +68,6 @@ jobs:
         with:
           commit_message: "style: auto-fix formatting via Spotless"
 
-      # Bagian ini diatur agar tetap lanjut walau Lint menemukan bug/error
       - name: Run Android Lint (Non-blocking)
         run: ./gradlew lintDebug
         continue-on-error: true
@@ -97,11 +96,11 @@ jobs:
   # 3. UI TESTING, SIMULASI ANDROID & CRASH LOGS
   android-ui-test:
     name: Android UI Tests & Crash Detection
-    runs-on: ubuntu-24.04  # <--- PAKAI UBUNTU
+    runs-on: ubuntu-latest # Memakai ubuntu-latest sesuai rekomendasi dokumentasi
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6 # Diubah sesuai contoh dokumentasi
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -110,17 +109,17 @@ jobs:
           distribution: temurin
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5 # Diubah sesuai contoh dokumentasi
 
+      # Script Enable KVM persis dari dokumentasi
       - name: Enable KVM
         run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm.rules
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-          sudo chmod 666 /dev/kvm
 
       - name: Run Android Emulator & Tests
-        uses: ReactiveCircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
           target: google_apis
@@ -130,18 +129,16 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: |
-            # Tunggu emulator siap
-            adb wait-for-device
             adb shell input keyevent 82
             
-            # Jalankan monkey test
             adb shell monkey -p eu.kanade.tachiyomi -v 5000 || true
             
-            # Ambil log error
             adb logcat -d *:E > emulator-crash-log.txt
             
-            # Upload log sebagai artifact
-            echo "Logs saved to emulator-crash-log.txt"
+            adb shell screencap -p /sdcard/screencap.png
+            adb pull /sdcard/screencap.png /tmp/android-emulator-screenshot.png
+            
+            echo "Logs and screenshot captured successfully."
 
       - name: Upload Emulator Crash Log
         if: always()
@@ -150,8 +147,8 @@ jobs:
           name: emulator-crash-log-${{ github.sha }}
           path: emulator-crash-log.txt
 
-      - name: Upload Emulator Screenshot (if failed)
-        if: failure()
+      - name: Upload Emulator Screenshot
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: emulator-screenshot-${{ github.sha }}
