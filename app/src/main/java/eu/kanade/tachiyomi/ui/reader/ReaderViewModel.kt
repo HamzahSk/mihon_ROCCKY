@@ -42,6 +42,7 @@ import eu.kanade.tachiyomi.ui.reader.translate.OcrEngineImpl
 import eu.kanade.tachiyomi.ui.reader.translate.OcrRegion
 import eu.kanade.tachiyomi.ui.reader.translate.OcrResult
 import eu.kanade.tachiyomi.ui.reader.translate.ScreenCaptureHelper
+import eu.kanade.tachiyomi.ui.reader.translate.ScreenCaptureService
 import eu.kanade.tachiyomi.ui.reader.translate.captureVisibleBitmap
 import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.util.chapter.filterDownloaded
@@ -272,6 +273,7 @@ class ReaderViewModel @JvmOverloads constructor(
                 downloadManager.addDownloadsToStartOfQueue(listOf(it))
             }
         }
+        ScreenCaptureService.stop(Injekt.get<Application>())
         ocrJob?.cancel()
         translateEngine?.release()
         screenCaptureHelper?.release()
@@ -828,11 +830,20 @@ class ReaderViewModel @JvmOverloads constructor(
         if (screenCaptureHelper != null) {
             enableTranslateMode()
         } else if (mediaProjectionData != null) {
-            recreateScreenCaptureHelper()
-            if (screenCaptureHelper != null) {
-                enableTranslateMode()
-            } else {
-                requestMediaProjectionPermission()
+            ScreenCaptureService.start(Injekt.get<Application>())
+            viewModelScope.launchNonCancellable {
+                kotlinx.coroutines.delay(500L)
+                if (!state.value.mediaProjectionPermissionRequested) {
+                    ScreenCaptureService.stop(Injekt.get<Application>())
+                    return@launchNonCancellable
+                }
+                recreateScreenCaptureHelper()
+                if (screenCaptureHelper != null) {
+                    enableTranslateMode()
+                } else {
+                    ScreenCaptureService.stop(Injekt.get<Application>())
+                    requestMediaProjectionPermission()
+                }
             }
         } else {
             requestMediaProjectionPermission()
@@ -880,6 +891,7 @@ class ReaderViewModel @JvmOverloads constructor(
 
     private fun disableTranslateMode() {
         mutableState.update { it.copy(translateMode = false) }
+        ScreenCaptureService.stop(Injekt.get<Application>())
         ocrJob?.cancel()
         ocrJob = null
         currentPageOcrResults = emptyList()
@@ -901,23 +913,32 @@ class ReaderViewModel @JvmOverloads constructor(
         if (resultCode == Activity.RESULT_OK && data != null) {
             mediaProjectionResultCode = resultCode
             mediaProjectionData = data
-            recreateScreenCaptureHelper()
-            if (screenCaptureHelper != null) {
-                mutableState.update {
-                    it.copy(
-                        mediaProjectionPermissionRequested = false,
-                        translatePermissionGranted = true,
-                    )
+            ScreenCaptureService.start(Injekt.get<Application>())
+            viewModelScope.launchNonCancellable {
+                kotlinx.coroutines.delay(500L)
+                if (!state.value.mediaProjectionPermissionRequested) {
+                    ScreenCaptureService.stop(Injekt.get<Application>())
+                    return@launchNonCancellable
                 }
-                enableTranslateMode()
-            } else {
-                mutableState.update {
-                    it.copy(
-                        mediaProjectionPermissionRequested = false,
-                        translatePermissionGranted = false,
-                    )
+                recreateScreenCaptureHelper()
+                if (screenCaptureHelper != null) {
+                    mutableState.update {
+                        it.copy(
+                            mediaProjectionPermissionRequested = false,
+                            translatePermissionGranted = true,
+                        )
+                    }
+                    enableTranslateMode()
+                } else {
+                    ScreenCaptureService.stop(Injekt.get<Application>())
+                    mutableState.update {
+                        it.copy(
+                            mediaProjectionPermissionRequested = false,
+                            translatePermissionGranted = false,
+                        )
+                    }
+                    eventChannel.trySend(Event.OcrError)
                 }
-                eventChannel.trySend(Event.OcrError)
             }
         } else {
             mutableState.update {
