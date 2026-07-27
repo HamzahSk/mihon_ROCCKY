@@ -86,7 +86,3 @@
 # Firebase
 -keep class com.google.firebase.installations.** { *; }
 -keep interface com.google.firebase.installations.** { *; }
-
-# ML Kit
--keep class com.google.mlkit.** { *; }
--dontwarn com.google.mlkit.**

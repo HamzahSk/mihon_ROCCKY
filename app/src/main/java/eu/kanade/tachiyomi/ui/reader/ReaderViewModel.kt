@@ -1,7 +1,6 @@
 package eu.kanade.tachiyomi.ui.reader
 
 import android.app.Application
-import android.graphics.Bitmap
 import android.net.Uri
 import androidx.annotation.IntRange
 import androidx.compose.runtime.Immutable
@@ -228,8 +227,6 @@ class ReaderViewModel @JvmOverloads constructor(
 
     private val incognitoMode: Boolean by lazy { getIncognitoState.await(manga?.source) }
     private val downloadAheadAmount = downloadPreferences.autoDownloadWhileReading.get()
-
-    private val ocrHelper = OcrHelper()
 
     init {
         // To save state
@@ -794,26 +791,6 @@ class ReaderViewModel @JvmOverloads constructor(
         mutableState.update { it.copy(brightnessOverlayValue = value) }
     }
 
-    fun triggerOcrForCurrentPage(bitmap: Bitmap) {
-        viewModelScope.launchIO {
-            val result = ocrHelper.recognizeText(bitmap)
-            withUIContext {
-                result.fold(
-                    onSuccess = { text ->
-                        if (text.isNotBlank()) {
-                            eventChannel.trySend(Event.OcrResult(text))
-                        } else {
-                            eventChannel.trySend(Event.OcrError)
-                        }
-                    },
-                    onFailure = {
-                        eventChannel.trySend(Event.OcrError)
-                    },
-                )
-            }
-        }
-    }
-
     /**
      * Saves the image of the selected page on the pictures directory and notifies the UI of the result.
      * There's also a notification to allow sharing the image somewhere else or deleting it.
@@ -1007,9 +984,5 @@ class ReaderViewModel @JvmOverloads constructor(
         data class SavedImage(val result: SaveImageResult) : Event
         data class ShareImage(val uri: Uri, val page: ReaderPage) : Event
         data class CopyImage(val uri: Uri) : Event
-
-        data class OcrResult(val text: String) : Event
-        data object OcrError : Event
-        data object OcrScreenCaptureNeeded : Event
     }
 }

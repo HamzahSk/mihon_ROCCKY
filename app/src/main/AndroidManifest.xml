@@ -33,9 +33,6 @@
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
-    <!-- Screen capture for OCR -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
-
     <application
         android:name=".App"
         android:allowBackup="false"

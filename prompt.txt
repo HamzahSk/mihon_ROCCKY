@@ -1,28 +1,55 @@
-## Context & Status
-- **Status Perbaikan Sebelumnya:** - Penyesuaian skala/dimensi bitmap (`bitmapWidth`/`bitmapHeight`) dan logika *overlay* teks di `ReaderActivity.kt` sudah berhasil diperbaiki.
-  - Eksekusi OCR otomatis via `triggerOcrForCurrentPage()` di `ReaderViewModel.kt` sudah diimplementasikan.
-- **Acuan Referensi:** Dokumentasi standar integrasi ML Kit dan Text Recognition telah disimpan di file `DOCS_MLKIT.md` pada root/home proyek.
+Tolong selesaikan tugas berikut secara bertahap. **WAJIB membaca dan mempelajari file dokumentasi `DOCS_MLKIT.md` terlebih dahulu sebelum melakukan perubahan atau penulisan kode.**
 
-## Issue Saat Ini
-1. **Pemeriksaan Integrasi ML Kit:** Perlu dipastikan pipeline ekstraksi teks dari *bitmap* hasil tangkapan layar sudah menggunakan acuan *best practice* dari ML Kit yang tertera pada `DOCS_MLKIT.md`.
-2. **Indikator Sistem Android Hilang:** Perekaman layar via `MediaProjection` dan `VirtualDisplay` perlu diverifikasi kembali agar sistem Android menampilkan indikator *screen capture* (perekaman/cast) aktif di *status bar*, bukan bergantung pada metode *fallback view capture*.
+---
 
-## Tugas & Spesifikasi Perbaikan
-
-Tolong selesaikan perbaikan ini dengan mengikuti petunjuk berikut:
-
-1. **Baca File Referensi `DOCS_MLKIT.md`:**
-   - Wajib baca file `DOCS_MLKIT.md` yang berada di root/home proyek sebelum melakukan perubahan kode.
+## LANGKAH 1: Penelusuran Dokumentasi (WAJIB DILAKUKAN PERTAMA)
+1. **Baca File `DOCS_MLKIT.md`**:
+   - Pahami dokumentasi standar integrasi ML Kit dan Text Recognition yang terletak pada root/home direktori proyek.
+2. **Pelajari Pipeline & Best Practices ML Kit**:
    - Pelajari struktur pembuatan `TextRecognitionHelper`, penggunaan `InputImage`, serta penanganan *recognizer* (termasuk opsi dukungan multi-bahasa seperti Jepang/Mandarin/Korea jika diperlukan).
+   - Pastikan pipeline ekstraksi teks dari *bitmap* hasil tangkapan layar sudah mengikuti acuan standar dari file tersebut.
 
-2. **Verifikasi Pipeline OCR ML Kit:**
-   - Pastikan *bitmap* yang ditangkap oleh `ImageReader` diubah menjadi `InputImage` dan diproses menggunakan `TextRecognition.getClient()` sesuai acuan di `DOCS_MLKIT.md`.
-   - Pastikan *listener* sukses/gagal menangani hasil rekognisi teks dan mengumpankannya kembali ke `ReaderViewModel`.
+---
 
-3. **Perbaiki `MediaProjection` & `VirtualDisplay`:**
-   - Pastikan `VirtualDisplay` terhubung secara riil dengan `Surface` dari `ImageReader`, sehingga OS Android secara resmi mengaktifkan indikator *screen recording* di *status bar*.
-   - Hindari penggunaan *fallback view capture* secara penuh jika izin `MediaProjection` sudah diberikan oleh pengguna (`RESULT_OK`).
+## LANGKAH 2: Implementasi Fitur "Manga Live Translator (Tahap 1: OCR Detection)"
+Setelah membaca dan memahami dokumentasi di atas, implementasikan fitur pada komponen viewer/reader manga dengan ketentuan sebagai berikut:
 
-4. **Testing & Clean Code (WAJIB):**
-   - Jalankan `./gradlew spotlessApply` untuk merapikan format kode.
-   - Jalankan `./gradlew testDebugUnitTest` dan pastikan **BUILD SUCCESSFUL**.
+### 1. UI & Penempatan Tombol
+- **Tombol Action Baru**: Tambahkan tombol "Translate" di samping tombol *Favorite* / *Save* (pada action bar atau toolbar reader).
+- **Indikator Status**: 
+  - Tombol memiliki state (Active/Inactive) dengan indikator visual yang jelas (perubahan warna ikon atau badge pulsing) saat fitur auto-translate aktif.
+  - Tambahkan animasi transisi halus saat status tombol berubah.
+
+### 2. Logika Deteksi OCR (Auto-Detect saat Scroll Berhenti)
+- **Scroll Detection**: Buat listener/observer pada *scroll state* halaman reader.
+- **Debounce / Interval**: Jalankan proses deteksi OCR hanya saat pengguna **berhenti melakukan scroll selama 1,25 detik** (`debounce(1250ms)`).
+- **Proses OCR**:
+  - Ambil *frame/image* yang saat ini sedang tampil di layar (*visible viewport*).
+  - Gunakan SDK OCR (Google ML Kit Text Recognition) untuk mendeteksi area dan teks pada panel komik.
+  - Buat overlay transparan di atas gambar komik untuk menggambarkan/menuliskan ulang teks (*text overlay*) tepat di lokasi *bounding box* teks yang terdeteksi.
+
+### 3. Integrasi Screen Capture (`MediaProjection` & `VirtualDisplay`)
+- Pastikan `VirtualDisplay` terhubung secara riil dengan `Surface` dari `ImageReader`, sehingga OS Android secara resmi mengaktifkan indikator *screen capture* (perekaman/cast) aktif di *status bar*.
+- Hindari penggunaan *fallback view capture* secara penuh jika izin `MediaProjection` sudah diberikan oleh pengguna (`RESULT_OK`).
+
+### 4. Arsitektur & Persiapan Integrasi (Tahap 1)
+- **Persiapan Modul API Translator**:
+  - Buat abstraksi / Interface khusus untuk service pemroses teks (misal: `MangaTranslatorEngine`).
+  - Untuk tahap ini, hasil keluaran dari OCR cukup dituliskan kembali (*mock/raw text*) pada overlay tanpa diproses ke API penerjemah eksternal terlebih dahulu.
+  - Pastikan struktur data fleksibel agar siap diintegrasikan dengan API Translator (seperti Google Translate / DeepL API) pada tahap selanjutnya.
+
+### 5. Performa & Best Practice (Jetpack Compose / Android)
+- **Resource Management**: Proses OCR harus berjalan secara *asynchronous* (menggunakan Coroutines / Background Thread) agar UI tidak *lag* atau *stuttering* saat pengguna membaca.
+- **Batal Otomatis (Cancellation)**: Jika pengguna mulai melakukan scroll kembali sebelum interval 1,25 detik selesai (atau saat OCR sedang berjalan), batalkan job OCR sebelumnya (*cancel ongoing job*).
+- **Memory Optimization**: Bersihkan (*recycle/dispose*) cache gambar bitmap dan overlay saat halaman/chapter ditutup atau berpindah.
+
+### 6. Catatan Penting
+- **JANGAN** mengubah atau merusak fungsi tombol *Favorite*, *Save*, maupun fitur navigasi reader yang sudah ada.
+- Pertahankan semua parameter dan *callback* event yang sudah berjalan pada layar reader.
+- Pastikan ketersediaan izin (*permissions*) yang dibutuhkan jika mengambil *frame* dari layar.
+
+---
+
+## LANGKAH 3: Testing & Clean Code (WAJIB)
+1. Jalankan `./gradlew spotlessApply` untuk merapikan format kode.
+2. Jalankan `./gradlew testDebugUnitTest` dan pastikan **BUILD SUCCESSFUL**.
