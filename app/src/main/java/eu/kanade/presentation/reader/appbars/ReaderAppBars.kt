@@ -56,6 +56,9 @@ fun ReaderAppBars(
     onOpenInBrowser: (() -> Unit)?,
     onShare: (() -> Unit)?,
 
+    translateActive: Boolean,
+    onToggleTranslate: () -> Unit,
+
     chapterNavigatorType: ChapterNavigatorType,
     verticalNavigatorHeight: Float,
     onNextChapter: () -> Unit,
@@ -97,6 +100,8 @@ fun ReaderAppBars(
                 onOpenInWebView = onOpenInWebView,
                 onOpenInBrowser = onOpenInBrowser,
                 onShare = onShare,
+                translateActive = translateActive,
+                onToggleTranslate = onToggleTranslate,
             )
         }
 

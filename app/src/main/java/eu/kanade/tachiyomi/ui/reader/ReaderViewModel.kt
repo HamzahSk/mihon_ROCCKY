@@ -33,6 +33,11 @@ import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderOrientation
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import eu.kanade.tachiyomi.ui.reader.setting.ReadingMode
+import eu.kanade.tachiyomi.ui.reader.translate.MangaTranslatorEngine
+import eu.kanade.tachiyomi.ui.reader.translate.OcrEngineImpl
+import eu.kanade.tachiyomi.ui.reader.translate.OcrRegion
+import eu.kanade.tachiyomi.ui.reader.translate.OcrResult
+import eu.kanade.tachiyomi.ui.reader.translate.captureVisibleBitmap
 import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.util.chapter.filterDownloaded
 import eu.kanade.tachiyomi.util.chapter.removeDuplicates
@@ -42,6 +47,7 @@ import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.storage.cacheImageDir
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -144,6 +150,11 @@ class ReaderViewModel @JvmOverloads constructor(
     private var chapterReadStartTime: Long? = null
 
     private var chapterToDownload: Download? = null
+
+    private var translateEngine: MangaTranslatorEngine? = null
+    private var ocrJob: Job? = null
+    private var currentPageOcrResults: List<OcrResult> = emptyList()
+    private var currentOcrPageIndex: Int = -1
 
     private val unfilteredChapterList by lazy {
         val manga = manga!!
@@ -253,6 +264,8 @@ class ReaderViewModel @JvmOverloads constructor(
                 downloadManager.addDownloadsToStartOfQueue(listOf(it))
             }
         }
+        ocrJob?.cancel()
+        translateEngine?.release()
     }
 
     /**
@@ -791,6 +804,59 @@ class ReaderViewModel @JvmOverloads constructor(
         mutableState.update { it.copy(brightnessOverlayValue = value) }
     }
 
+    fun toggleTranslateMode() {
+        val newMode = !state.value.translateMode
+        mutableState.update { it.copy(translateMode = newMode) }
+        if (!newMode) {
+            ocrJob?.cancel()
+            ocrJob = null
+            currentPageOcrResults = emptyList()
+            currentOcrPageIndex = -1
+            mutableState.update { it.copy(ocrResults = emptyList()) }
+            translateEngine?.release()
+            translateEngine = null
+        } else {
+            translateEngine = OcrEngineImpl()
+        }
+    }
+
+    fun onViewerScrollStopped(pageIndex: Int, view: android.view.View?) {
+        if (!state.value.translateMode) return
+        if (view == null) return
+
+        ocrJob?.cancel()
+        ocrJob = viewModelScope.launchNonCancellable {
+            kotlinx.coroutines.delay(1250L)
+            if (pageIndex == currentOcrPageIndex) return@launchNonCancellable
+            currentOcrPageIndex = pageIndex
+
+            val engine = translateEngine ?: return@launchNonCancellable
+
+            try {
+                val bitmap = view.captureVisibleBitmap()
+                if (bitmap.width <= 0 || bitmap.height <= 0) {
+                    bitmap.recycle()
+                    return@launchNonCancellable
+                }
+
+                val results = withIOContext {
+                    engine.detectText(bitmap)
+                }
+
+                bitmap.recycle()
+
+                withUIContext {
+                    currentPageOcrResults = results
+                    mutableState.update { it.copy(ocrResults = results) }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logcat(LogPriority.ERROR, e) { "OCR detection error" }
+            }
+        }
+    }
+
     /**
      * Saves the image of the selected page on the pictures directory and notifies the UI of the result.
      * There's also a notification to allow sharing the image somewhere else or deleting it.
@@ -959,6 +1025,9 @@ class ReaderViewModel @JvmOverloads constructor(
         val dialog: Dialog? = null,
         val menuVisible: Boolean = false,
         @IntRange(from = -100, to = 100) val brightnessOverlayValue: Int = 0,
+
+        val translateMode: Boolean = false,
+        val ocrResults: List<OcrResult> = emptyList(),
     ) {
         val currentChapter: ReaderChapter?
             get() = viewerChapters?.currChapter

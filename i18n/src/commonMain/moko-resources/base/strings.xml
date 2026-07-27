@@ -1071,4 +1071,9 @@
     <string name="donationCampaign.paragraph3">Regardless, Mihon will continue to be maintained by me and the volunteers, and it will stay open source.</string>
     <string name="donationCampaign.contactPlatform">Discord</string>
     <string name="donationCampaign.dismiss">Dismiss</string>
+
+    <!-- Translator -->
+    <string name="action_translate">Translate</string>
+    <string name="action_translate_active">Auto-translate active</string>
+    <string name="action_translate_inactive">Auto-translate inactive</string>
 </resources>
