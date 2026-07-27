@@ -309,6 +309,9 @@ dependencies {
     implementation(libs.materialKolor)
     implementation(libs.lottie.compose)
 
+    // ML Kit OCR
+    implementation(libs.mlkit.text.recognition)
+
     // Logging
     implementation(libs.logcat)
 
@@ -317,9 +320,6 @@ dependencies {
 
     // String similarity
     implementation(libs.stringSimilarity)
-
-    // ML Kit OCR
-    implementation(libs.mlkit.textRecognition)
 
     // Tests
     testImplementation(libs.bundles.test)

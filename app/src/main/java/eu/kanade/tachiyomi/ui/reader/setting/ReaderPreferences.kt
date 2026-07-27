@@ -152,6 +152,15 @@ class ReaderPreferences(
 
     // endregion
 
+    // region Translation
+
+    val translateEnabled: Preference<Boolean> = preferenceStore.getBoolean(
+        "reader_translate_enabled",
+        false,
+    )
+
+    // endregion
+
     // region Controls
 
     val readWithLongTap: Preference<Boolean> = preferenceStore.getBoolean("reader_long_tap", true)

@@ -53,10 +53,10 @@ import eu.kanade.presentation.reader.DisplayRefreshHost
 import eu.kanade.presentation.reader.OrientationSelectDialog
 import eu.kanade.presentation.reader.ReaderContentOverlay
 import eu.kanade.presentation.reader.ReaderPageActionsDialog
-import eu.kanade.presentation.reader.translate.TextOverlay
 import eu.kanade.presentation.reader.ReaderPageIndicator
 import eu.kanade.presentation.reader.ReadingModeSelectDialog
 import eu.kanade.presentation.reader.appbars.ReaderAppBars
+import eu.kanade.presentation.reader.translate.OcrOverlay
 import eu.kanade.presentation.reader.components.ChapterNavigatorType
 import eu.kanade.presentation.reader.settings.ReaderSettingsDialog
 import eu.kanade.tachiyomi.R
@@ -274,6 +274,13 @@ class ReaderActivity : BaseActivity() {
 
             ContentOverlay(state = state)
 
+
+            if (state.translateEnabled) {
+                OcrOverlay(
+                    textBlocks = state.ocrTextBlocks,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
             AppBars(state = state)
         }
 
@@ -447,14 +454,6 @@ class ReaderActivity : BaseActivity() {
         if (flashOnPageChange) {
             DisplayRefreshHost(hostState = displayRefreshHost)
         }
-
-        if (state.translateMode && state.ocrResults.isNotEmpty()) {
-            TextOverlay(
-                results = state.ocrResults,
-                imageWidth = binding.viewerContainer.width.toFloat().coerceAtLeast(1f),
-                imageHeight = binding.viewerContainer.height.toFloat().coerceAtLeast(1f),
-            )
-        }
     }
 
     @Composable
@@ -489,9 +488,6 @@ class ReaderActivity : BaseActivity() {
             onOpenInWebView = ::openChapterInWebView.takeIf { isHttpSource },
             onOpenInBrowser = ::openChapterInBrowser.takeIf { isHttpSource },
             onShare = ::shareChapter.takeIf { isHttpSource },
-
-            translateActive = state.translateMode,
-            onToggleTranslate = viewModel::toggleTranslateMode,
 
             chapterNavigatorType = if (!verticalNavigator) {
                 if (state.viewer is R2LPagerViewer) {
@@ -536,6 +532,8 @@ class ReaderActivity : BaseActivity() {
                 menuToggleToast = toast(if (enabled) MR.strings.on else MR.strings.off)
             },
             onClickSettings = viewModel::openSettingsDialog,
+            translateEnabled = state.translateEnabled,
+            onToggleTranslate = viewModel::toggleTranslate,
         )
     }
 
@@ -575,10 +573,6 @@ class ReaderActivity : BaseActivity() {
         viewModel.onViewerLoaded(newViewer)
         updateViewerInset(readerPreferences.fullscreen.get(), readerPreferences.drawUnderCutout.get())
         binding.viewerContainer.addView(newViewer.getView())
-
-        newViewer.onScrollStopped = { pageIndex, view ->
-            viewModel.onViewerScrollStopped(pageIndex, view)
-        }
 
         if (readerPreferences.showReadingMode.get()) {
             showReadingModeToast(viewModel.getMangaReadingMode())

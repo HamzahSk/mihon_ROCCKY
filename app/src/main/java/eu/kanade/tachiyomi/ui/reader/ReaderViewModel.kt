@@ -33,11 +33,6 @@ import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderOrientation
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import eu.kanade.tachiyomi.ui.reader.setting.ReadingMode
-import eu.kanade.tachiyomi.ui.reader.translate.MangaTranslatorEngine
-import eu.kanade.tachiyomi.ui.reader.translate.OcrEngineImpl
-import eu.kanade.tachiyomi.ui.reader.translate.OcrRegion
-import eu.kanade.tachiyomi.ui.reader.translate.OcrResult
-import eu.kanade.tachiyomi.ui.reader.translate.captureVisibleBitmap
 import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.util.chapter.filterDownloaded
 import eu.kanade.tachiyomi.util.chapter.removeDuplicates
@@ -49,6 +44,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -59,6 +55,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import logcat.LogPriority
 import tachiyomi.core.common.preference.toggle
@@ -84,6 +81,8 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.time.Instant
 import java.util.Date
+import eu.kanade.tachiyomi.ui.reader.translate.OcrProcessor
+import eu.kanade.tachiyomi.ui.reader.translate.OcrTextBlock
 
 /**
  * Presenter used by the activity to perform background operations.
@@ -122,6 +121,16 @@ class ReaderViewModel @JvmOverloads constructor(
         get() = state.value.manga
 
     /**
+     * OCR processor for manga text detection. Lazily created when translate is first enabled.
+     */
+    private var ocrProcessor: OcrProcessor? = null
+
+    /**
+     * Active OCR/translate job. Cancelled when scrolling resumes or feature is disabled.
+     */
+    private var translateJob: Job? = null
+
+    /**
      * The chapter id of the currently loaded chapter. Used to restore from process kill.
      */
     private var chapterId = savedState.get<Long>("chapter_id") ?: -1L
@@ -150,11 +159,6 @@ class ReaderViewModel @JvmOverloads constructor(
     private var chapterReadStartTime: Long? = null
 
     private var chapterToDownload: Download? = null
-
-    private var translateEngine: MangaTranslatorEngine? = null
-    private var ocrJob: Job? = null
-    private var currentPageOcrResults: List<OcrResult> = emptyList()
-    private var currentOcrPageIndex: Int = -1
 
     private val unfilteredChapterList by lazy {
         val manga = manga!!
@@ -257,6 +261,9 @@ class ReaderViewModel @JvmOverloads constructor(
     }
 
     override fun onCleared() {
+        translateJob?.cancel()
+        ocrProcessor?.dispose()
+        ocrProcessor = null
         val currentChapters = state.value.viewerChapters
         if (currentChapters != null) {
             currentChapters.unref()
@@ -264,8 +271,6 @@ class ReaderViewModel @JvmOverloads constructor(
                 downloadManager.addDownloadsToStartOfQueue(listOf(it))
             }
         }
-        ocrJob?.cancel()
-        translateEngine?.release()
     }
 
     /**
@@ -474,6 +479,11 @@ class ReaderViewModel @JvmOverloads constructor(
         }
 
         eventChannel.trySend(Event.PageChanged)
+
+        // Trigger OCR debounce when translate is active
+        if (state.value.translateEnabled) {
+            triggerOcrDebounced()
+        }
     }
 
     private fun downloadNextChapters() {
@@ -676,6 +686,78 @@ class ReaderViewModel @JvmOverloads constructor(
     }
 
     /**
+     * Toggles the live translation (OCR) feature on/off.
+     * Saves the preference and starts/stops observing page changes.
+     */
+    fun toggleTranslate() {
+        val newState = !state.value.translateEnabled
+        readerPreferences.translateEnabled.set(newState)
+        mutableState.update {
+            it.copy(
+                translateEnabled = newState,
+                ocrTextBlocks = if (newState) it.ocrTextBlocks else emptyList(),
+            )
+        }
+        if (newState) {
+            triggerOcrDebounced()
+        } else {
+            translateJob?.cancel()
+            translateJob = null
+        }
+    }
+
+    /**
+     * Called when the user stops scrolling (or page changes) to schedule OCR.
+     * Cancels any pending OCR job and starts a new debounced one.
+     */
+    fun triggerOcrDebounced() {
+        if (!state.value.translateEnabled) return
+        translateJob?.cancel()
+        translateJob = viewModelScope.launch {
+            delay(OCR_DEBOUNCE_MS)
+            runOcrOnCurrentPage()
+        }
+    }
+
+    /**
+     * Executes OCR on the currently visible page image.
+     * The image is obtained from the current page's stream, converted to a Bitmap,
+     * and then processed by [OcrProcessor].
+     */
+    private suspend fun runOcrOnCurrentPage() {
+        val page = getCurrentChapter()?.pages?.getOrNull(state.value.currentPage - 1) ?: return
+        val streamFn = page.stream ?: return
+        val bitmap = withIOContext {
+            try {
+                val inputStream = streamFn()
+                val bytes = inputStream.readBytes()
+                android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            } catch (e: Exception) {
+                logcat { "Failed to decode page bitmap for OCR: ${e.message}" }
+                null
+            }
+        } ?: return
+
+        // Lazily create the OCR processor
+        val processor = ocrProcessor ?: run {
+            OcrProcessor().also { ocrProcessor = it }
+        }
+
+        try {
+            val blocks = processor.detectText(bitmap)
+            withUIContext {
+                mutableState.update { it.copy(ocrTextBlocks = blocks) }
+            }
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            logcat { "OCR processing failed: ${e.message}" }
+        } finally {
+            bitmap.recycle()
+        }
+    }
+
+
+    /**
      * Returns the viewer position used by this manga or the default one.
      */
     fun getMangaReadingMode(resolveDefault: Boolean = true): Int {
@@ -802,59 +884,6 @@ class ReaderViewModel @JvmOverloads constructor(
 
     fun setBrightnessOverlayValue(value: Int) {
         mutableState.update { it.copy(brightnessOverlayValue = value) }
-    }
-
-    fun toggleTranslateMode() {
-        val newMode = !state.value.translateMode
-        mutableState.update { it.copy(translateMode = newMode) }
-        if (!newMode) {
-            ocrJob?.cancel()
-            ocrJob = null
-            currentPageOcrResults = emptyList()
-            currentOcrPageIndex = -1
-            mutableState.update { it.copy(ocrResults = emptyList()) }
-            translateEngine?.release()
-            translateEngine = null
-        } else {
-            translateEngine = OcrEngineImpl()
-        }
-    }
-
-    fun onViewerScrollStopped(pageIndex: Int, view: android.view.View?) {
-        if (!state.value.translateMode) return
-        if (view == null) return
-
-        ocrJob?.cancel()
-        ocrJob = viewModelScope.launchNonCancellable {
-            kotlinx.coroutines.delay(1250L)
-            if (pageIndex == currentOcrPageIndex) return@launchNonCancellable
-            currentOcrPageIndex = pageIndex
-
-            val engine = translateEngine ?: return@launchNonCancellable
-
-            try {
-                val bitmap = view.captureVisibleBitmap()
-                if (bitmap.width <= 0 || bitmap.height <= 0) {
-                    bitmap.recycle()
-                    return@launchNonCancellable
-                }
-
-                val results = withIOContext {
-                    engine.detectText(bitmap)
-                }
-
-                bitmap.recycle()
-
-                withUIContext {
-                    currentPageOcrResults = results
-                    mutableState.update { it.copy(ocrResults = results) }
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                logcat(LogPriority.ERROR, e) { "OCR detection error" }
-            }
-        }
     }
 
     /**
@@ -1026,8 +1055,11 @@ class ReaderViewModel @JvmOverloads constructor(
         val menuVisible: Boolean = false,
         @IntRange(from = -100, to = 100) val brightnessOverlayValue: Int = 0,
 
-        val translateMode: Boolean = false,
-        val ocrResults: List<OcrResult> = emptyList(),
+        /** Whether the live translation / OCR feature is active. */
+        val translateEnabled: Boolean = false,
+
+        /** Current OCR results (text blocks with bounding boxes) for the visible page. */
+        val ocrTextBlocks: List<OcrTextBlock> = emptyList(),
     ) {
         val currentChapter: ReaderChapter?
             get() = viewerChapters?.currChapter
@@ -1053,5 +1085,9 @@ class ReaderViewModel @JvmOverloads constructor(
         data class SavedImage(val result: SaveImageResult) : Event
         data class ShareImage(val uri: Uri, val page: ReaderPage) : Event
         data class CopyImage(val uri: Uri) : Event
+    }
+    companion object {
+        /** Debounce interval in ms before triggering OCR after scroll stops. */
+        private const val OCR_DEBOUNCE_MS = 1250L
     }
 }

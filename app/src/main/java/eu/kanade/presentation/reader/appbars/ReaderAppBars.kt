@@ -56,9 +56,6 @@ fun ReaderAppBars(
     onOpenInBrowser: (() -> Unit)?,
     onShare: (() -> Unit)?,
 
-    translateActive: Boolean,
-    onToggleTranslate: () -> Unit,
-
     chapterNavigatorType: ChapterNavigatorType,
     verticalNavigatorHeight: Float,
     onNextChapter: () -> Unit,
@@ -77,6 +74,9 @@ fun ReaderAppBars(
     cropEnabled: Boolean,
     onClickCropBorder: () -> Unit,
     onClickSettings: () -> Unit,
+
+    translateEnabled: Boolean = false,
+    onToggleTranslate: () -> Unit = {},
 ) {
     val backgroundColor = MaterialTheme.colorScheme
         .surfaceColorAtElevation(3.dp)
@@ -100,7 +100,7 @@ fun ReaderAppBars(
                 onOpenInWebView = onOpenInWebView,
                 onOpenInBrowser = onOpenInBrowser,
                 onShare = onShare,
-                translateActive = translateActive,
+                translateEnabled = translateEnabled,
                 onToggleTranslate = onToggleTranslate,
             )
         }

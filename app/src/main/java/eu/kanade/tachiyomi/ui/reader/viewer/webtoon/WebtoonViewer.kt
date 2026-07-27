@@ -109,13 +109,6 @@ class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boolean = tr
                         activity.showMenu()
                     }
                 }
-
-                override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                    if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                        val position = layoutManager.findLastEndVisibleItemPosition()
-                        onScrollStopped?.invoke(position, recyclerView)
-                    }
-                }
             },
         )
         recycler.tapListener = { event ->
@@ -207,8 +200,6 @@ class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boolean = tr
         super.destroy()
         scope.cancel()
     }
-
-    override var onScrollStopped: ((pageIndex: Int, view: View) -> Unit)? = null
 
     /**
      * Called from the RecyclerView listener when a [page] is marked as active. It notifies the
