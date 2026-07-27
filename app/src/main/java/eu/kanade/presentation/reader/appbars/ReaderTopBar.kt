@@ -1,13 +1,9 @@
 package eu.kanade.presentation.reader.appbars
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material.icons.outlined.BookmarkBorder
-import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import eu.kanade.presentation.components.AppBar
@@ -25,16 +21,8 @@ fun ReaderTopBar(
     onOpenInWebView: (() -> Unit)?,
     onOpenInBrowser: (() -> Unit)?,
     onShare: (() -> Unit)?,
-    translateActive: Boolean,
-    onToggleTranslate: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val translateIconTint by animateColorAsState(
-        targetValue = if (translateActive) Color(0xFF4FC3F7) else Color.White,
-        animationSpec = tween(durationMillis = 300),
-        label = "translateTint",
-    )
-
     AppBar(
         modifier = modifier,
         backgroundColor = Color.Transparent,
@@ -59,20 +47,6 @@ fun ReaderTopBar(
                                 Icons.Outlined.BookmarkBorder
                             },
                             onClick = onToggleBookmarked,
-                        ),
-                    )
-                    add(
-                        AppBar.Action(
-                            title = stringResource(
-                                if (translateActive) {
-                                    MR.strings.action_translate_active
-                                } else {
-                                    MR.strings.action_translate_inactive
-                                },
-                            ),
-                            icon = Icons.Outlined.Translate,
-                            iconTint = translateIconTint,
-                            onClick = onToggleTranslate,
                         ),
                     )
                     onOpenInWebView?.let {

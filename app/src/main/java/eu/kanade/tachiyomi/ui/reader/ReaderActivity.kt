@@ -10,7 +10,6 @@ import android.graphics.Color
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
-import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -21,8 +20,6 @@ import android.view.View.LAYER_TYPE_HARDWARE
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -61,7 +58,6 @@ import eu.kanade.presentation.reader.ReadingModeSelectDialog
 import eu.kanade.presentation.reader.appbars.ReaderAppBars
 import eu.kanade.presentation.reader.components.ChapterNavigatorType
 import eu.kanade.presentation.reader.settings.ReaderSettingsDialog
-import eu.kanade.presentation.reader.translate.TextOverlay
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
@@ -139,11 +135,6 @@ class ReaderActivity : BaseActivity() {
     private var menuToggleToast: Toast? = null
     private var readingModeToast: Toast? = null
     private val displayRefreshHost = DisplayRefreshHost()
-
-    private val mediaProjectionLauncher: ActivityResultLauncher<Intent> =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            viewModel.onMediaProjectionResult(result.resultCode, result.data)
-        }
 
     private val windowInsetsController by lazy { WindowInsetsControllerCompat(window, window.decorView) }
 
@@ -252,16 +243,6 @@ class ReaderActivity : BaseActivity() {
                     }
                     is ReaderViewModel.Event.SetCoverResult -> {
                         onSetAsCoverResult(event.result)
-                    }
-                    ReaderViewModel.Event.OcrError -> {
-                        toast(MR.strings.unknown_error)
-                    }
-                    ReaderViewModel.Event.RequestMediaProjectionPermission -> {
-                        val mpm = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-                        mediaProjectionLauncher.launch(mpm.createScreenCaptureIntent())
-                    }
-                    ReaderViewModel.Event.TranslatePermissionDenied -> {
-                        toast(MR.strings.translate_permission_denied)
                     }
                 }
             }
@@ -465,14 +446,6 @@ class ReaderActivity : BaseActivity() {
         if (flashOnPageChange) {
             DisplayRefreshHost(hostState = displayRefreshHost)
         }
-
-        if (state.translateMode && state.ocrResults.isNotEmpty()) {
-            TextOverlay(
-                results = state.ocrResults,
-                bitmapWidth = state.ocrCaptureWidth.coerceAtLeast(1f),
-                bitmapHeight = state.ocrCaptureHeight.coerceAtLeast(1f),
-            )
-        }
     }
 
     @Composable
@@ -507,9 +480,6 @@ class ReaderActivity : BaseActivity() {
             onOpenInWebView = ::openChapterInWebView.takeIf { isHttpSource },
             onOpenInBrowser = ::openChapterInBrowser.takeIf { isHttpSource },
             onShare = ::shareChapter.takeIf { isHttpSource },
-
-            translateActive = state.translateMode,
-            onToggleTranslate = viewModel::toggleTranslateMode,
 
             chapterNavigatorType = if (!verticalNavigator) {
                 if (state.viewer is R2LPagerViewer) {
@@ -593,10 +563,6 @@ class ReaderActivity : BaseActivity() {
         viewModel.onViewerLoaded(newViewer)
         updateViewerInset(readerPreferences.fullscreen.get(), readerPreferences.drawUnderCutout.get())
         binding.viewerContainer.addView(newViewer.getView())
-
-        newViewer.onScrollStopped = { pageIndex, view ->
-            viewModel.onViewerScrollStopped(pageIndex, view)
-        }
 
         if (readerPreferences.showReadingMode.get()) {
             showReadingModeToast(viewModel.getMangaReadingMode())

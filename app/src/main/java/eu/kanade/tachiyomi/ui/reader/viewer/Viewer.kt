@@ -12,14 +12,6 @@ import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
 interface Viewer {
 
     /**
-     * Called when the user stops scrolling and the viewer is idle.
-     * Provides the page index and the visible view for OCR capture.
-     */
-    var onScrollStopped: ((pageIndex: Int, view: View) -> Unit)?
-        get() = null
-        set(_) {}
-
-    /**
      * Returns the view this viewer uses.
      */
     fun getView(): View

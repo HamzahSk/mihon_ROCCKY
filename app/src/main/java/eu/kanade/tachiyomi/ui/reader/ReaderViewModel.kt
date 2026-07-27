@@ -1,10 +1,6 @@
 package eu.kanade.tachiyomi.ui.reader
 
-import android.app.Activity
 import android.app.Application
-import android.content.Context
-import android.content.Intent
-import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import androidx.annotation.IntRange
 import androidx.compose.runtime.Immutable
@@ -37,13 +33,6 @@ import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderOrientation
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import eu.kanade.tachiyomi.ui.reader.setting.ReadingMode
-import eu.kanade.tachiyomi.ui.reader.translate.MangaTranslatorEngine
-import eu.kanade.tachiyomi.ui.reader.translate.OcrEngineImpl
-import eu.kanade.tachiyomi.ui.reader.translate.OcrRegion
-import eu.kanade.tachiyomi.ui.reader.translate.OcrResult
-import eu.kanade.tachiyomi.ui.reader.translate.ScreenCaptureHelper
-import eu.kanade.tachiyomi.ui.reader.translate.ScreenCaptureService
-import eu.kanade.tachiyomi.ui.reader.translate.captureVisibleBitmap
 import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.util.chapter.filterDownloaded
 import eu.kanade.tachiyomi.util.chapter.removeDuplicates
@@ -53,7 +42,6 @@ import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.storage.cacheImageDir
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -156,16 +144,6 @@ class ReaderViewModel @JvmOverloads constructor(
     private var chapterReadStartTime: Long? = null
 
     private var chapterToDownload: Download? = null
-
-    private var translateEngine: MangaTranslatorEngine? = null
-    private var ocrJob: Job? = null
-    private var currentPageOcrResults: List<OcrResult> = emptyList()
-    private var currentOcrPageIndex: Int = -1
-    private var currentOcrCaptureWidth: Int = 0
-    private var currentOcrCaptureHeight: Int = 0
-    private var screenCaptureHelper: ScreenCaptureHelper? = null
-    private var mediaProjectionResultCode: Int = Activity.RESULT_CANCELED
-    private var mediaProjectionData: Intent? = null
 
     private val unfilteredChapterList by lazy {
         val manga = manga!!
@@ -275,13 +253,6 @@ class ReaderViewModel @JvmOverloads constructor(
                 downloadManager.addDownloadsToStartOfQueue(listOf(it))
             }
         }
-        ScreenCaptureService.stop(Injekt.get<Application>())
-        ocrJob?.cancel()
-        translateEngine?.release()
-        screenCaptureHelper?.release()
-        screenCaptureHelper = null
-        mediaProjectionResultCode = Activity.RESULT_CANCELED
-        mediaProjectionData = null
     }
 
     /**
@@ -820,306 +791,6 @@ class ReaderViewModel @JvmOverloads constructor(
         mutableState.update { it.copy(brightnessOverlayValue = value) }
     }
 
-    fun toggleTranslateMode() {
-        if (state.value.translateMode) {
-            disableTranslateMode()
-        } else {
-            requestAndEnableTranslateMode()
-        }
-    }
-
-    private fun requestAndEnableTranslateMode() {
-        if (screenCaptureHelper != null) {
-            enableTranslateMode()
-        } else if (mediaProjectionData != null) {
-            ScreenCaptureService.start(Injekt.get<Application>())
-            viewModelScope.launchNonCancellable {
-                kotlinx.coroutines.delay(500L)
-                if (state.value.mediaProjectionPermissionRequested) {
-                    ScreenCaptureService.stop(Injekt.get<Application>())
-                    return@launchNonCancellable
-                }
-                recreateScreenCaptureHelper()
-                if (screenCaptureHelper != null) {
-                    enableTranslateMode()
-                } else {
-                    ScreenCaptureService.stop(Injekt.get<Application>())
-                    requestMediaProjectionPermission()
-                }
-            }
-        } else {
-            requestMediaProjectionPermission()
-        }
-    }
-
-    private fun requestMediaProjectionPermission() {
-        mutableState.update { it.copy(mediaProjectionPermissionRequested = true) }
-        eventChannel.trySend(Event.RequestMediaProjectionPermission)
-    }
-
-    private fun recreateScreenCaptureHelper() {
-        try {
-            logcat { "recreateScreenCaptureHelper: starting" }
-            val data = mediaProjectionData ?: throw IllegalStateException("MediaProjection Intent is null")
-
-            val app = Injekt.get<Application>()
-            val mpm = app.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-
-            screenCaptureHelper?.release()
-            screenCaptureHelper = null
-
-            val mp = mpm.getMediaProjection(mediaProjectionResultCode, data)
-                ?: throw IllegalStateException("Failed to get MediaProjection")
-
-            val metrics = app.resources.displayMetrics
-            logcat { "Screen dimensions: ${metrics.widthPixels}x${metrics.heightPixels} @ ${metrics.densityDpi}dpi" }
-            val helper = ScreenCaptureHelper(mp, metrics.widthPixels, metrics.heightPixels, metrics.densityDpi)
-            helper.startCapture()
-            screenCaptureHelper = helper
-            logcat { "recreateScreenCaptureHelper: success" }
-        } catch (e: Exception) {
-            logcat(LogPriority.ERROR, e) { "Failed to recreate MediaProjection" }
-            screenCaptureHelper?.release()
-            screenCaptureHelper = null
-            mediaProjectionResultCode = Activity.RESULT_CANCELED
-            mediaProjectionData = null
-        }
-    }
-
-    private fun enableTranslateMode() {
-        logcat { "enableTranslateMode: starting" }
-        mutableState.update { it.copy(translateMode = true) }
-        translateEngine = runCatching {
-            OcrEngineImpl(Injekt.get<Application>())
-        }.onFailure { e ->
-            logcat(LogPriority.ERROR, e) { "Failed to create OCR engine" }
-            disableTranslateMode()
-            eventChannel.trySend(Event.OcrError)
-        }.getOrNull()
-
-        if (translateEngine != null) {
-            logcat { "enableTranslateMode: OCR engine ready, triggering initial capture" }
-            triggerOcrForCurrentPage()
-        }
-    }
-
-    private fun triggerOcrForCurrentPage() {
-        ocrJob?.cancel()
-        ocrJob = viewModelScope.launchNonCancellable {
-            val pageIndex = state.value.currentPage
-            if (pageIndex < 0) return@launchNonCancellable
-            currentOcrPageIndex = -1
-
-            kotlinx.coroutines.delay(1500L)
-
-            if (pageIndex == currentOcrPageIndex) return@launchNonCancellable
-            currentOcrPageIndex = pageIndex
-
-            val engine = translateEngine ?: return@launchNonCancellable
-            val helper = screenCaptureHelper ?: return@launchNonCancellable
-
-            try {
-                logcat { "triggerOcrForCurrentPage: capturing page $pageIndex" }
-                val bitmap = helper.captureBitmap()
-
-                if (bitmap == null || bitmap.width <= 0 || bitmap.height <= 0) {
-                    logcat(LogPriority.WARN) {
-                        "triggerOcrForCurrentPage: bitmap is ${if (bitmap == null) "null" else "invalid"}"
-                    }
-                    bitmap?.recycle()
-                    return@launchNonCancellable
-                }
-
-                logcat { "triggerOcrForCurrentPage: bitmap captured (${bitmap.width}x${bitmap.height}), running OCR" }
-                val results = withIOContext {
-                    engine.detectText(bitmap)
-                }
-
-                logcat { "triggerOcrForCurrentPage: OCR returned ${results.size} results" }
-                val bmpWidth = bitmap.width
-                val bmpHeight = bitmap.height
-                bitmap.recycle()
-
-                withUIContext {
-                    currentPageOcrResults = results
-                    currentOcrCaptureWidth = bmpWidth
-                    currentOcrCaptureHeight = bmpHeight
-                    mutableState.update {
-                        it.copy(
-                            ocrResults = results,
-                            ocrCaptureWidth = bmpWidth.toFloat(),
-                            ocrCaptureHeight = bmpHeight.toFloat(),
-                        )
-                    }
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                logcat(LogPriority.ERROR, e) { "triggerOcrForCurrentPage: error" }
-            }
-        }
-    }
-
-    private fun disableTranslateMode() {
-        mutableState.update { it.copy(translateMode = false) }
-        ScreenCaptureService.stop(Injekt.get<Application>())
-        ocrJob?.cancel()
-        ocrJob = null
-        currentPageOcrResults = emptyList()
-        currentOcrPageIndex = -1
-        currentOcrCaptureWidth = 0
-        currentOcrCaptureHeight = 0
-        mutableState.update { it.copy(ocrResults = emptyList(), ocrCaptureWidth = 0f, ocrCaptureHeight = 0f) }
-        translateEngine?.release()
-        translateEngine = null
-        screenCaptureHelper?.release()
-        screenCaptureHelper = null
-        mutableState.update {
-            it.copy(
-                mediaProjectionPermissionRequested = false,
-                translatePermissionGranted = false,
-            )
-        }
-    }
-
-    fun onMediaProjectionResult(resultCode: Int, data: Intent?) {
-        if (resultCode == Activity.RESULT_OK && data != null) {
-            mediaProjectionResultCode = resultCode
-            mediaProjectionData = data
-            ScreenCaptureService.start(Injekt.get<Application>())
-            viewModelScope.launchNonCancellable {
-                kotlinx.coroutines.delay(500L)
-                if (!state.value.mediaProjectionPermissionRequested) {
-                    ScreenCaptureService.stop(Injekt.get<Application>())
-                    return@launchNonCancellable
-                }
-                recreateScreenCaptureHelper()
-                if (screenCaptureHelper != null) {
-                    mutableState.update {
-                        it.copy(
-                            mediaProjectionPermissionRequested = false,
-                            translatePermissionGranted = true,
-                        )
-                    }
-                    enableTranslateMode()
-                } else {
-                    ScreenCaptureService.stop(Injekt.get<Application>())
-                    mutableState.update {
-                        it.copy(
-                            mediaProjectionPermissionRequested = false,
-                            translatePermissionGranted = false,
-                        )
-                    }
-                    eventChannel.trySend(Event.OcrError)
-                }
-            }
-        } else {
-            mutableState.update {
-                it.copy(
-                    mediaProjectionPermissionRequested = false,
-                    translatePermissionGranted = false,
-                )
-            }
-            eventChannel.trySend(Event.TranslatePermissionDenied)
-        }
-    }
-
-    fun onViewerScrollStopped(pageIndex: Int, view: android.view.View?) {
-        if (!state.value.translateMode) return
-        if (view == null && screenCaptureHelper == null) return
-
-        ocrJob?.cancel()
-        ocrJob = viewModelScope.launchNonCancellable {
-            kotlinx.coroutines.delay(1250L)
-            if (pageIndex == currentOcrPageIndex) return@launchNonCancellable
-            currentOcrPageIndex = pageIndex
-
-            val engine = translateEngine ?: return@launchNonCancellable
-
-            try {
-                // Prefer MediaProjection capture when available. Avoid falling back to view capture
-                // if MediaProjection permission has been granted to ensure the OS shows the
-                // system-level screen capture indicator.
-                var bitmap = screenCaptureHelper?.captureBitmap()
-
-                if (bitmap == null || bitmap.width <= 0 || bitmap.height <= 0) {
-                    logcat(LogPriority.DEBUG) {
-                        "onViewerScrollStopped: screen capture returned ${if (bitmap == null) "null" else "invalid bitmap"}"
-                    }
-
-                    // If media projection is active (permission granted), do not use view fallback.
-                    if (screenCaptureHelper != null && state.value.translatePermissionGranted) {
-                        // Try to recreate the helper and retry once before giving up.
-                        logcat(LogPriority.WARN) {
-                            "onViewerScrollStopped: MediaProjection active but no frame available; retrying capture once"
-                        }
-                        recreateScreenCaptureHelper()
-                        bitmap = screenCaptureHelper?.captureBitmap()
-                        if (bitmap == null || bitmap.width <= 0 || bitmap.height <= 0) {
-                            logcat(LogPriority.ERROR) {
-                                "onViewerScrollStopped: screen capture failed despite permission — aborting OCR"
-                            }
-                            return@launchNonCancellable
-                        }
-                    } else {
-                        // Legacy fallback: capture the view bitmap if MediaProjection not available.
-                        view?.captureVisibleBitmap()?.let { viewBitmap ->
-                            val vbWidth = viewBitmap.width
-                            val vbHeight = viewBitmap.height
-                            if (vbWidth > 0 && vbHeight > 0) {
-                                logcat { "onViewerScrollStopped: using view capture (${vbWidth}x$vbHeight)" }
-                                val viewResults = withIOContext { engine.detectText(viewBitmap) }
-                                viewBitmap.recycle()
-                                withUIContext {
-                                    currentPageOcrResults = viewResults
-                                    currentOcrCaptureWidth = vbWidth
-                                    currentOcrCaptureHeight = vbHeight
-                                    mutableState.update {
-                                        it.copy(
-                                            ocrResults = viewResults,
-                                            ocrCaptureWidth = vbWidth.toFloat(),
-                                            ocrCaptureHeight = vbHeight.toFloat(),
-                                        )
-                                    }
-                                }
-                            } else {
-                                viewBitmap.recycle()
-                            }
-                        }
-                        return@launchNonCancellable
-                    }
-                }
-
-                logcat { "onViewerScrollStopped: bitmap captured (${bitmap.width}x${bitmap.height}), running OCR" }
-                val results = withIOContext {
-                    engine.detectText(bitmap)
-                }
-
-                logcat { "onViewerScrollStopped: OCR returned ${results.size} results" }
-                val bmpWidth = bitmap.width
-                val bmpHeight = bitmap.height
-                bitmap.recycle()
-
-                withUIContext {
-                    currentPageOcrResults = results
-                    currentOcrCaptureWidth = bmpWidth
-                    currentOcrCaptureHeight = bmpHeight
-                    mutableState.update {
-                        it.copy(
-                            ocrResults = results,
-                            ocrCaptureWidth = bmpWidth.toFloat(),
-                            ocrCaptureHeight = bmpHeight.toFloat(),
-                        )
-                    }
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                logcat(LogPriority.ERROR, e) { "OCR detection error" }
-            }
-        }
-    }
-
     /**
      * Saves the image of the selected page on the pictures directory and notifies the UI of the result.
      * There's also a notification to allow sharing the image somewhere else or deleting it.
@@ -1288,13 +959,6 @@ class ReaderViewModel @JvmOverloads constructor(
         val dialog: Dialog? = null,
         val menuVisible: Boolean = false,
         @IntRange(from = -100, to = 100) val brightnessOverlayValue: Int = 0,
-
-        val translateMode: Boolean = false,
-        val ocrResults: List<OcrResult> = emptyList(),
-        val ocrCaptureWidth: Float = 0f,
-        val ocrCaptureHeight: Float = 0f,
-        val mediaProjectionPermissionRequested: Boolean = false,
-        val translatePermissionGranted: Boolean = false,
     ) {
         val currentChapter: ReaderChapter?
             get() = viewerChapters?.currChapter
@@ -1320,9 +984,5 @@ class ReaderViewModel @JvmOverloads constructor(
         data class SavedImage(val result: SaveImageResult) : Event
         data class ShareImage(val uri: Uri, val page: ReaderPage) : Event
         data class CopyImage(val uri: Uri) : Event
-
-        data object OcrError : Event
-        data object RequestMediaProjectionPermission : Event
-        data object TranslatePermissionDenied : Event
     }
 }

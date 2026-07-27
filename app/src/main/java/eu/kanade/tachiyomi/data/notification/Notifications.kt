@@ -65,12 +65,6 @@ object Notifications {
     const val ID_INCOGNITO_MODE = -701
 
     /**
-     * Notification channel used for Screen Capture / MediaProjection
-     */
-    const val CHANNEL_SCREEN_CAPTURE = "screen_capture_channel"
-    const val ID_SCREEN_CAPTURE = -801
-
-    /**
      * Notification channel and ids used for app and extension updates.
      */
     private const val GROUP_APK_UPDATES = "group_apk_updates"
@@ -172,10 +166,6 @@ object Notifications {
                 buildNotificationChannel(CHANNEL_EXTENSIONS_UPDATE, IMPORTANCE_DEFAULT) {
                     setGroup(GROUP_APK_UPDATES)
                     setName(context.stringResource(MR.strings.channel_ext_updates))
-                },
-                buildNotificationChannel(CHANNEL_SCREEN_CAPTURE, IMPORTANCE_LOW) {
-                    setName("Screen Capture")
-                    setShowBadge(false)
                 },
             ),
         )

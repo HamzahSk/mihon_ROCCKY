@@ -116,6 +116,9 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v5
 
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+        
       # RAHASIA 2: Gunakan sistem Cache AVD (Mempercepat booting hingga 3x lipat)
       - name: AVD Cache
         uses: actions/cache@v4
