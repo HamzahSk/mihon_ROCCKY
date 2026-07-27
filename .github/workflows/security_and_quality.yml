@@ -100,7 +100,7 @@ jobs:
     name: Android UI Tests & Crash Detection
     # Catatan: Sangat disarankan menggunakan macOS runner untuk emulator 
     # karena mendukung Hardware Acceleration (HAXM), sehingga jauh lebih cepat dan stabil.
-    runs-on: macos-13
+    runs-on: macos-latest 
 
     steps:
       - name: Checkout Code
@@ -118,17 +118,13 @@ jobs:
       - name: Run Android Emulator & Tests
         uses: ReactiveCircus/android-emulator-runner@v2
         with:
-          api-level: 29 # Seringkali API 29 lebih stabil di runner CI daripada API 30
+          api-level: 29
           target: google_apis
-          arch: x86_64
+          arch: arm64-v8a # <--- UBAH DI SINI
           profile: Nexus 6
-          disable-animations: true # Wajib dinyalakan agar UI test tidak flaky
+          disable-animations: true
           force-avd-creation: false
-          # Tambahkan opsi di bawah ini agar emulator berjalan tanpa UI/Audio (Headless) sehingga jauh lebih ringan
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: |
-            # Jalankan Monkey Test
             adb shell monkey -p eu.kanade.tachiyomi -v 5000 || true
-            
-            # Ekspor log
             adb logcat -d *:E > emulator-crash-log.txt
