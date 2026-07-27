@@ -100,30 +100,31 @@ class ScreenCaptureHelper(
         val plane = image.planes[0]
         val buffer = plane.buffer
         val rowStride = plane.rowStride
-        val pixelStride = plane.pixelStride
         val imgWidth = image.width
         val imgHeight = image.height
 
         val bitmap = Bitmap.createBitmap(imgWidth, imgHeight, Bitmap.Config.ARGB_8888)
-
-        if (rowStride == imgWidth * pixelStride) {
-            buffer.rewind()
-            bitmap.copyPixelsFromBuffer(buffer)
-        } else {
-            val pixels = IntArray(imgWidth * imgHeight)
-            buffer.rewind()
-            for (row in 0 until imgHeight) {
-                buffer.position(row * rowStride)
-                for (col in 0 until imgWidth) {
-                    val r = buffer.get().toInt() and 0xFF
-                    val g = buffer.get().toInt() and 0xFF
-                    val b = buffer.get().toInt() and 0xFF
-                    val a = buffer.get().toInt() and 0xFF
-                    pixels[row * imgWidth + col] = (a shl 24) or (r shl 16) or (g shl 8) or b
-                }
+        val pixels = IntArray(imgWidth * imgHeight)
+        
+        buffer.rewind()
+        for (row in 0 until imgHeight) {
+            // Pindah ke posisi awal baris ini
+            buffer.position(row * rowStride)
+            for (col in 0 until imgWidth) {
+                val r = buffer.get().toInt() and 0xFF
+                val g = buffer.get().toInt() and 0xFF
+                val b = buffer.get().toInt() and 0xFF
+                
+                // Kita abaikan alpha bawaan dari buffer karena sering kali 0 (transparan)
+                buffer.get() 
+                
+                // PAKSA ALPHA MENJADI 255 (0xFF) AGAR GAMBAR SOLID
+                val a = 0xFF 
+                
+                pixels[row * imgWidth + col] = (a shl 24) or (r shl 16) or (g shl 8) or b
             }
-            bitmap.setPixels(pixels, 0, imgWidth, 0, 0, imgWidth, imgHeight)
         }
+        bitmap.setPixels(pixels, 0, imgWidth, 0, 0, imgWidth, imgHeight)
 
         return bitmap
     }
