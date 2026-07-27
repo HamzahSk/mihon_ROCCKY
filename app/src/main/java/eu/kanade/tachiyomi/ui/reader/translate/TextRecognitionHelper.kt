@@ -23,22 +23,42 @@ enum class OcrLanguage {
 
 class TextRecognitionHelper {
 
-    // Gunakan "by lazy" agar tidak langsung crash saat inisialisasi awal
-    private val latinRecognizer: TextRecognizer by lazy {
-        TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-    }
+    // Menggunakan backing field nullable (?)
+    private var _latinRecognizer: TextRecognizer? = null
+    private val latinRecognizer: TextRecognizer
+        get() {
+            if (_latinRecognizer == null) {
+                _latinRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+            }
+            return _latinRecognizer!!
+        }
     
-    private val japaneseRecognizer: TextRecognizer by lazy {
-        TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build())
-    }
+    private var _japaneseRecognizer: TextRecognizer? = null
+    private val japaneseRecognizer: TextRecognizer
+        get() {
+            if (_japaneseRecognizer == null) {
+                _japaneseRecognizer = TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build())
+            }
+            return _japaneseRecognizer!!
+        }
     
-    private val chineseRecognizer: TextRecognizer by lazy {
-        TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build())
-    }
+    private var _chineseRecognizer: TextRecognizer? = null
+    private val chineseRecognizer: TextRecognizer
+        get() {
+            if (_chineseRecognizer == null) {
+                _chineseRecognizer = TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build())
+            }
+            return _chineseRecognizer!!
+        }
     
-    private val koreanRecognizer: TextRecognizer by lazy {
-        TextRecognition.getClient(KoreanTextRecognizerOptions.Builder().build())
-    }
+    private var _koreanRecognizer: TextRecognizer? = null
+    private val koreanRecognizer: TextRecognizer
+        get() {
+            if (_koreanRecognizer == null) {
+                _koreanRecognizer = TextRecognition.getClient(KoreanTextRecognizerOptions.Builder().build())
+            }
+            return _koreanRecognizer!!
+        }
 
     private fun getRecognizer(language: OcrLanguage): TextRecognizer {
         return when (language) {
@@ -77,11 +97,10 @@ class TextRecognitionHelper {
     }
 
     fun close() {
-        // Kita juga bisa mengecek apakah variabelnya sudah diinisialisasi atau belum
-        // untuk menghindari crash saat menutup aplikasi
-        latinRecognizer.close()
-        japaneseRecognizer.close()
-        chineseRecognizer.close()
-        koreanRecognizer.close()
+        // Hanya ditutup kalau sebelumnya pernah dipakai (nilainya tidak null)
+        _latinRecognizer?.close()
+        _japaneseRecognizer?.close()
+        _chineseRecognizer?.close()
+        _koreanRecognizer?.close()
     }
 }

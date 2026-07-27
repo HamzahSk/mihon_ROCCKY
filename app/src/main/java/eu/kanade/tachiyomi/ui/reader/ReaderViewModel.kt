@@ -261,7 +261,8 @@ class ReaderViewModel @JvmOverloads constructor(
             }
         }
         ocrDebounceJob?.cancel()
-        textRecognitionHelper.close()
+        textRecognitionHelper?.close()
+        
     }
 
     /**
@@ -440,7 +441,8 @@ class ReaderViewModel @JvmOverloads constructor(
         }
     }
 
-    private val textRecognitionHelper by lazy { TextRecognitionHelper() }
+    private var textRecognitionHelper: TextRecognitionHelper? = null
+
 
     private var ocrDebounceJob: Job? = null
     private var isReaderScrolling: Boolean = false
@@ -499,7 +501,12 @@ class ReaderViewModel @JvmOverloads constructor(
             inputStream.close()
             if (bitmap == null) return
 
-            val results = textRecognitionHelper.recognize(bitmap, OcrLanguage.JAPANESE)
+            if (textRecognitionHelper == null) {
+                textRecognitionHelper = TextRecognitionHelper()
+            }
+
+            // Tambahkan !! karena kita sudah yakin nilainya tidak null
+            val results = textRecognitionHelper!!.recognize(bitmap, OcrLanguage.JAPANESE)
             withUIContext {
                 mutableState.update {
                     it.copy(
