@@ -1,50 +1,23 @@
 ## Context & Status
-- **Status Saat Ini:** Fitur `MediaProjection` berhasil meminta izin, notifikasi sistem muncul, dan tidak ada *crash*.
-- **Issue:** Setelah fitur aktif, tidak ada perubahan apa-apa pada layar (teks OCR tidak muncul dan tidak ada *overlay* teks ber-background).
-- **Akar Masalah:** Terdapat kebocoran/buffer overflow pada `ImageReader` di dalam `ScreenCaptureHelper.kt`. Saat ini `setOnImageAvailableListener` hanya melakukan *logging* tanpa mengeksekusi `acquireLatestImage()` dan `close()`. Akibatnya, kapasitas buffer (`maxImages = 2`) langsung penuh dalam hitungan milidetik, perekaman layar macet (*freeze*), dan pipeline OCR tidak mendapatkan *bitmap* gambar.
+- **Status Saat Ini:** Fitur `MediaProjection` berhasil meminta izin, notifikasi sistem muncul, dan tidak terjadi *crash*.
+- **Issue:** Setelah fitur aktif, tidak ada proses OCR yang berjalan. Tidak ada teks yang terdeteksi, tidak ada *overlay* teks dengan background, dan tidak ada indikasi bahwa *frame* hasil `MediaProjection` berhasil diproses.
+- **Referensi Proyek:** Terdapat direktori `/ImageTextExtractor-main/` pada *root* proyek yang berisi implementasi OCR yang sudah berfungsi sebagai referensi.
 
-## Tugas & Spesifikasi Perbaikan
+## Tugas & Instruksi untuk AI
 
-Fokus perbaiki file **`ScreenCaptureHelper.kt`** dengan langkah-langkah berikut:
+1. **Analisis & Perbandingan**
+   - Bandingkan seluruh alur `MediaProjection` pada proyek utama dengan implementasi di `/ImageTextExtractor-main/`, mulai dari pembuatan `VirtualDisplay`, `ImageReader`, pengambilan `Image`, konversi ke `Bitmap`, proses OCR, hingga pengiriman hasil ke *overlay*.
+   - Identifikasi setiap perbedaan implementasi yang berpotensi menyebabkan *frame* tidak pernah diterima atau tidak pernah diproses.
 
-1. **Buat Variabel Penampung Global:**
-   - Tambahkan variabel `private var latestBitmap: Bitmap? = null` di dalam *class* `ScreenCaptureHelper`.
+2. **Identifikasi Akar Masalah**
+   - Periksa apakah terdapat kesalahan pada konfigurasi `ImageReader`, ukuran atau format buffer, `VirtualDisplay`, *listener* (`OnImageAvailableListener`), proses `acquireLatestImage()/acquireNextImage()`, pelepasan (`close()`) objek `Image`, maupun alur pemrosesan OCR.
+   - Pastikan tidak ada kebocoran buffer, *buffer* penuh karena `Image` tidak ditutup, atau kondisi lain yang menyebabkan callback berhenti menerima *frame*.
+   - Gunakan implementasi di `/ImageTextExtractor-main/` sebagai acuan untuk menemukan penyebab utama.
 
-2. **Perbarui `setOnImageAvailableListener` (Wajib Kuras Buffer):**
-   - Ubah logika *listener* agar selalu mengambil *frame* terbaru, mengonversinya ke `Bitmap`, dan **langsung menutup** objek `Image` agar buffer tidak penuh.
-   - Contoh logika:
-     ```kotlin
-     imageReader?.setOnImageAvailableListener({ reader ->
-         try {
-             val image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
-             val bitmap = bitmapFromImage(image)
-             image.close() // WAJIB: Tutup image agar buffer ImageReader tidak macet
-             
-             latestBitmap?.recycle() // Bersihkan memory bitmap lama
-             latestBitmap = bitmap
-         } catch (e: Exception) {
-             logcat(LogPriority.ERROR, e) { "Error in ImageReader listener" }
-         }
-     }, Handler(callbackThread!!.looper))
-     ```
+3. **Perbaikan**
+   - Perbaiki seluruh kode yang bermasalah hingga alur `MediaProjection → ImageReader → OCR → Overlay` berjalan dengan benar.
+   - Jangan menggunakan *workaround* atau menonaktifkan fitur. Pertahankan arsitektur yang ada dan lakukan perbaikan pada akar penyebabnya.
 
-3. **Sesuaikan `captureBitmap()`:**
-   - Karena *listener* sekarang yang bertugas membaca *frame* secara asinkron, ubah fungsi `captureBitmap()` agar sekadar me-return *copy* dari `latestBitmap`.
-   - Contoh logika:
-     ```kotlin
-     suspend fun captureBitmap(): Bitmap? = withContext(Dispatchers.IO) {
-         val bmp = latestBitmap
-         if (bmp == null || bmp.isRecycled) {
-             return@withContext null
-         }
-         // Return copy agar aman digunakan oleh OCR engine tanpa takut ter-recycle oleh listener
-         bmp.copy(bmp.config, false)
-     }
-     ```
-
-4. **Perbarui `release()`:**
-   - Pastikan `latestBitmap?.recycle()` dan `latestBitmap = null` dipanggil saat `release()` dieksekusi agar tidak *memory leak*.
-
-5. **Testing (WAJIB):**
-   - Jalankan `./gradlew spotlessApply`.
-   - Jalankan `./gradlew testDebugUnitTest` dan pastikan BUILD SUCCESSFUL.
+4. **Verifikasi & Testing (WAJIB)**
+   - Jalankan `./gradlew spotlessApply` untuk memformat ulang kode.
+   - Jalankan `./gradlew testDebugUnitTest` dan pastikan hasil akhirnya `BUILD SUCCESSFUL`.
