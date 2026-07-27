@@ -93,3 +93,50 @@ jobs:
         with:
           name: unit-test-report-${{ github.sha }}
           path: app/build/reports/tests/testDebugUnitTest
+
+
+  # 3. UI TESTING, SIMULASI ANDROID & CRASH LOGS
+  android-ui-test:
+    name: Android UI Tests & Crash Detection
+    # Catatan: Sangat disarankan menggunakan macOS runner untuk emulator 
+    # karena mendukung Hardware Acceleration (HAXM), sehingga jauh lebih cepat dan stabil.
+    runs-on: macos-latest 
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run Android Emulator & Tests
+        uses: ReactiveCircus/android-emulator-runner@v2
+        with:
+          api-level: 30 # Versi Android (API 30 = Android 11)
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          # Di bagian 'script' ini kita mengatur apa yang dilakukan emulator
+          script: |
+            # OPSI 1: Jika kamu punya UI Test (Espresso)
+            # ./gradlew connectedDebugAndroidTest
+            
+            # OPSI 2: Jika belum punya test script, gunakan Monkey Test untuk mencari crash acak (hapus tanda # di bawah ini)
+            adb shell monkey -p eu.kanade.tachiyomi -v 5000 || true
+            
+            # Ekspor semua logcat (termasuk crash & error) ke sebuah file txt
+            adb logcat -d *:E > emulator-crash-log.txt
+
+      - name: Upload Emulator Crash Logs
+        if: always() # Pastikan log tetap di-upload walaupun test-nya gagal (crash)
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-emulator-crash-logs-${{ github.sha }}
+          path: emulator-crash-log.txt
+          
