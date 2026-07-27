@@ -1,27 +1,27 @@
-Tolong lakukan analisis dan perbaikan (bug fixing) pada fitur OCR Reader yang mengalami crash saat tombol Translate diklik.
+# Prompt: Perbaikan Fitur Auto Translator & Integrasi Izin Screen Capture (MediaProjection)
 
-## 1. Detail Error & Context Crash
-Aplikasi mengalami crash `NullPointerException` pada file `OcrEngineImpl.kt` saat diinstansiasi dari tombol UI Compose (`ReaderActivity$AppBars`):
+## Context & Status
+- **Status Sebelumnya:** Issue `NullPointerException` pada inisialisasi `OcrEngineImpl.kt` saat tombol Translate diklik sudah berhasil diperbaiki (FIXED).
+- **Kebutuhan Saat Ini:** Perlu dilakukan penyesuaian ulang pada alur kerja fitur Auto Translator agar sebelum melakukan OCR/Translasi, aplikasi memicu dialog izin perekaman/mentransmisikan layar (*MediaProjection API*) dari sistem Android saat tombol Translate/Auto Translate diklik.
 
-- **Error Stacktrace:**
-  `java.lang.NullPointerException: Attempt to read from field 'com.google.mlkit.vision.text.internal.zzp com.google.mlkit.vision.text.internal.zzo.zza' on a null object reference`
-  `at eu.kanade.tachiyomi.ui.reader.translate.OcrEngineImpl.<init>(OcrEngineImpl.kt)`
+---
 
-## 2. Tugas & Analisis
-Tolong periksa file `OcrEngineImpl.kt` dan komponen pembilangnya di `ReaderActivity`:
+## Tugas & Spesifikasi Perbaikan
 
-1. **Inisialisasi `TextRecognizer`**:
-   - Pastikan inisialisasi ML Kit `TextRecognition.getClient(...)` **tidak dilakukan secara synchronous** langsung di dalam constructor utama `OcrEngineImpl`.
-   - Gunakan pendekatan `by lazy` atau bungkus dengan safe initialization/try-catch agar tidak melempar NullPointerException jika Context atau ML Kit Engine belum siap.
+Tolong berikan perbaikan kode untuk `ReaderActivity.kt` dan komponen terkait dengan ketentuan berikut:
 
-2. **Pengelolaan Context**:
-   - Pastikan `Context` yang di-pass ke `OcrEngineImpl` adalah `ApplicationContext` atau `Activity Context` yang valid dan tidak bernilai `null`.
+1. **Integrasi `MediaProjectionManager` (Screen Capture Permission):**
+   - Saat tombol Translate diklik dari UI Reader (`ReaderActivity$AppBars`), aplikasi tidak boleh langsung menjalankan proses OCR/Capture secara silent.
+   - Panggil `MediaProjectionManager.createScreenCaptureIntent()` untuk memicu pop-up dialog sistem standar: *"Izinkan [Nama Aplikasi] merekam atau mentransmisikan layar?"*.
 
-3. **Inisialisasi di Compose Layer (`ReaderActivity$AppBars`)**:
-   - Jangan membuat instansi baru `OcrEngineImpl` langsung di dalam event `onClick` Compose secara langsung tanpa `CoroutineScope` / Dependency Injection (Injekt).
-   - Gunakan `remember` atau kelola `OcrEngineImpl` di dalam `ViewModel` / Lifecycle-aware Scope agar instansinya aman dan tidak terus-menerus dibuat ulang setiap tombol diklik.
+2. **Handling Permission Result (`ActivityResultLauncher`):**
+   - Gunakan `registerForActivityResult` dengan contract `ActivityResultContracts.StartActivityForResult()` di level `Activity` (`ReaderActivity`).
+   - **Jika Pengguna Memilih "Mulai Sekarang" (`RESULT_OK`):** Ambil `Intent` data hasil permission, jalankan service/proses `MediaProjection` untuk mengambil screenshot layar, lalu teruskan gambar tersebut ke `OcrEngineImpl` untuk diproses.
+   - **Jika Pengguna Memilih "Batal":** Berikan respons *graceful degradation* (misalnya tampilkan Toast atau Snackbar bahwa izin perekaman layar diperlukan untuk menjalankan fitur auto-translate).
 
-4. **Error Handling**:
-   - Tambahkan blok `runCatching` / `try-catch` saat memanggil method OCR agar jika library ML Kit gagal memuat model, aplikasi tidak langsung crash total (*graceful degradation* dengan fallback notification/toast).
+3. **Arsitektur & State Management:**
+   - Kelola state izin dan instansiasi OCR melalui `ViewModel` / Lifecycle-aware Scope agar tidak terjadi *memory leak* atau instansiasi ulang yang berlebihan di Compose Layer (`ReaderActivity$AppBars`).
 
-Tolong berikan perbaikan kode lengkap untuk file `OcrEngineImpl.kt` dan contoh pemanggilannya di UI Reader (`ReaderActivity`).
+4. **Output yang Diharapkan:**
+   - Berikan perbaikan kode lengkap pada `ReaderActivity.kt` (termasuk pendaftaran `ActivityResultLauncher` dan pemicuan intent).
+   - Berikan contoh penyesuaian pada `ViewModel` / Service pendukung untuk menangani data `MediaProjection` hasil dari dialog izin tersebut.
