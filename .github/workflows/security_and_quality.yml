@@ -118,25 +118,17 @@ jobs:
       - name: Run Android Emulator & Tests
         uses: ReactiveCircus/android-emulator-runner@v2
         with:
-          api-level: 30 # Versi Android (API 30 = Android 11)
+          api-level: 29 # Seringkali API 29 lebih stabil di runner CI daripada API 30
           target: google_apis
           arch: x86_64
           profile: Nexus 6
-          # Di bagian 'script' ini kita mengatur apa yang dilakukan emulator
+          disable-animations: true # Wajib dinyalakan agar UI test tidak flaky
+          force-avd-creation: false
+          # Tambahkan opsi di bawah ini agar emulator berjalan tanpa UI/Audio (Headless) sehingga jauh lebih ringan
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: |
-            # OPSI 1: Jika kamu punya UI Test (Espresso)
-            # ./gradlew connectedDebugAndroidTest
-            
-            # OPSI 2: Jika belum punya test script, gunakan Monkey Test untuk mencari crash acak (hapus tanda # di bawah ini)
+            # Jalankan Monkey Test
             adb shell monkey -p eu.kanade.tachiyomi -v 5000 || true
             
-            # Ekspor semua logcat (termasuk crash & error) ke sebuah file txt
+            # Ekspor log
             adb logcat -d *:E > emulator-crash-log.txt
-
-      - name: Upload Emulator Crash Logs
-        if: always() # Pastikan log tetap di-upload walaupun test-nya gagal (crash)
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-emulator-crash-logs-${{ github.sha }}
-          path: emulator-crash-log.txt
-          
