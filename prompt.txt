@@ -1,27 +1,35 @@
-# Prompt: Perbaikan Fitur Auto Translator & Integrasi Izin Screen Capture (MediaProjection)
+# Prompt: Perbaikan Bug "Unknown Error" Auto Translator (Foreground Service) & Verifikasi
 
 ## Context & Status
-- **Status Sebelumnya:** Issue `NullPointerException` pada inisialisasi `OcrEngineImpl.kt` saat tombol Translate diklik sudah berhasil diperbaiki (FIXED).
-- **Kebutuhan Saat Ini:** Perlu dilakukan penyesuaian ulang pada alur kerja fitur Auto Translator agar sebelum melakukan OCR/Translasi, aplikasi memicu dialog izin perekaman/mentransmisikan layar (*MediaProjection API*) dari sistem Android saat tombol Translate/Auto Translate diklik.
+- **Status Sebelumnya:** Alur pemanggilan pop-up dialog izin `MediaProjection API` sudah berhasil diimplementasikan menggunakan `ActivityResultLauncher`.
+- **Issue Saat Ini:** Saat pengguna memilih "Mulai Sekarang" (`RESULT_OK`), aplikasi memunculkan pesan "Unknown Error" (kemungkinan besar akibat *silent crash* berupa `SecurityException`). Hal ini terjadi karena sistem Android modern mewajibkan adanya **Foreground Service dengan tipe `mediaProjection`** yang berjalan **sebelum** aplikasi memanggil `MediaProjectionManager.getMediaProjection()`.
 
 ---
 
 ## Tugas & Spesifikasi Perbaikan
 
-Tolong berikan perbaikan kode untuk `ReaderActivity.kt` dan komponen terkait dengan ketentuan berikut:
+Tolong perbaiki bug tersebut dengan mengimplementasikan `Foreground Service` dan pastikan kodenya terverifikasi dengan langkah-langkah berikut:
 
-1. **Integrasi `MediaProjectionManager` (Screen Capture Permission):**
-   - Saat tombol Translate diklik dari UI Reader (`ReaderActivity$AppBars`), aplikasi tidak boleh langsung menjalankan proses OCR/Capture secara silent.
-   - Panggil `MediaProjectionManager.createScreenCaptureIntent()` untuk memicu pop-up dialog sistem standar: *"Izinkan [Nama Aplikasi] merekam atau mentransmisikan layar?"*.
+1. **Tambahkan Permission dan Service di `AndroidManifest.xml`:**
+   - Tambahkan permission `FOREGROUND_SERVICE` dan `FOREGROUND_SERVICE_MEDIA_PROJECTION`.
+   - Daftarkan `ScreenCaptureService` dengan atribut `android:foregroundServiceType="mediaProjection"`.
 
-2. **Handling Permission Result (`ActivityResultLauncher`):**
-   - Gunakan `registerForActivityResult` dengan contract `ActivityResultContracts.StartActivityForResult()` di level `Activity` (`ReaderActivity`).
-   - **Jika Pengguna Memilih "Mulai Sekarang" (`RESULT_OK`):** Ambil `Intent` data hasil permission, jalankan service/proses `MediaProjection` untuk mengambil screenshot layar, lalu teruskan gambar tersebut ke `OcrEngineImpl` untuk diproses.
-   - **Jika Pengguna Memilih "Batal":** Berikan respons *graceful degradation* (misalnya tampilkan Toast atau Snackbar bahwa izin perekaman layar diperlukan untuk menjalankan fitur auto-translate).
+2. **Buat Class `ScreenCaptureService`:**
+   - Buat class baru turunan `Service`.
+   - Di dalam `onStartCommand()`, buat *Notification Channel* dan tampilkan *Notification* persisten.
+   - Panggil `startForeground(ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)` dengan penanganan versi Android yang sesuai (API 29+).
 
-3. **Arsitektur & State Management:**
-   - Kelola state izin dan instansiasi OCR melalui `ViewModel` / Lifecycle-aware Scope agar tidak terjadi *memory leak* atau instansiasi ulang yang berlebihan di Compose Layer (`ReaderActivity$AppBars`).
+3. **Sesuaikan Logika di `ReaderViewModel.kt`:**
+   - Saat pop-up izin mengembalikan `RESULT_OK`, jalankan `ScreenCaptureService` terlebih dahulu.
+   - Berikan jeda (*delay* via coroutines) agar service dipastikan sudah berjalan, barulah eksekusi pembuatan `ScreenCaptureHelper` dan lanjutkan proses OCR.
+   - Pastikan service dihentikan (`stopService`) jika proses translasi dimatikan atau terjadi error.
 
-4. **Output yang Diharapkan:**
-   - Berikan perbaikan kode lengkap pada `ReaderActivity.kt` (termasuk pendaftaran `ActivityResultLauncher` dan pemicuan intent).
-   - Berikan contoh penyesuaian pada `ViewModel` / Service pendukung untuk menangani data `MediaProjection` hasil dari dialog izin tersebut.
+4. **Testing & Formatting (WAJIB):**
+   - Jalankan `./gradlew spotlessApply` untuk memastikan format kode sudah sesuai standar project.
+   - Setelah selesai, jalankan `./gradlew testDebugUnitTest` hingga **BUILD SUCCESSFUL**.
+   - Pastikan tidak ada *compile error* atau potensi `NullPointerException` / `SecurityException` yang terlewat. Jangan selesaikan tugas sebelum dipastikan *build* berhasil.
+
+5. **Output yang Diharapkan:**
+   - File `ScreenCaptureService.kt` baru.
+   - Perubahan pada `AndroidManifest.xml`.
+   - Perbaikan pada `ReaderViewModel.kt`.
