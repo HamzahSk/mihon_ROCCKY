@@ -1,18 +1,28 @@
 ## Context & Status
-- **Status Sebelumnya:** Implementasi `Foreground Service` tipe `mediaProjection` berhasil dan masalah "Unknown Error" saat menyetujui izin sudah teratasi.
-- **Issue Saat Ini:** Meskipun tidak ada *crash*, sistem Android tidak menampilkan pesan atau indikator *cast* bahwa aplikasi sedang melakukan *screen capture*. Selain itu, tidak ada perubahan sama sekali pada gambar komik (hasil translasi atau overlay tidak muncul) saat fitur aktif.
+- **Status Perbaikan Sebelumnya:** - Penyesuaian skala/dimensi bitmap (`bitmapWidth`/`bitmapHeight`) dan logika *overlay* teks di `ReaderActivity.kt` sudah berhasil diperbaiki.
+  - Eksekusi OCR otomatis via `triggerOcrForCurrentPage()` di `ReaderViewModel.kt` sudah diimplementasikan.
+- **Acuan Referensi:** Dokumentasi standar integrasi ML Kit dan Text Recognition telah disimpan di file `DOCS_MLKIT.md` pada root/home proyek.
 
-## Analisis Potensi Masalah
-- **Indikator Sistem Hilang:** Objek `VirtualDisplay` mungkin belum dibuat atau *flags* pada `MediaProjection` belum terkonfigurasi dengan benar, sehingga sistem tidak mendeteksi adanya aktivitas perekaman layar yang riil.
-- **Translasi Tidak Muncul:** Pipeline penangkapan *frame* via `ImageReader` kemungkinan tidak mendapatkan data *bitmap*, atau hasil dari proses OCR tidak pernah diteruskan kembali ke UI untuk dirender.
+## Issue Saat Ini
+1. **Pemeriksaan Integrasi ML Kit:** Perlu dipastikan pipeline ekstraksi teks dari *bitmap* hasil tangkapan layar sudah menggunakan acuan *best practice* dari ML Kit yang tertera pada `DOCS_MLKIT.md`.
+2. **Indikator Sistem Android Hilang:** Perekaman layar via `MediaProjection` dan `VirtualDisplay` perlu diverifikasi kembali agar sistem Android menampilkan indikator *screen capture* (perekaman/cast) aktif di *status bar*, bukan bergantung pada metode *fallback view capture*.
 
 ## Tugas & Spesifikasi Perbaikan
 
-Tolong periksa dan perbaiki alur *screen capture* serta *rendering* translasi dengan langkah-langkah berikut:
+Tolong selesaikan perbaikan ini dengan mengikuti petunjuk berikut:
 
-1. **Verifikasi Implementasi `VirtualDisplay`:** Pastikan `MediaProjection.createVirtualDisplay()` dipanggil dengan parameter yang tepat (lebar, tinggi, *density*, dan *flag* seperti `DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR`).
-2. **Koneksi `ImageReader`:** Pastikan `ImageReader` terhubung dengan benar ke `Surface` dari `VirtualDisplay` agar aplikasi bisa mulai membaca *frame* layar secara berkala.
-3. **Pengecekan Pipeline OCR:** Tambahkan *log debug* (Logcat) pada *listener* `ImageReader` untuk mengonfirmasi bahwa *bitmap* gambar benar-benar ditangkap, lalu pastikan *bitmap* tersebut dikirim ke modul OCR tanpa masalah.
-4. **Perbaikan Rendering UI (Overlay):** Pastikan hasil teks yang sudah diproses oleh OCR dikirim kembali ke Main/UI Thread dan berhasil digambar pada kanvas atau *overlay* di atas gambar komik.
-5. **Verifikasi Notifikasi:** Cek kembali implementasi notifikasi pada *Foreground Service* untuk memastikan propertinya memicu sistem Android memunculkan indikator perekaman aktif.
-6. **Testing Output:** Pastikan *build* sukses, indikator *screen recording* dari OS muncul di *status bar*, dan teks terjemahan berhasil muncul pada layar komik.
+1. **Baca File Referensi `DOCS_MLKIT.md`:**
+   - Wajib baca file `DOCS_MLKIT.md` yang berada di root/home proyek sebelum melakukan perubahan kode.
+   - Pelajari struktur pembuatan `TextRecognitionHelper`, penggunaan `InputImage`, serta penanganan *recognizer* (termasuk opsi dukungan multi-bahasa seperti Jepang/Mandarin/Korea jika diperlukan).
+
+2. **Verifikasi Pipeline OCR ML Kit:**
+   - Pastikan *bitmap* yang ditangkap oleh `ImageReader` diubah menjadi `InputImage` dan diproses menggunakan `TextRecognition.getClient()` sesuai acuan di `DOCS_MLKIT.md`.
+   - Pastikan *listener* sukses/gagal menangani hasil rekognisi teks dan mengumpankannya kembali ke `ReaderViewModel`.
+
+3. **Perbaiki `MediaProjection` & `VirtualDisplay`:**
+   - Pastikan `VirtualDisplay` terhubung secara riil dengan `Surface` dari `ImageReader`, sehingga OS Android secara resmi mengaktifkan indikator *screen recording* di *status bar*.
+   - Hindari penggunaan *fallback view capture* secara penuh jika izin `MediaProjection` sudah diberikan oleh pengguna (`RESULT_OK`).
+
+4. **Testing & Clean Code (WAJIB):**
+   - Jalankan `./gradlew spotlessApply` untuk merapikan format kode.
+   - Jalankan `./gradlew testDebugUnitTest` dan pastikan **BUILD SUCCESSFUL**.
