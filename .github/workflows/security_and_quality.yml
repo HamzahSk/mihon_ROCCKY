@@ -94,13 +94,10 @@ jobs:
           name: unit-test-report-${{ github.sha }}
           path: app/build/reports/tests/testDebugUnitTest
 
-
   # 3. UI TESTING, SIMULASI ANDROID & CRASH LOGS
   android-ui-test:
     name: Android UI Tests & Crash Detection
-    # Catatan: Sangat disarankan menggunakan macOS runner untuk emulator 
-    # karena mendukung Hardware Acceleration (HAXM), sehingga jauh lebih cepat dan stabil.
-    runs-on: macos-latest 
+    runs-on: ubuntu-24.04  # <--- PAKAI UBUNTU
 
     steps:
       - name: Checkout Code
@@ -115,6 +112,13 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          sudo chmod 666 /dev/kvm
+
       - name: Run Android Emulator & Tests
         uses: ReactiveCircus/android-emulator-runner@v2
         with:
@@ -126,5 +130,29 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: |
+            # Tunggu emulator siap
+            adb wait-for-device
+            adb shell input keyevent 82
+            
+            # Jalankan monkey test
             adb shell monkey -p eu.kanade.tachiyomi -v 5000 || true
+            
+            # Ambil log error
             adb logcat -d *:E > emulator-crash-log.txt
+            
+            # Upload log sebagai artifact
+            echo "Logs saved to emulator-crash-log.txt"
+
+      - name: Upload Emulator Crash Log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: emulator-crash-log-${{ github.sha }}
+          path: emulator-crash-log.txt
+
+      - name: Upload Emulator Screenshot (if failed)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: emulator-screenshot-${{ github.sha }}
+          path: /tmp/android-emulator-screenshot.png
