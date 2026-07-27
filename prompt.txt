@@ -1,61 +1,31 @@
-Tolong lakukan upgrade UI pada komponen MangaInfoHeader.kt dengan ketentuan berikut:
+Tolong tambahkan fitur **Manga Live Translator (Tahap 1: OCR Detection)** pada komponen viewer/reader manga dengan ketentuan sebagai berikut:
 
-## 1. Visual & Animasi
-- **Cover Manga**: Tambahkan parallax effect saat scroll - cover akan bergerak naik/turun dengan kecepatan berbeda dari konten di bawahnya.
-- **Background Thumbnail**: Buat efek parallax dengan blur yang dinamis - saat scroll, background akan bergerak dan blur intensity berubah.
-- **Animasi Transisi**: Semua state change (expanded/collapsed, favorite toggle, dll) menggunakan animasi spring yang halus.
+## 1. UI & Penempatan Tombol
+- **Tombol Action Baru**: Tambahkan tombol "Translate" di samping tombol *Favorite* / *Save* (misalnya di action bar atau toolbar reader).
+- **Indikator Status**: 
+  - Tombol memiliki state (Active/Inactive) dengan indikator visual yang jelas (misalnya perubahan warna ikon atau badge pulsing) saat fitur auto-translate sedang aktif.
+  - Tambahkan animasi transisi halus saat status tombol berubah.
 
-## 2. Tombol Aksi (MangaActionRow)
-- **Redesign Total**: Ganti dari FilledTonalButton menjadi komponen yang lebih premium:
-  - Gunakan AnimatedIconButton dengan efek ripple yang halus
-  - Tambahkan tooltip yang muncul saat hover/long press
-  - Setiap tombol memiliki elevation shadow yang naik saat diinteraksi
-  - Tombol favorite memiliki animasi heart burst saat diklik
-  - Gunakan container dengan gradient background subtle
-  - Tambahkan badge counter untuk tracking dengan animasi scale
+## 2. Logika Deteksi OCR (Auto-Detect saat Scroll Berhenti)
+- **Scroll Detection**: Buat listener/observer pada scroll state di halaman baca manga.
+- **Debounce / Interval**: Jalankan proses deteksi OCR hanya saat pengguna **berhenti melakukan scroll** selama **1,25 detik** (`debounce(1250ms)`).
+- **Proses OCR**:
+  - Ambil *frame/image* yang saat ini sedang tampil di layar (*visible viewport*).
+  - Gunakan SDK OCR (seperti Google ML Kit Text Recognition) untuk mendeteksi area dan teks pada panel komik.
+  - Buat overlay transparan di atas gambar komik untuk menggambarkan/menuliskan ulang teks (*text overlay*) tepat di lokasi bounding box teks yang terdeteksi.
 
-## 3. Informasi Manga (MangaContentInfo)
-- **Typografi**: Gunakan hierarchy yang lebih jelas dengan ukuran font yang proposional
-- **Status Badge**: Ganti icon status menjadi badge dengan warna spesifik:
-  - Ongoing: Hijau dengan pulsing dot
-  - Completed: Biru
-  - On Hiatus: Orange
-  - Cancelled: Merah
-- **Author/Artist**: Tampilkan dengan avatar icon kecil dan text yang clickable
+## 3. Arsitektur & Persiapan Integrasi (Tahap 1)
+- **Persiapan Modul API Translator**:
+  - Buat abstraksi / Interface khusus untuk service pemroses teks (misal: `MangaTranslatorEngine`).
+  - Untuk tahap ini, hasil keluaran dari OCR cukup dituliskan kembali (mock/raw text) pada overlay tanpa diproses ke API penerjemah eksternal terlebih dahulu.
+  - Pastikan struktur data fleksibel agar siap diintegrasikan dengan API Translator (seperti Google Translate / DeepL API) pada tahap selanjutnya.
 
-## 4. Deskripsi & Tags (ExpandableMangaDescription)
-- **Deskripsi**: 
-  - Tambahkan gradient overlay di bagian bawah saat collapsed
-  - Animasi height yang smooth dengan spring
-  - Tombol expand/collapse dengan ikon animasi rotate
-- **Tags/Genre**:
-  - Grid layout yang lebih rapi dengan chip yang memiliki depth (shadow)
-  - Animasi masuk saat tags muncul
-  - Haptic feedback saat chip ditekan
+## 4. Performa & Best Practice (Jetpack Compose / Android)
+- **Resource Management**: Proses OCR harus berjalan secara *asynchronous* (menggunakan Coroutines / Background Thread) agar UI tidak *lag* atau *stuttering* saat pengguna membaca.
+- **Batal Otomatis (Cancellation)**: Jika pengguna mulai melakukan scroll kembali sebelum interval 1,25 detik selesai (atau saat OCR sedang berjalan), batalkan job OCR sebelumnya (*cancel ongoing job*).
+- **Memory Optimization**: Bersihkan (*recycle/dispose*) cache gambar bitmap dan overlay saat halaman/chapter ditutup atau berpindah.
 
-## 5. Material 3 Implementation
-- Gunakan color scheme dari Material 3 dengan dynamic color support
-- Surface dengan elevation yang berbeda untuk setiap layer
-- Typography sesuai M3 dengan font scaling yang responsive
-- Shape yang konsisten (corner radius 12-16dp untuk card, 8dp untuk chip)
-
-## 6. Light/Dark Mode
-- Pastikan semua elemen mendukung light dan dark mode secara native
-- Gunakan surface-tint untuk depth di dark mode
-- Kontras yang baik di kedua mode
-
-## 7. Performance & Best Practice
-- Gunakan remember dan derivedStateOf untuk optimasi recomposition
-- Lazy loading untuk gambar
-- Gunakan Modifier.animateContentSize untuk perubahan layout
-
-## 8. Testing & Formatting
-- Jalankan `./gradlew spotlessApply` untuk memastikan format kode sudah sesuai standar project.
-- Setelah selesai, jalankan `./gradlew testDebugUnitTest` hingga **BUILD SUCCESSFUL**.
-- Pastikan tidak ada compile error.
-
-## Catatan Penting:
-- JANGAN mengubah logika bisnis atau fitur yang sudah ada
-- Pertahankan semua parameter dan fungsi callback yang ada
-- Pastikan semua import yang diperlukan tersedia
-- Kompatibel dengan Compose versi terbaru
+## 5. Catatan Penting
+- **JANGAN** mengubah atau merusak fungsi tombol *Favorite*, *Save*, maupun fitur navigasi reader yang sudah ada.
+- Pertahankan semua parameter dan *callback* event yang sudah berjalan pada layar reader.
+- Pastikan ketersediaan izin (*permissions*) yang dibutuhkan jika mengambil *frame* dari layar.
