@@ -23,6 +23,7 @@ class ScreenCaptureHelper(
     private var imageReader: ImageReader? = null
     private var virtualDisplay: VirtualDisplay? = null
     private var callbackThread: HandlerThread? = null
+    private var latestBitmap: Bitmap? = null
 
     var captureWidth: Int = defaultWidth
         private set
@@ -45,12 +46,18 @@ class ScreenCaptureHelper(
         callbackThread = HandlerThread("ScreenCapture-Callback").apply { start() }
 
         imageReader = ImageReader.newInstance(captureWidth, captureHeight, PixelFormat.RGBA_8888, 2)
-        imageReader?.setOnImageAvailableListener(
-            {
-                logcat(LogPriority.DEBUG) { "ImageReader: new frame available" }
-            },
-            Handler(callbackThread!!.looper),
-        )
+        imageReader?.setOnImageAvailableListener({ reader ->
+            try {
+                val image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
+                val bitmap = bitmapFromImage(image)
+                image.close()
+
+                latestBitmap?.recycle()
+                latestBitmap = bitmap
+            } catch (e: Exception) {
+                logcat(LogPriority.ERROR, e) { "Error in ImageReader listener" }
+            }
+        }, Handler(callbackThread!!.looper))
 
         virtualDisplay = mediaProjection.createVirtualDisplay(
             "OCR-ScreenCapture",
@@ -82,22 +89,11 @@ class ScreenCaptureHelper(
     }
 
     suspend fun captureBitmap(): Bitmap? = withContext(Dispatchers.IO) {
-        val reader = imageReader ?: run {
-            logcat(LogPriority.WARN) { "captureBitmap: ImageReader is null" }
+        val bmp = latestBitmap
+        if (bmp == null || bmp.isRecycled) {
             return@withContext null
         }
-
-        val image = reader.acquireLatestImage()
-        if (image == null) {
-            logcat(LogPriority.DEBUG) { "captureBitmap: no new frame available" }
-            return@withContext null
-        }
-
-        image.use { img ->
-            val bitmap = bitmapFromImage(img)
-            logcat { "captureBitmap: success (${bitmap.width}x${bitmap.height})" }
-            bitmap
-        }
+        bmp.copy(bmp.config ?: Bitmap.Config.ARGB_8888, false)
     }
 
     private fun bitmapFromImage(image: Image): Bitmap {
@@ -139,6 +135,8 @@ class ScreenCaptureHelper(
         virtualDisplay = null
         imageReader?.close()
         imageReader = null
+        latestBitmap?.recycle()
+        latestBitmap = null
         mediaProjection.stop()
         logcat { "ScreenCaptureHelper: released" }
     }
