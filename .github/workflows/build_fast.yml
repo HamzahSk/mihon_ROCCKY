@@ -1,24 +1,72 @@
-steps:
-  - uses: actions/checkout@v4
+name: Build App Fast
 
-  - uses: actions/setup-java@v4
-    with:
-      java-version-file: .github/.java-version
-      distribution: temurin
+on:
+  workflow_dispatch:
 
-  - uses: gradle/actions/setup-gradle@v4
+  pull_request:
+    paths:
+      - "**"
+      - "!**.md"
+      - "!fastlane/**"
+      - "!i18n/src/commonMain/moko-resources/**/strings.xml"
+      - "!i18n/src/commonMain/moko-resources/**/plurals.xml"
+      - "i18n/src/commonMain/moko-resources/base/strings.xml"
+      - "i18n/src/commonMain/moko-resources/base/plurals.xml"
 
-  - name: Build app
-    env:
-      MIHON_GITHUB_RELEASE: "true"
-      RUNNER_TEMP: ${{ runner.temp }}
-      storeFileBase64: ${{ secrets.SIGNING_KEY }}
-      storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-      keyAlias: ${{ secrets.ALIAS }}
-      keyPassword: ${{ secrets.KEY_PASSWORD }}
-    run: ./gradlew assembleRelease -Penable-updater
+  push:
+    branches:
+      - main
 
-  - uses: actions/upload-artifact@v4
-    with:
-      name: arm64-v8a-${{ github.sha }}
-      path: app/build/outputs/apk/release/app-arm64-v8a-release.apk
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build & Test App
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Dependency Review
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build app
+        env:
+          MIHON_GITHUB_RELEASE: "true"
+          RUNNER_TEMP: ${{ runner.temp }}
+          storeFileBase64: ${{ secrets.SIGNING_KEY }}
+          storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyAlias: ${{ secrets.ALIAS }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew assembleRelease -Penable-updater
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: arm64-v8a-${{ github.sha }}
+          path: app/build/outputs/apk/release/app-arm64-v8a-release.apk
+      
+      - name: Upload Repository Backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo-backup-${{ github.sha }}
+          path: |
+            .
+            !.git/
+            !**/build/
