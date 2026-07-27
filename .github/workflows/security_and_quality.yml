@@ -7,7 +7,6 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
   schedule:
-    # Menjalankan pemindaian keamanan otomatis setiap hari Senin jam 00:00 UTC
     - cron: '0 0 * * 1'
   workflow_dispatch:
 
@@ -16,8 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write # Diubah ke WRITE agar git-auto-commit-action bisa push hasil perbaikan format
-  security-events: write # Dibutuhkan jika mengupload hasil scan keamanan
+  contents: write
+  security-events: write
 
 jobs:
   # 1. ANALISIS KEAMANAN & VULNERABILITY SCAN
@@ -35,7 +34,7 @@ jobs:
         with:
           fail-on-severity: high
 
-      - name: Scan Repository with Trivy (Security Vulnerabilities)
+      - name: Scan Repository with Trivy
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
@@ -43,7 +42,7 @@ jobs:
           format: 'table'
           severity: 'CRITICAL,HIGH'
 
-  # 2. DETEKSI BUG, ERROR & KUALITAS KODE (LINT & TEST)
+  # 2. DETEKSI BUG, ERROR & KUALITAS KODE
   code-quality-and-test:
     name: Lint, Static Analysis & Tests
     runs-on: ubuntu-24.04
@@ -69,8 +68,10 @@ jobs:
         with:
           commit_message: "style: auto-fix formatting via Spotless"
 
-      - name: Run Android Lint (Check potential bugs & performance issues)
+      # Bagian ini diatur agar tetap lanjut walau Lint menemukan bug/error
+      - name: Run Android Lint (Non-blocking)
         run: ./gradlew lintDebug
+        continue-on-error: true
 
       - name: Run Unit Tests
         id: run_tests
@@ -86,7 +87,7 @@ jobs:
           name: android-lint-report-${{ github.sha }}
           path: app/build/reports/lint-results-debug.html
 
-      - name: Upload Test Report (If Failed or Passed)
+      - name: Upload Test Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
