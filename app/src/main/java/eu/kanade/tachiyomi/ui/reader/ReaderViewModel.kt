@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.reader
 
 import android.app.Application
+import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.annotation.IntRange
 import androidx.compose.runtime.Immutable
@@ -33,6 +34,10 @@ import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderOrientation
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import eu.kanade.tachiyomi.ui.reader.setting.ReadingMode
+import eu.kanade.tachiyomi.ui.reader.translate.MangaTranslatorEngine
+import eu.kanade.tachiyomi.ui.reader.translate.OcrLanguage
+import eu.kanade.tachiyomi.ui.reader.translate.OcrOverlay
+import eu.kanade.tachiyomi.ui.reader.translate.TextRecognitionHelper
 import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.util.chapter.filterDownloaded
 import eu.kanade.tachiyomi.util.chapter.removeDuplicates
@@ -42,7 +47,9 @@ import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.storage.cacheImageDir
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -253,6 +260,8 @@ class ReaderViewModel @JvmOverloads constructor(
                 downloadManager.addDownloadsToStartOfQueue(listOf(it))
             }
         }
+        ocrDebounceJob?.cancel()
+        textRecognitionHelper.close()
     }
 
     /**
@@ -428,6 +437,81 @@ class ReaderViewModel @JvmOverloads constructor(
     fun onViewerLoaded(viewer: Viewer?) {
         mutableState.update {
             it.copy(viewer = viewer)
+        }
+    }
+
+    private val textRecognitionHelper = TextRecognitionHelper()
+    private var ocrDebounceJob: Job? = null
+    private var isReaderScrolling: Boolean = false
+
+    fun toggleTranslateMode() {
+        val willBeActive = !state.value.isTranslateModeActive
+        mutableState.update {
+            it.copy(
+                isTranslateModeActive = willBeActive,
+                ocrOverlay = if (!willBeActive) null else it.ocrOverlay,
+            )
+        }
+        if (willBeActive) {
+            scheduleOcrWithDebounce()
+        } else {
+            ocrDebounceJob?.cancel()
+            ocrDebounceJob = null
+        }
+    }
+
+    fun onReaderScrollStateChanged(isScrolling: Boolean) {
+        isReaderScrolling = isScrolling
+        if (!state.value.isTranslateModeActive) return
+
+        if (isScrolling) {
+            ocrDebounceJob?.cancel()
+            mutableState.update { it.copy(ocrOverlay = null) }
+        } else {
+            scheduleOcrWithDebounce()
+        }
+    }
+
+    private fun scheduleOcrWithDebounce() {
+        if (!state.value.isTranslateModeActive) return
+        ocrDebounceJob?.cancel()
+        ocrDebounceJob = viewModelScope.launchIO {
+            delay(1250L)
+            if (isReaderScrolling) return@launchIO
+            runOcrOnCurrentPage()
+        }
+    }
+
+    private suspend fun runOcrOnCurrentPage() {
+        val currentChapter = getCurrentChapter() ?: return
+        val requestedPage = currentChapter.requestedPage
+        val pages = currentChapter.pages ?: return
+        val currentPage = pages.getOrNull(requestedPage) ?: return
+        if (currentPage.status !is Page.State.Ready) return
+
+        mutableState.update { it.copy(isOcrProcessing = true) }
+
+        try {
+            val stream = currentPage.stream ?: return
+            val inputStream = stream()
+            val bitmap = BitmapFactory.decodeStream(inputStream)
+            inputStream.close()
+            if (bitmap == null) return
+
+            val results = textRecognitionHelper.recognize(bitmap, OcrLanguage.JAPANESE)
+            withUIContext {
+                mutableState.update {
+                    it.copy(
+                        ocrOverlay = OcrOverlay(results, bitmap.width, bitmap.height),
+                        isOcrProcessing = false,
+                    )
+                }
+            }
+            bitmap.recycle()
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            logcat(LogPriority.ERROR, e)
+            mutableState.update { it.copy(isOcrProcessing = false) }
         }
     }
 
@@ -959,6 +1043,11 @@ class ReaderViewModel @JvmOverloads constructor(
         val dialog: Dialog? = null,
         val menuVisible: Boolean = false,
         @IntRange(from = -100, to = 100) val brightnessOverlayValue: Int = 0,
+
+        // Translate feature state
+        val isTranslateModeActive: Boolean = false,
+        val ocrOverlay: OcrOverlay? = null,
+        val isOcrProcessing: Boolean = false,
     ) {
         val currentChapter: ReaderChapter?
             get() = viewerChapters?.currChapter

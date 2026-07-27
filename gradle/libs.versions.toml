@@ -1,4 +1,8 @@
 [versions]
+mlkit-text-recognition = "16.0.1"
+mlkit-text-recognition-japanese = "16.0.1"
+mlkit-text-recognition-chinese = "16.0.1"
+mlkit-text-recognition-korean = "16.0.1"
 aboutLibraries = "15.0.4"
 android-desugar = "2.1.5"
 android-gradle = "9.3.0"
@@ -184,6 +188,10 @@ voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.
 voyager-tabNavigator = { module = "cafe.adriel.voyager:voyager-tab-navigator", version.ref = "voyager" }
 voyager-transitions = { module = "cafe.adriel.voyager:voyager-transitions", version.ref = "voyager" }
 lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottie" }
+mlkit-text-recognition = { module = "com.google.mlkit:text-recognition", version.ref = "mlkit-text-recognition" }
+mlkit-text-recognition-japanese = { module = "com.google.mlkit:text-recognition-japanese", version.ref = "mlkit-text-recognition-japanese" }
+mlkit-text-recognition-chinese = { module = "com.google.mlkit:text-recognition-chinese", version.ref = "mlkit-text-recognition-chinese" }
+mlkit-text-recognition-korean = { module = "com.google.mlkit:text-recognition-korean", version.ref = "mlkit-text-recognition-korean" }
 xmlutil-core = { module = "io.github.pdvrieze.xmlutil:core-android", version.ref = "xmlutil" }
 xmlutil-serialization = { module = "io.github.pdvrieze.xmlutil:serialization", version.ref = "xmlutil" }
 
