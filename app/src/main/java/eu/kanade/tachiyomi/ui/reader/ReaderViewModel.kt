@@ -865,6 +865,9 @@ class ReaderViewModel @JvmOverloads constructor(
             val app = Injekt.get<Application>()
             val mpm = app.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
 
+            screenCaptureHelper?.release()
+            screenCaptureHelper = null
+
             val mp = mpm.getMediaProjection(mediaProjectionResultCode, data)
                 ?: throw IllegalStateException("Failed to get MediaProjection")
 
@@ -876,6 +879,8 @@ class ReaderViewModel @JvmOverloads constructor(
             logcat { "recreateScreenCaptureHelper: success" }
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Failed to recreate MediaProjection" }
+            screenCaptureHelper?.release()
+            screenCaptureHelper = null
             mediaProjectionResultCode = Activity.RESULT_CANCELED
             mediaProjectionData = null
         }

@@ -36,8 +36,8 @@ class ScreenCaptureHelper(
         captureDensityDpi: Int = defaultDensityDpi,
     ) {
         if (virtualDisplay != null) {
-            logcat { "ScreenCaptureHelper: startCapture called but already running" }
-            return
+            logcat { "ScreenCaptureHelper: startCapture called but already running, releasing first" }
+            releaseResources()
         }
 
         this.captureWidth = captureWidth
@@ -45,7 +45,7 @@ class ScreenCaptureHelper(
 
         callbackThread = HandlerThread("ScreenCapture-Callback").apply { start() }
 
-        imageReader = ImageReader.newInstance(captureWidth, captureHeight, PixelFormat.RGBA_8888, 2)
+        imageReader = ImageReader.newInstance(captureWidth, captureHeight, PixelFormat.RGBA_8888, 3)
         imageReader?.setOnImageAvailableListener(
             {
                 logcat(LogPriority.DEBUG) { "ImageReader: new frame available" }
@@ -117,37 +117,35 @@ class ScreenCaptureHelper(
         val imgHeight = image.height
 
         val bitmap = Bitmap.createBitmap(imgWidth, imgHeight, Bitmap.Config.ARGB_8888)
-
-        if (rowStride == imgWidth * pixelStride) {
-            buffer.rewind()
-            bitmap.copyPixelsFromBuffer(buffer)
-        } else {
-            val pixels = IntArray(imgWidth * imgHeight)
-            buffer.rewind()
-            for (row in 0 until imgHeight) {
-                buffer.position(row * rowStride)
-                for (col in 0 until imgWidth) {
-                    val r = buffer.get().toInt() and 0xFF
-                    val g = buffer.get().toInt() and 0xFF
-                    val b = buffer.get().toInt() and 0xFF
-                    val a = buffer.get().toInt() and 0xFF
-                    pixels[row * imgWidth + col] = (a shl 24) or (r shl 16) or (g shl 8) or b
-                }
+        val pixels = IntArray(imgWidth * imgHeight)
+        buffer.rewind()
+        for (row in 0 until imgHeight) {
+            buffer.position(row * rowStride)
+            for (col in 0 until imgWidth) {
+                val r = buffer.get().toInt() and 0xFF
+                val g = buffer.get().toInt() and 0xFF
+                val b = buffer.get().toInt() and 0xFF
+                val a = buffer.get().toInt() and 0xFF
+                pixels[row * imgWidth + col] = (a shl 24) or (r shl 16) or (g shl 8) or b
             }
-            bitmap.setPixels(pixels, 0, imgWidth, 0, 0, imgWidth, imgHeight)
         }
+        bitmap.setPixels(pixels, 0, imgWidth, 0, 0, imgWidth, imgHeight)
 
         return bitmap
     }
 
     fun release() {
+        releaseResources()
+        mediaProjection.stop()
+        logcat { "ScreenCaptureHelper: released" }
+    }
+
+    private fun releaseResources() {
         callbackThread?.quitSafely()
         callbackThread = null
         virtualDisplay?.release()
         virtualDisplay = null
         imageReader?.close()
         imageReader = null
-        mediaProjection.stop()
-        logcat { "ScreenCaptureHelper: released" }
     }
 }
