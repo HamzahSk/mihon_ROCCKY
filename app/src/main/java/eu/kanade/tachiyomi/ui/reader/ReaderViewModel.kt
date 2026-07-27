@@ -846,9 +846,16 @@ class ReaderViewModel @JvmOverloads constructor(
 
     private fun recreateScreenCaptureHelper() {
         try {
+            // 1. Pastikan Intent tidak null
+            val data = mediaProjectionData ?: throw IllegalStateException("MediaProjection Intent is null")
+            
             val app = Injekt.get<Application>()
             val mpm = app.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-            val mp = mpm.getMediaProjection(mediaProjectionResultCode, mediaProjectionData)
+            
+            // 2. Pastikan hasil MediaProjection tidak null
+            val mp = mpm.getMediaProjection(mediaProjectionResultCode, data) 
+                ?: throw IllegalStateException("Failed to get MediaProjection")
+                
             val metrics = app.resources.displayMetrics
             val helper = ScreenCaptureHelper(mp, metrics.widthPixels, metrics.heightPixels, metrics.densityDpi)
             helper.startCapture()
