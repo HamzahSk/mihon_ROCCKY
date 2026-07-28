@@ -83,8 +83,6 @@
     <string name="action_mark_previous_as_read">Mark previous as read</string>
     <string name="action_download">Download</string>
     <string name="action_bookmark">Bookmark chapter</string>
-    <string name="action_translate">Translate</string>
-    <string name="action_translate_active">Translate active</string>
     <string name="action_remove_bookmark">Unbookmark chapter</string>
     <string name="action_delete">Delete</string>
     <string name="action_update_library">Update library</string>

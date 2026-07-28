@@ -90,9 +90,6 @@ abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
 
         override fun onPageScrollStateChanged(state: Int) {
             isIdle = state == ViewPager.SCROLL_STATE_IDLE
-            activity.viewModel.onReaderScrollStateChanged(
-                isScrolling = state != ViewPager.SCROLL_STATE_IDLE,
-            )
         }
     }
 

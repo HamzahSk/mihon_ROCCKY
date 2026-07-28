@@ -1,13 +1,9 @@
 package eu.kanade.presentation.reader.appbars
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material.icons.outlined.BookmarkBorder
-import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import eu.kanade.presentation.components.AppBar
@@ -22,18 +18,11 @@ fun ReaderTopBar(
     navigateUp: () -> Unit,
     bookmarked: Boolean,
     onToggleBookmarked: () -> Unit,
-    translateActive: Boolean,
-    onToggleTranslate: () -> Unit,
     onOpenInWebView: (() -> Unit)?,
     onOpenInBrowser: (() -> Unit)?,
     onShare: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    val translateTint by animateColorAsState(
-        targetValue = if (translateActive) Color(0xFF4CAF50) else Color.White,
-        animationSpec = tween(300),
-    )
-
     AppBar(
         modifier = modifier,
         backgroundColor = Color.Transparent,
@@ -43,14 +32,6 @@ fun ReaderTopBar(
         actions = {
             AppBarActions(
                 actions = buildList {
-                    add(
-                        AppBar.Action(
-                            title = stringResource(MR.strings.action_translate),
-                            icon = Icons.Outlined.Translate,
-                            iconTint = translateTint,
-                            onClick = onToggleTranslate,
-                        ),
-                    )
                     add(
                         AppBar.Action(
                             title = stringResource(

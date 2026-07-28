@@ -21,7 +21,6 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -36,9 +35,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import androidx.core.content.getSystemService
 import androidx.core.graphics.Insets
@@ -80,7 +76,6 @@ import eu.kanade.tachiyomi.ui.reader.setting.ReaderOrientation
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsViewModel
 import eu.kanade.tachiyomi.ui.reader.setting.ReadingMode
-import eu.kanade.tachiyomi.ui.reader.translate.OcrOverlay
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderProgressIndicator
 import eu.kanade.tachiyomi.ui.reader.viewer.pager.R2LPagerViewer
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
@@ -277,8 +272,6 @@ class ReaderActivity : BaseActivity() {
             }
 
             ContentOverlay(state = state)
-
-            ReaderOcrOverlay(overlay = state.ocrOverlay)
 
             AppBars(state = state)
         }
@@ -484,8 +477,6 @@ class ReaderActivity : BaseActivity() {
             onClickTopAppBar = ::openMangaScreen,
             bookmarked = state.bookmarked,
             onToggleBookmarked = viewModel::toggleChapterBookmark,
-            translateActive = state.isTranslateModeActive,
-            onToggleTranslate = viewModel::toggleTranslateMode,
             onOpenInWebView = ::openChapterInWebView.takeIf { isHttpSource },
             onOpenInBrowser = ::openChapterInBrowser.takeIf { isHttpSource },
             onShare = ::shareChapter.takeIf { isHttpSource },
@@ -534,30 +525,6 @@ class ReaderActivity : BaseActivity() {
             },
             onClickSettings = viewModel::openSettingsDialog,
         )
-    }
-
-    @Composable
-    private fun ReaderOcrOverlay(overlay: OcrOverlay?) {
-        if (overlay == null) return
-
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val scaleX = size.width / overlay.imageWidth.toFloat()
-            val scaleY = size.height / overlay.imageHeight.toFloat()
-
-            for (result in overlay.results) {
-                val rect = result.boundingBox
-                val scaledRect = androidx.compose.ui.geometry.Rect(
-                    offset = Offset(rect.left * scaleX, rect.top * scaleY),
-                    size = Size(rect.width() * scaleX, rect.height() * scaleY),
-                )
-                drawRect(
-                    color = androidx.compose.ui.graphics.Color(0xCC4CAF50),
-                    topLeft = scaledRect.topLeft,
-                    size = scaledRect.size,
-                    style = Stroke(width = 3f),
-                )
-            }
-        }
     }
 
     /**
