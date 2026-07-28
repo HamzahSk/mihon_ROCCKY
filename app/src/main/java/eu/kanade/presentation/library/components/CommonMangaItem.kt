@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -281,14 +282,17 @@ private fun GridItemTitle(
     modifier: Modifier = Modifier,
     maxLines: Int = 2,
 ) {
-    Text(
-        modifier = modifier,
-        text = title,
-        minLines = minLines,
-        maxLines = maxLines,
-        overflow = TextOverflow.Ellipsis,
-        style = style,
-    )
+    BoxWithConstraints(modifier = modifier) {
+        val scale = (maxWidth / 140.dp).coerceIn(0.65f, 1.15f)
+        val baseFontSize = if (style.fontSize.value > 0f) style.fontSize else 14.sp
+        Text(
+            text = title,
+            minLines = minLines,
+            maxLines = maxLines,
+            overflow = TextOverflow.Ellipsis,
+            style = style.copy(fontSize = baseFontSize * scale),
+        )
+    }
 }
 
 /**
