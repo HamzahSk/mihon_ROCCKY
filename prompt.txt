@@ -1,18 +1,20 @@
-# PROMPT: Auto-Typesetting & Penyesuaian Teks Cover Manga
+# Konteks Masalah
+Saya memiliki kode Jetpack Compose untuk aplikasi pembaca manga yang mengatur tampilan *grid* dan *list* untuk item manga (Library/Browse). Saat ini, ukuran font untuk judul manga di dalam `GridItemTitle` menggunakan ukuran statis dari `MaterialTheme.typography.titleSmall` atau `bodyMedium`.
 
-**Konteks & Peran:**
-Kamu adalah asisten AI developer yang ahli dalam *image processing* dan *typesetting*. Tugasmu adalah membuat/menyesuaikan kode agar teks pada cover manga bisa secara otomatis menyesuaikan ukurannya (*auto-sizing*) dengan template layout yang sudah disediakan.
+Masalahnya, saat tampilan diubah ke *grid* yang lebih rapat (misalnya 3x3 atau lebih), ukuran font ini menjadi terlalu besar, statis, dan memakan terlalu banyak ruang di atas *cover* manga.
 
-**Instruksi Kerja:**
+# Tujuan
+Tolong ubah atau modifikasi komponen `GridItemTitle`, `MangaCompactGridItem`, dan `CoverTextOverlay` agar ukuran font judulnya menjadi **fleksibel/dinamis**. Ukuran font harus bisa mengecil secara proporsional jika ukuran *container* (lebar *grid*) semakin sempit, agar tetap rapi pada *grid* 3x3 atau lebih. Kamu bisa menggunakan pendekatan seperti kalkulasi berbasis `LocalConfiguration`, `BoxWithConstraints`, atau menambahkan parameter `fontSize` dinamis yang menyesuaikan dengan rasio/kolom.
 
-**LANGKAH 1: Analisis Template & Bounding Box**
-* Deteksi area kosong (*bounding box*) yang dikhususkan untuk teks (Judul, Lang, Jumlah Chapter, dll) pada template cover.
-* Pastikan sistem mengenali batas lebar (width) dan tinggi (height) maksimal dari masing-masing area teks tersebut.
+# Instruksi Eksekusi
+Tolong kerjakan dengan mengikuti langkah-langkah berikut secara berurutan:
 
-**LANGKAH 2: Penyesuaian Ukuran Teks (Dynamic Sizing)**
-* Buat logika kodenya agar teks secara dinamis mengecilkan atau membesarkan ukuran *font*-nya agar pas 100% dengan template.
-* Jangan sampai ada teks yang *overflow* (keluar dari kotak template) atau terlihat terlalu kecil.
-* Terapkan *word-wrap* atau *line-break* otomatis jika teks terlalu panjang.
+**LANGKAH 1: Analisis & Modifikasi Kode**
+- Analisis bagian mana saja yang perlu disisipkan logika ukuran font dinamis.
+- Tulis ulang komponen yang terdampak (terutama `GridItemTitle` dan komponen yang memanggilnya). Pastikan tidak merusak fungsi yang sudah ada.
+
+**LANGKAH 2: Tampilkan Hasil Kode**
+- Berikan *full code* dari komponen-komponen yang sudah direvisi agar saya bisa langsung menyalinnya. Jangan lupa sertakan `import` baru jika ada (seperti `BoxWithConstraints` atau ekstensi UI lainnya).
 
 **LANGKAH 3: Testing & Clean Code (WAJIB)**
 1. Jalankan `./gradlew spotlessApply` untuk merapikan format kode.
