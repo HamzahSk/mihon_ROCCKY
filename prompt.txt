@@ -1,22 +1,19 @@
-**Tugas:**
-Bertindaklah sebagai Senior Android Developer. Tolong buatkan panduan dan implementasi kode lengkap untuk menambahkan fitur **Custom Font** di dalam aplikasi Android saya.
+Kamu adalah seorang Expert Android Developer. Tolong bantu saya memodifikasi struktur navigasi dan menambahkan fitur baru pada aplikasi (berbasis Kotlin/Jetpack Compose atau XML). 
 
-**Konteks & Lokasi Fitur:**
-Fitur ini berada di menu **Pengaturan Tampilan** (satu halaman dengan pengaturan Tema, Format Tanggal, dll).
+Berikut adalah detail tugas yang harus dikerjakan:
 
-**Spesifikasi Fitur:**
-1. **Upload Font:** User bisa memilih dan mengunggah (upload) file font kustom mereka sendiri (format `.ttf` atau `.otf`) menggunakan File Picker.
-2. **Simpan & Terapkan:** Font yang diupload disimpan dengan aman (misalnya di internal storage) dan diterapkan secara global ke seluruh aplikasi.
-3. **Smart Font Adjustment (Sangat Penting):** Karena ini font dari luar, seringkali metriknya tidak standar (contoh: hurufnya jauh lebih besar dari ukuran default, *line-height* berantakan/terpotong, atau *letter-spacing* terlalu renggang). Tolong buatkan *logic* untuk **menyesuaikan atau menormalisasi font tersebut**. Gunakan pendekatan seperti membaca `FontMetrics` untuk menyesuaikan *line-height* dan *baseline*, atau berikan fungsi *scaler* proporsional agar tampilannya tetap rapi dan tidak merusak layout UI aplikasi.
+**LANGKAH 1: Memindahkan Fitur "Riwayat" (History)**
+* Hapus tab "Riwayat" dari *Bottom Navigation Bar* utama (beranda).
+* Pindahkan entri navigasi "Riwayat" tersebut ke dalam tab "Lainnya" (More).
+* Posisikan menu "Riwayat" ini secara spesifik di antara menu "Kategori" dan "Statistik" pada *list/menu* di tab "Lainnya".
 
-Tolong berikan solusi kodenya (bisa menggunakan Jetpack Compose atau XML, sesuaikan dengan best practice) dengan struktur langkah berikut:
-
-**LANGKAH 1: UI Pengaturan Tampilan & File Picker**
-Berikan kode untuk UI menu pengaturan dan *intent/launcher* untuk memilih file font.
-
-**LANGKAH 2: Logic Penerapan Font & Smart Adjustment**
-Berikan kode cara menyimpan file secara lokal, mendaftarkan font tersebut ke sistem *Typography* aplikasi, serta algoritma/perhitungan untuk menormalisasi ukuran dan jarak font.
+**LANGKAH 2: Mengimplementasikan Tab "Rekomendasi" Baru**
+* Isi slot kosong di *Bottom Navigation Bar* (bekas tab Riwayat) dengan tab baru bernama "Rekomendasi".
+* Desain UI dan logika datanya: Buat tampilan datanya mirip dengan *carousel* rekomendasi yang ada di komponen `browsesource`.
+* Fitur Utama: Tambahkan fungsionalitas agar *user* bisa mengatur/memilih (menambah/menghapus) ekstensi (extensions) mana saja yang datanya ingin ditampilkan ke dalam tab "Rekomendasi" ini.
 
 **LANGKAH 3: Testing & Clean Code (WAJIB)**
 1. Jalankan `./gradlew spotlessApply` untuk merapikan format kode.
 2. Jalankan `./gradlew testDebugUnitTest` dan pastikan **BUILD SUCCESSFUL**.
+
+Tolong lakukan modifikasi kodenya secara bertahap (langkah demi langkah) mulai dari perubahan navigasi hingga implementasi UI dan logika rekomendasinya.
