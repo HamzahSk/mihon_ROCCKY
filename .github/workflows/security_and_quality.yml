@@ -179,7 +179,7 @@ jobs:
             adb shell monkey -p app.komikku.roccky -v 5000 || adb shell monkey -p app.komikku.roccky.dev -v 5000 || true
             
             # Ambil log error
-            adb logcat -d *:E > emulator-crash-log.txt
+            adb logcat -d | grep -iE "app.komikku.roccky|AndroidRuntime|FATAL" > emulator-crash-log.txt || true
             
             # Screenshot
             adb shell screencap -p /sdcard/screencap.png || true
