@@ -1,4 +1,4 @@
-name: Build Debug
+name: Build Preview 
 
 on:
   workflow_dispatch:
@@ -54,13 +54,13 @@ jobs:
           storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyAlias: ${{ secrets.ALIAS }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew assembleDebug -Penable-updater
+        run: ./gradlew assemblePreview -Penable-updater
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: arm64-v8a-${{ github.sha }}
-          path: app/build/outputs/apk/debug/app-arm64-v8a-debug.apk
+          path: app/build/outputs/apk/preview/app-arm64-v8a-preview.apk
 
       - name: Upload Repository Backup
         uses: actions/upload-artifact@v4
