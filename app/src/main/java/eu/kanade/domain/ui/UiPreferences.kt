@@ -37,7 +37,9 @@ class UiPreferences(
 
     val imagesInDescription: Preference<Boolean> = preferenceStore.getBoolean("pref_render_images_description", true)
 
-    val customFontUri: Preference<String> = preferenceStore.getString("pref_custom_font_uri", "")
+    val customFontUri: Preference<String> = preferenceStore.getString("custom_font_uri", "")
+
+    val customFontName: Preference<String> = preferenceStore.getString("custom_font_name", "")
 
     companion object {
         fun dateFormat(format: String): DateTimeFormatter = when (format) {

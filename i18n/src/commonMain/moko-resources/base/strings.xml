@@ -249,14 +249,6 @@
     <string name="pref_relative_format_summary">\"%1$s\" instead of \"%2$s\"</string>
     <string name="pref_date_format">Date format</string>
     <string name="pref_display_images_description">Render images in manga descriptions</string>
-    <string name="pref_custom_font">Custom font</string>
-    <string name="pref_custom_font_summary">Select a custom font for the app</string>
-    <string name="pref_custom_font_select">Select font</string>
-    <string name="pref_custom_font_clear">Clear custom font</string>
-    <string name="font_picker_title">Select a font file</string>
-    <string name="font_picker_error_invalid">Invalid font file</string>
-    <string name="font_picker_error_load">Failed to load font</string>
-    <string name="font_picker_success">Custom font applied</string>
 
     <string name="pref_manage_notifications">Manage notifications</string>
     <string name="pref_app_language">App language</string>
@@ -285,6 +277,10 @@
     <string name="pref_library_columns">Items per row</string>
     <string name="portrait">Portrait</string>
     <string name="landscape">Landscape</string>
+    <string name="pref_custom_font">Custom font</string>
+    <string name="pref_custom_font_summary">Select a .ttf or .otf font file to use as the app-wide font</string>
+    <string name="pref_custom_font_reset">Reset to default</string>
+    <string name="pref_font_default">Default</string>
 
     <string name="pref_category_library_update">Global update</string>
     <string name="pref_library_update_interval">Automatic updates</string>

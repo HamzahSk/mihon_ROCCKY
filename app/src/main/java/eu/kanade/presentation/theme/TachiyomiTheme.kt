@@ -6,6 +6,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.domain.ui.UiPreferences
@@ -25,7 +26,8 @@ import eu.kanade.presentation.theme.colorscheme.TealTurqoiseColorScheme
 import eu.kanade.presentation.theme.colorscheme.TidalWaveColorScheme
 import eu.kanade.presentation.theme.colorscheme.YinYangColorScheme
 import eu.kanade.presentation.theme.colorscheme.YotsubaColorScheme
-import tachiyomi.presentation.core.theme.rememberAppTypography
+import eu.kanade.tachiyomi.data.font.CustomFontManager
+import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -58,19 +60,30 @@ private fun BaseTachiyomiTheme(
 ) {
     val context = LocalContext.current
     val isDark = isSystemInDarkTheme()
-    val typography = rememberAppTypography()
+    val colorScheme = remember(appTheme, isDark, isAmoled) {
+        getThemeColorScheme(context, appTheme, isDark, isAmoled)
+    }
+    val typography = rememberCustomTypography()
     MaterialExpressiveTheme(
-        colorScheme = remember(appTheme, isDark, isAmoled) {
-            getThemeColorScheme(
-                context = context,
-                appTheme = appTheme,
-                isDark = isDark,
-                isAmoled = isAmoled,
-            )
-        },
+        colorScheme = colorScheme,
         typography = typography,
         content = content,
     )
+}
+
+@Composable
+private fun rememberCustomTypography(): Typography {
+    val uiPreferences = Injekt.get<UiPreferences>()
+    val customFontUri by uiPreferences.customFontUri.collectAsState()
+    return remember(customFontUri) {
+        if (customFontUri.isNotEmpty()) {
+            val manager = Injekt.get<CustomFontManager>()
+            val base = Typography()
+            manager.createAdjustedTypography(base)
+        } else {
+            Typography()
+        }
+    }
 }
 
 private fun getThemeColorScheme(
