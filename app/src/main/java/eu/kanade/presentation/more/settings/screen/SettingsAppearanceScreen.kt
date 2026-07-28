@@ -1,11 +1,17 @@
 package eu.kanade.presentation.more.settings.screen
 
 import android.app.Activity
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -18,6 +24,7 @@ import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.appearance.AppLanguageScreen
 import eu.kanade.presentation.more.settings.widget.AppThemeModePreferenceWidget
 import eu.kanade.presentation.more.settings.widget.AppThemePreferenceWidget
+import tachiyomi.presentation.core.util.FontManager
 import eu.kanade.tachiyomi.util.system.toast
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -39,6 +46,7 @@ object SettingsAppearanceScreen : SearchableSettings {
         return listOf(
             getThemeGroup(uiPreferences = uiPreferences),
             getDisplayGroup(uiPreferences = uiPreferences),
+            getCustomFontGroup(uiPreferences = uiPreferences),
         )
     }
 
@@ -144,6 +152,79 @@ object SettingsAppearanceScreen : SearchableSettings {
                 Preference.PreferenceItem.SwitchPreference(
                     preference = uiPreferences.imagesInDescription,
                     title = stringResource(MR.strings.pref_display_images_description),
+                ),
+            ),
+        )
+    }
+
+    @Composable
+    private fun getCustomFontGroup(
+        uiPreferences: UiPreferences,
+    ): Preference.PreferenceGroup {
+        val context = LocalContext.current
+        val customFontUri by uiPreferences.customFontUri.collectAsState()
+        val defaultLabel = stringResource(MR.strings.label_default)
+        val selectLabel = stringResource(MR.strings.pref_custom_font_select)
+
+        var fontFileName by remember(customFontUri) {
+            mutableStateOf(
+                if (customFontUri.isNotEmpty() && FontManager.hasCustomFont(context)) {
+                    FontManager.getFontFileName(context, android.net.Uri.parse(customFontUri))
+                        ?: selectLabel
+                } else {
+                    defaultLabel
+                },
+            )
+        }
+
+        val filePickerLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocument(),
+        ) { uri ->
+            uri?.let {
+                if (!FontManager.isValidFontUri(context, it)) {
+                    context.toast(MR.strings.font_picker_error_invalid)
+                    return@let
+                }
+                val fileName = FontManager.getFontFileName(context, it) ?: selectLabel
+                if (FontManager.saveFont(context, it)) {
+                    uiPreferences.customFontUri.set(it.toString())
+                    fontFileName = fileName
+                    context.toast(MR.strings.font_picker_success)
+                    (context as? Activity)?.let { activity -> ActivityCompat.recreate(activity) }
+                } else {
+                    context.toast(MR.strings.font_picker_error_load)
+                }
+            }
+        }
+
+        return Preference.PreferenceGroup(
+            title = stringResource(MR.strings.pref_custom_font),
+            preferenceItems = listOf(
+                Preference.PreferenceItem.TextPreference(
+                    title = stringResource(MR.strings.pref_custom_font),
+                    subtitle = fontFileName,
+                    onClick = {
+                        filePickerLauncher.launch(
+                            arrayOf(
+                                "application/x-font-ttf",
+                                "application/x-font-otf",
+                                "font/ttf",
+                                "font/otf",
+                                "*/*",
+                            ),
+                        )
+                    },
+                ),
+                Preference.PreferenceItem.TextPreference(
+                    title = stringResource(MR.strings.pref_custom_font_clear),
+                    enabled = customFontUri.isNotEmpty(),
+                    onClick = {
+                        FontManager.clearFont(context)
+                        uiPreferences.customFontUri.set("")
+                        fontFileName = defaultLabel
+                        context.toast(MR.strings.pref_custom_font_clear)
+                        (context as? Activity)?.let { activity -> ActivityCompat.recreate(activity) }
+                    },
                 ),
             ),
         )

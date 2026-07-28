@@ -285,12 +285,12 @@ private fun GridItemTitle(
     BoxWithConstraints(modifier = modifier) {
         // 1. Ubah patokan lebar (120dp lebih ideal untuk rata-rata cover)
         // 2. Perlebar batasnya: minimal 75% (biar gak kekecilan), maksimal 140% (biar di 1x1 tetep gede)
-        val scale = (maxWidth / 120.dp).coerceIn(0.75f, 1.4f) 
-        
+        val scale = (maxWidth / 120.dp).coerceIn(0.75f, 1.4f)
+
         val baseFontSize = if (style.fontSize.value > 0f) style.fontSize else 14.sp
         // Ambil ukuran jarak baris bawaan tema (biasanya 20.sp)
         val baseLineHeight = if (style.lineHeight.value > 0f) style.lineHeight else 20.sp
-        
+
         Text(
             text = title,
             minLines = minLines,
@@ -298,12 +298,11 @@ private fun GridItemTitle(
             overflow = TextOverflow.Ellipsis,
             style = style.copy(
                 fontSize = baseFontSize * scale,
-                lineHeight = baseLineHeight * scale // Ini yang benerin jarak baris kejauhan!
+                lineHeight = baseLineHeight * scale, // Ini yang benerin jarak baris kejauhan!
             ),
         )
     }
 }
-
 
 /**
  * Wrapper for grid items to handle selection state, click and long click.
