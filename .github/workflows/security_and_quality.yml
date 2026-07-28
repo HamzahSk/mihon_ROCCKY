@@ -52,21 +52,37 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up JDK
-        uses: actions/setup-java@v5 # Diperbarui ke v5
+        uses: actions/setup-java@v5
         with:
           java-version-file: .github/.java-version
           distribution: temurin
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v5 # Diperbarui ke v5
+        uses: gradle/actions/setup-gradle@v5
 
       - name: Auto-fix Code Format (Spotless)
         run: ./gradlew spotlessApply
 
-      - name: Commit changes (If format was fixed)
-        uses: stefanzweifel/git-auto-commit-action@v5
+      # --- PERUBAHAN DI SINI: Simpan file fix ke folder sementara ---
+      - name: Prepare Fixed Files for Artifact
+        id: check_fixes
+        run: |
+          if [[ -n $(git status -s) ]]; then
+            echo "has_fixes=true" >> $GITHUB_OUTPUT
+            mkdir -p /tmp/spotless-fixes
+            # Kopi file yang berubah beserta struktur foldernya secara otomatis
+            git diff --name-only | xargs -I {} cp --parents {} /tmp/spotless-fixes/
+          else
+            echo "has_fixes=false" >> $GITHUB_OUTPUT
+          fi
+
+      # --- PERUBAHAN DI SINI: Upload folder sementara tadi jadi Artifact ---
+      - name: Upload Spotless Fixes Artifact
+        if: steps.check_fixes.outputs.has_fixes == 'true'
+        uses: actions/upload-artifact@v4
         with:
-          commit_message: "style: auto-fix formatting via Spotless"
+          name: spotless-fixed-files-${{ github.sha }}
+          path: /tmp/spotless-fixes/
 
       - name: Run Android Lint (Non-blocking)
         run: ./gradlew lintDebug
@@ -98,10 +114,9 @@ jobs:
     name: Android UI Tests & Crash Detection
     runs-on: ubuntu-latest
     
-    # RAHASIA 1: Batasi memori JVM agar tidak memakan RAM Emulator
     env:
       JAVA_TOOL_OPTIONS: -Xmx4g
-    timeout-minutes: 30 # Mencegah tagihan menit GitHub bengkak jika stuck
+    timeout-minutes: 30
 
     steps:
       - name: Checkout Code
@@ -119,7 +134,6 @@ jobs:
       - name: Build Debug APK
         run: ./gradlew assembleDebug
         
-      # RAHASIA 2: Gunakan sistem Cache AVD (Mempercepat booting hingga 3x lipat)
       - name: AVD Cache
         uses: actions/cache@v4
         id: avd-cache
@@ -127,34 +141,30 @@ jobs:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          # Key unik berdasarkan konfigurasi emulator kita
           key: avd-34-aosp_atd-x86_64
 
-      # RAHASIA 3: Script KVM standar dari dokumentasi
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      # RAHASIA 4: Generate Snapshot (Hanya berjalan jika cache belum ada/baru pertama kali)
       - name: Generate AVD Snapshot for Caching
         if: steps.avd-cache.outputs.cache-hit != 'true'
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
-          target: aosp_atd # Menggunakan ATD (Automated Test Device) yang jauh lebih ringan
+          target: aosp_atd
           arch: x86_64
           profile: Nexus 6
-          cores: 2 # Pembatasan CPU
-          ram-size: 2048M # Pembatasan RAM
+          cores: 2
+          ram-size: 2048M
           sdcard-path-or-size: 100M
           force-avd-creation: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: false
           script: echo "Generated AVD snapshot for caching."
 
-      # RAHASIA 5: Jalankan Tes dari Snapshot (-no-snapshot-save)
       - name: Run Android Emulator & Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -171,22 +181,16 @@ jobs:
           script: |
             adb shell input keyevent 82
             
-            # --- TAMBAHAN BARU: Install APK ke dalam emulator ---
-            # Pastikan path ini sesuai dengan lokasi output APK di project kamu
             adb install app/build/outputs/apk/debug/app-x86_64-debug.apk || adb install app/build/outputs/apk/debug/app-universal-debug.apk
             
-            # Jalankan monkey test
             adb shell monkey -p app.komikku.roccky -v 5000 || adb shell monkey -p app.komikku.roccky.dev -v 5000 || true
             
-            # Ambil log error
             adb logcat -d | grep -iE "app.komikku.roccky|AndroidRuntime|FATAL" > emulator-crash-log.txt || true
             
-            # Screenshot
             adb shell screencap -p /sdcard/screencap.png || true
             adb pull /sdcard/screencap.png /tmp/android-emulator-screenshot.png || true
             
             echo "Test and log extraction completed."
-
 
       - name: Upload Emulator Crash Log
         if: always()
