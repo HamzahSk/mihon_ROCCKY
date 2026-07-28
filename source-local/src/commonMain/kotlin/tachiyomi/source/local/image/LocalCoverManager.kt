@@ -9,4 +9,12 @@ expect class LocalCoverManager {
     fun find(mangaUrl: String): UniFile?
 
     fun update(manga: SManga, inputStream: InputStream): UniFile?
+
+    fun updateWithText(
+        manga: SManga,
+        inputStream: InputStream,
+        title: String,
+        lang: String? = null,
+        chapterCount: String? = null,
+    ): UniFile?
 }
