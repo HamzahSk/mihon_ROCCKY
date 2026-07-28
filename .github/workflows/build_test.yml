@@ -68,7 +68,7 @@ jobs:
 
       - name: Build app
         env:
-          MIHON_GITHUB_RELEASE: "true"
+          RIKOMIK_GITHUB_RELEASE: "true"
           RUNNER_TEMP: ${{ runner.temp }}
           storeFileBase64: ${{ secrets.SIGNING_KEY }}
           storePassword: ${{ secrets.KEY_STORE_PASSWORD }}

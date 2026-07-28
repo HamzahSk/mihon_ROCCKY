@@ -176,7 +176,7 @@ jobs:
             adb install app/build/outputs/apk/debug/app-x86_64-debug.apk || adb install app/build/outputs/apk/debug/app-universal-debug.apk
             
             # Jalankan monkey test
-            adb shell monkey -p eu.kanade.tachiyomi -v 5000 || true
+            adb shell monkey -p app.komikku.roccky -v 5000 || adb shell monkey -p app.komikku.roccky.dev -v 5000 || true
             
             # Ambil log error
             adb logcat -d *:E > emulator-crash-log.txt

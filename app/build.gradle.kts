@@ -32,8 +32,8 @@ android {
     defaultConfig {
         applicationId = "app.komikku.roccky"
 
-        versionCode = 26
-        versionName = "0.20.1"
+        versionCode = 27
+        versionName = "1.2.1"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getLatestCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getLatestCommitSha()}\"")
@@ -44,7 +44,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    if (System.getenv("MIHON_GITHUB_RELEASE").toBoolean()) {
+    if (System.getenv("RIKOMIK_GITHUB_RELEASE").toBoolean()) {
         val tempStoreFile = file(System.getenv("RUNNER_TEMP")).resolve("antsy.keystore")
 
         val storeFileBytes = System.getenv("storeFileBase64").let(Base64::decode)
