@@ -302,7 +302,7 @@ actual class LocalSource(
         // Copy the cover from the first chapter found if not available
         if (manga.thumbnail_url.isNullOrBlank()) {
             chapters.lastOrNull()?.let { chapter ->
-                updateCover(chapter, manga, chapters.size)
+                updateCover(chapter, manga)
             }
         }
 
@@ -330,9 +330,8 @@ actual class LocalSource(
         }
     }
 
-    private fun updateCover(chapter: SChapter, manga: SManga, chapterCount: Int = 0): UniFile? {
+    private fun updateCover(chapter: SChapter, manga: SManga): UniFile? {
         return try {
-            val chapterLabel = if (chapterCount > 0) "Ch. $chapterCount" else null
             when (val format = getFormat(chapter)) {
                 is Format.Directory -> {
                     val entry = format.file.listFiles()
@@ -345,9 +344,7 @@ actual class LocalSource(
                             !it.isDirectory && ImageUtil.isImage(it.name) { it.openInputStream() }
                         }
 
-                    entry?.let {
-                        coverManager.updateWithText(manga, it.openInputStream(), manga.title, lang, chapterLabel)
-                    }
+                    entry?.let { coverManager.update(manga, it.openInputStream()) }
                 }
                 is Format.Archive -> {
                     format.file.archiveReader(context).use { reader ->
@@ -357,30 +354,14 @@ actual class LocalSource(
                                 .find { it.isFile && ImageUtil.isImage(it.name) { reader.getInputStream(it.name)!! } }
                         }
 
-                        entry?.let {
-                            coverManager.updateWithText(
-                                manga,
-                                reader.getInputStream(it.name)!!,
-                                manga.title,
-                                lang,
-                                chapterLabel,
-                            )
-                        }
+                        entry?.let { coverManager.update(manga, reader.getInputStream(it.name)!!) }
                     }
                 }
                 is Format.Epub -> {
                     format.file.epubReader(context).use { epub ->
                         val entry = epub.getImagesFromPages().firstOrNull()
 
-                        entry?.let {
-                            coverManager.updateWithText(
-                                manga,
-                                epub.getInputStream(it)!!,
-                                manga.title,
-                                lang,
-                                chapterLabel,
-                            )
-                        }
+                        entry?.let { coverManager.update(manga, epub.getInputStream(it)!!) }
                     }
                 }
             }
