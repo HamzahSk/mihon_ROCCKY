@@ -1,20 +1,21 @@
-# Konteks Masalah
-Saya memiliki kode Jetpack Compose untuk aplikasi pembaca manga yang mengatur tampilan *grid* dan *list* untuk item manga (Library/Browse). Saat ini, ukuran font untuk judul manga di dalam `GridItemTitle` menggunakan ukuran statis dari `MaterialTheme.typography.titleSmall` atau `bodyMedium`.
+**Tugas:**
+Bertindaklah sebagai Senior Android Developer. Tolong buatkan panduan dan implementasi kode lengkap untuk menambahkan fitur **Custom Font** di dalam aplikasi Android saya.
 
-Masalahnya, saat tampilan diubah ke *grid* yang lebih rapat (misalnya 3x3 atau lebih), ukuran font ini menjadi terlalu besar, statis, dan memakan terlalu banyak ruang di atas *cover* manga.
+**Konteks & Lokasi Fitur:**
+Fitur ini berada di menu **Pengaturan Tampilan** (satu halaman dengan pengaturan Tema, Format Tanggal, dll).
 
-# Tujuan
-Tolong ubah atau modifikasi komponen `GridItemTitle`, `MangaCompactGridItem`, dan `CoverTextOverlay` agar ukuran font judulnya menjadi **fleksibel/dinamis**. Ukuran font harus bisa mengecil secara proporsional jika ukuran *container* (lebar *grid*) semakin sempit, agar tetap rapi pada *grid* 3x3 atau lebih. Kamu bisa menggunakan pendekatan seperti kalkulasi berbasis `LocalConfiguration`, `BoxWithConstraints`, atau menambahkan parameter `fontSize` dinamis yang menyesuaikan dengan rasio/kolom.
+**Spesifikasi Fitur:**
+1. **Upload Font:** User bisa memilih dan mengunggah (upload) file font kustom mereka sendiri (format `.ttf` atau `.otf`) menggunakan File Picker.
+2. **Simpan & Terapkan:** Font yang diupload disimpan dengan aman (misalnya di internal storage) dan diterapkan secara global ke seluruh aplikasi.
+3. **Smart Font Adjustment (Sangat Penting):** Karena ini font dari luar, seringkali metriknya tidak standar (contoh: hurufnya jauh lebih besar dari ukuran default, *line-height* berantakan/terpotong, atau *letter-spacing* terlalu renggang). Tolong buatkan *logic* untuk **menyesuaikan atau menormalisasi font tersebut**. Gunakan pendekatan seperti membaca `FontMetrics` untuk menyesuaikan *line-height* dan *baseline*, atau berikan fungsi *scaler* proporsional agar tampilannya tetap rapi dan tidak merusak layout UI aplikasi.
 
-# Instruksi Eksekusi
-Tolong kerjakan dengan mengikuti langkah-langkah berikut secara berurutan:
+Tolong berikan solusi kodenya (bisa menggunakan Jetpack Compose atau XML, sesuaikan dengan best practice) dengan struktur langkah berikut:
 
-**LANGKAH 1: Analisis & Modifikasi Kode**
-- Analisis bagian mana saja yang perlu disisipkan logika ukuran font dinamis.
-- Tulis ulang komponen yang terdampak (terutama `GridItemTitle` dan komponen yang memanggilnya). Pastikan tidak merusak fungsi yang sudah ada.
+**LANGKAH 1: UI Pengaturan Tampilan & File Picker**
+Berikan kode untuk UI menu pengaturan dan *intent/launcher* untuk memilih file font.
 
-**LANGKAH 2: Tampilkan Hasil Kode**
-- Berikan *full code* dari komponen-komponen yang sudah direvisi agar saya bisa langsung menyalinnya. Jangan lupa sertakan `import` baru jika ada (seperti `BoxWithConstraints` atau ekstensi UI lainnya).
+**LANGKAH 2: Logic Penerapan Font & Smart Adjustment**
+Berikan kode cara menyimpan file secara lokal, mendaftarkan font tersebut ke sistem *Typography* aplikasi, serta algoritma/perhitungan untuk menormalisasi ukuran dan jarak font.
 
 **LANGKAH 3: Testing & Clean Code (WAJIB)**
 1. Jalankan `./gradlew spotlessApply` untuk merapikan format kode.
