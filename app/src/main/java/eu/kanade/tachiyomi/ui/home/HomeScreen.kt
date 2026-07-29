@@ -183,6 +183,8 @@ object HomeScreen : Screen() {
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
         val selected = tabNavigator.current::class == tab::class
+        val isRecommendationTab = tab is RecommendationsTab // Cek apakah tab Rekomendasi
+
         NavigationBarItem(
             selected = selected,
             onClick = {
@@ -192,16 +194,52 @@ object HomeScreen : Screen() {
                     scope.launch { tab.onReselect(navigator) }
                 }
             },
-            icon = { NavigationIconItem(tab) },
+            icon = {
+                if (isRecommendationTab) {
+                    // Tampilan Menonjol untuk Tab Rekomendasi
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp) // Ukuran tombol yang lebih besar
+                            // .offset(y = (-8).dp) // Opsional: Hapus // di depan .offset untuk membuatnya sedikit naik (mengambang)
+                            .background(
+                                color = MaterialTheme.colorScheme.primary, // Warna background solid
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+                            ),
+                        contentAlignment = androidx.compose.ui.Alignment.Center
+                    ) {
+                        // Icon di dalam kotak solid
+                        Icon(
+                            painter = tab.options.icon!!,
+                            contentDescription = tab.options.title,
+                            tint = MaterialTheme.colorScheme.onPrimary, // Warna icon agar kontras dengan background
+                            modifier = Modifier.size(28.dp) // Ukuran icon diperbesar sedikit
+                        )
+                    }
+                } else {
+                    // Tampilan Biasa (Ada icon badgenya juga kalau ada update)
+                    NavigationIconItem(tab)
+                }
+            },
             label = {
-                Text(
-                    text = tab.options.title,
-                    style = MaterialTheme.typography.labelLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                // Sembunyikan label untuk tab rekomendasi agar lebih bersih (Ala TikTok)
+                if (!isRecommendationTab) {
+                    Text(
+                        text = tab.options.title,
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             },
             alwaysShowLabel = true,
+            // Menghilangkan highlight bulat bawaan saat diklik pada tab Rekomendasi
+            colors = if (isRecommendationTab) {
+                androidx.compose.material3.NavigationBarItemDefaults.colors(
+                    indicatorColor = androidx.compose.ui.graphics.Color.Transparent
+                )
+            } else {
+                androidx.compose.material3.NavigationBarItemDefaults.colors()
+            }
         )
     }
 
