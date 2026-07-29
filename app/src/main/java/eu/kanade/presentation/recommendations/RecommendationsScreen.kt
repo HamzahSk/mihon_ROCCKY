@@ -25,17 +25,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Numbers
-import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.SortByAlpha
-import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -60,12 +56,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import eu.kanade.presentation.components.AdaptiveSheet
+import eu.kanade.presentation.components.TabbedDialogPaddings
 import eu.kanade.presentation.library.components.MangaCompactGridItem
 import eu.kanade.tachiyomi.ui.recommendations.RecommendationsViewModel
 import eu.kanade.tachiyomi.ui.recommendations.SortMode
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.BaseSortItem
 import tachiyomi.presentation.core.components.FastScrollLazyVerticalGrid
+import tachiyomi.presentation.core.components.HeadingItem
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
@@ -85,7 +85,7 @@ fun RecommendationsScreen(
     onSetSortMode: (SortMode) -> Unit,
 ) {
     var showManageDialog by remember { mutableStateOf(false) }
-    var showSortMenu by remember { mutableStateOf(false) }
+    var showSortSheet by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -98,70 +98,15 @@ fun RecommendationsScreen(
                         targetValue = if (isSortPressed) 0.9f else 1f,
                         label = "sort_scale",
                     )
-                    Box {
-                        IconButton(
-                            onClick = { showSortMenu = true },
-                            interactionSource = sortInteractionSource,
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.SortByAlpha,
-                                contentDescription = stringResource(MR.strings.action_sort),
-                                modifier = Modifier.scale(sortScale),
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = showSortMenu,
-                            onDismissRequest = { showSortMenu = false },
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(MR.strings.label_default)) },
-                                onClick = {
-                                    onSetSortMode(SortMode.DEFAULT)
-                                    showSortMenu = false
-                                },
-                                leadingIcon = if (state.sortMode == SortMode.DEFAULT) {
-                                    { Icon(Icons.Outlined.SortByAlpha, contentDescription = null) }
-                                } else {
-                                    null
-                                },
-                            )
-                            DropdownMenuItem(
-                                text = { Text(stringResource(MR.strings.action_sort_last_manga_update)) },
-                                onClick = {
-                                    onSetSortMode(SortMode.LATEST_UPDATE)
-                                    showSortMenu = false
-                                },
-                                leadingIcon = if (state.sortMode == SortMode.LATEST_UPDATE) {
-                                    { Icon(Icons.Outlined.Update, contentDescription = null) }
-                                } else {
-                                    null
-                                },
-                            )
-                            DropdownMenuItem(
-                                text = { Text(stringResource(MR.strings.action_sort_random)) },
-                                onClick = {
-                                    onSetSortMode(SortMode.RANDOM)
-                                    showSortMenu = false
-                                },
-                                leadingIcon = if (state.sortMode == SortMode.RANDOM) {
-                                    { Icon(Icons.Outlined.Refresh, contentDescription = null) }
-                                } else {
-                                    null
-                                },
-                            )
-                            DropdownMenuItem(
-                                text = { Text(stringResource(MR.strings.action_sort_total)) },
-                                onClick = {
-                                    onSetSortMode(SortMode.CHAPTER_COUNT)
-                                    showSortMenu = false
-                                },
-                                leadingIcon = if (state.sortMode == SortMode.CHAPTER_COUNT) {
-                                    { Icon(Icons.Outlined.Numbers, contentDescription = null) }
-                                } else {
-                                    null
-                                },
-                            )
-                        }
+                    IconButton(
+                        onClick = { showSortSheet = true },
+                        interactionSource = sortInteractionSource,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.SortByAlpha,
+                            contentDescription = stringResource(MR.strings.action_sort),
+                            modifier = Modifier.scale(sortScale),
+                        )
                     }
 
                     val settingsInteractionSource = remember { MutableInteractionSource() }
@@ -187,7 +132,7 @@ fun RecommendationsScreen(
         PullRefresh(
             refreshing = state.isLoading,
             onRefresh = onRefresh,
-            enabled = state.recommendations.isNotEmpty(),
+            enabled = true,
         ) {
             if (state.isLoading && state.recommendations.isEmpty()) {
                 LoadingScreen(modifier = Modifier.padding(contentPadding))
@@ -236,6 +181,39 @@ fun RecommendationsScreen(
                             onLongClick = {},
                         )
                     }
+                }
+            }
+        }
+    }
+
+    if (showSortSheet) {
+        AdaptiveSheet(
+            onDismissRequest = { showSortSheet = false },
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(vertical = TabbedDialogPaddings.Vertical)
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                HeadingItem(stringResource(MR.strings.action_sort))
+
+                val sortOptions = listOf(
+                    SortMode.DEFAULT to MR.strings.label_default,
+                    SortMode.LATEST_UPDATE to MR.strings.action_sort_last_manga_update,
+                    SortMode.RANDOM to MR.strings.action_sort_random,
+                    SortMode.CHAPTER_COUNT to MR.strings.action_sort_total,
+                )
+
+                sortOptions.forEach { (mode, labelRes) ->
+                    val selected = state.sortMode == mode
+                    BaseSortItem(
+                        label = stringResource(labelRes),
+                        icon = if (selected) Icons.Default.Check else null,
+                        onClick = {
+                            onSetSortMode(mode)
+                            showSortSheet = false
+                        },
+                    )
                 }
             }
         }
