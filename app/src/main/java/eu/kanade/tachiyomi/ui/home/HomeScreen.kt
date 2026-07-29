@@ -6,16 +6,13 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
-
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.size
-import androidx.compose.ui.unit.dp
-
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
@@ -33,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -208,16 +206,16 @@ object HomeScreen : Screen() {
                             // .offset(y = (-8).dp) // Opsional: Hapus // di depan .offset untuk membuatnya sedikit naik (mengambang)
                             .background(
                                 color = MaterialTheme.colorScheme.primary, // Warna background solid
-                                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
                             ),
-                        contentAlignment = androidx.compose.ui.Alignment.Center
+                        contentAlignment = androidx.compose.ui.Alignment.Center,
                     ) {
                         // Icon di dalam kotak solid
                         Icon(
                             painter = tab.options.icon!!,
                             contentDescription = tab.options.title,
                             tint = MaterialTheme.colorScheme.onPrimary, // Warna icon agar kontras dengan background
-                            modifier = Modifier.size(28.dp) // Ukuran icon diperbesar sedikit
+                            modifier = Modifier.size(28.dp), // Ukuran icon diperbesar sedikit
                         )
                     }
                 } else {
@@ -240,11 +238,11 @@ object HomeScreen : Screen() {
             // Menghilangkan highlight bulat bawaan saat diklik pada tab Rekomendasi
             colors = if (isRecommendationTab) {
                 androidx.compose.material3.NavigationBarItemDefaults.colors(
-                    indicatorColor = androidx.compose.ui.graphics.Color.Transparent
+                    indicatorColor = androidx.compose.ui.graphics.Color.Transparent,
                 )
             } else {
                 androidx.compose.material3.NavigationBarItemDefaults.colors()
-            }
+            },
         )
     }
 

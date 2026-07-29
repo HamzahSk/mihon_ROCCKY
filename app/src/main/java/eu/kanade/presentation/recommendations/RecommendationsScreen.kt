@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -50,15 +50,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import eu.kanade.presentation.library.components.MangaCompactGridItem
 import eu.kanade.tachiyomi.ui.recommendations.RecommendationsViewModel
 import tachiyomi.domain.manga.model.Manga
-import tachiyomi.domain.manga.model.MangaCover
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.FastScrollLazyVerticalGrid
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
+import tachiyomi.presentation.core.util.plus
+import tachiyomi.domain.manga.model.MangaCover as MangaCoverModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,43 +100,44 @@ fun RecommendationsScreen(
             return@Scaffold
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(contentPadding),
+        FastScrollLazyVerticalGrid(
+            columns = GridCells.Adaptive(128.dp),
+            contentPadding = contentPadding + PaddingValues(8.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            RecommendationsCarousel(
-                mangas = state.recommendations,
-                onMangaClick = onClickManga,
-            )
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                RecommendationsCarousel(
+                    mangas = state.recommendations,
+                    onMangaClick = onClickManga,
+                )
+            }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Text(
+                    text = stringResource(MR.strings.label_recommendations),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(
+                        horizontal = MaterialTheme.padding.medium,
+                        vertical = 4.dp,
+                    ),
+                )
+            }
 
-            Text(
-                text = stringResource(MR.strings.label_recommendations),
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            LazyVerticalGrid(
-                columns = GridCells.Adaptive(120.dp),
-                contentPadding = PaddingValues(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.height(
-                    (((state.recommendations.size + 1) / 2) * 220).dp,
-                ),
-            ) {
-                items(state.recommendations.size) { index ->
-                    val manga = state.recommendations[index]
-                    MangaRecommendationCard(
-                        manga = manga,
-                        onClick = { onClickManga(manga) },
-                    )
-                }
+            items(state.recommendations.size) { index ->
+                val manga = state.recommendations[index]
+                MangaCompactGridItem(
+                    title = manga.title,
+                    coverData = MangaCoverModel(
+                        mangaId = manga.id,
+                        sourceId = manga.source,
+                        isMangaFavorite = manga.favorite,
+                        url = manga.thumbnailUrl,
+                        lastModified = manga.coverLastModified,
+                    ),
+                    onClick = { onClickManga(manga) },
+                    onLongClick = {},
+                )
             }
         }
     }
@@ -294,48 +298,6 @@ fun CarouselDotsIndicator(
 }
 
 @Composable
-fun MangaRecommendationCard(
-    manga: Manga,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        ),
-    ) {
-        Column {
-            Box(modifier = Modifier.fillMaxWidth().height(180.dp)) {
-                AsyncImage(
-                    model = MangaCover(
-                        mangaId = manga.id,
-                        sourceId = manga.source,
-                        isMangaFavorite = manga.favorite,
-                        url = manga.thumbnailUrl,
-                        lastModified = manga.coverLastModified,
-                    ),
-                    contentDescription = manga.title,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
-            }
-            Text(
-                text = manga.title,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(8.dp),
-            )
-        }
-    }
-}
-
-@Composable
 fun ManageSourcesDialog(
     sources: List<RecommendationsViewModel.SourceItem>,
     onToggleSource: (Long) -> Unit,
@@ -345,8 +307,8 @@ fun ManageSourcesDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(MR.strings.pref_manage_sources)) },
         text = {
-            Column (
-                modifier = Modifier.verticalScroll(rememberScrollState())
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
             ) {
                 if (sources.isEmpty()) {
                     Text(stringResource(MR.strings.information_empty_recommendations))

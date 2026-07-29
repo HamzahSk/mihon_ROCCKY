@@ -20,14 +20,17 @@ import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import mihon.domain.manga.model.toDomainManga
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.manga.interactor.NetworkToLocalManga
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
@@ -72,6 +75,7 @@ data object RecommendationsTab : Tab {
 class RecommendationsViewModel(
     private val sourceManager: SourceManager = Injekt.get(),
     private val sourcePreferences: SourcePreferences = Injekt.get(),
+    private val networkToLocalManga: NetworkToLocalManga = Injekt.get(),
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(State())
@@ -142,7 +146,12 @@ class RecommendationsViewModel(
     }
 
     fun onMangaClick(manga: Manga, onClick: (Long) -> Unit) {
-        onClick(manga.id)
+        viewModelScope.launchIO {
+            val localManga = networkToLocalManga(manga)
+            withContext(Dispatchers.Main) {
+                onClick(localManga.id)
+            }
+        }
     }
 
     data class State(
