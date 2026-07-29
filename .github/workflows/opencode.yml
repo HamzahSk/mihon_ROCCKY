@@ -2,6 +2,10 @@ name: OpenCode DB Fixer
 
 on:
   workflow_dispatch:
+  
+  push:
+    paths:
+      - "prompt.txt"
 
 permissions:
   contents: read

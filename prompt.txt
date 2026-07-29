@@ -1,28 +1,29 @@
-# Project: Refactor Data Aggregation, Genre Filtering, and Library-Style Pull-to-Refresh
+# Project: Separate Manage Sources from Filter/Sort Dialog and Fix Recommendation Logic
 
 ## Context
-We need to refine the `RecommendationsTab` in our Mihon/Tachiyomi fork to address data aggregation logic, filtering accuracy, and visual feedback during refresh actions. Currently, data is separated by source, genre filtering is not aligned with daily recommendation logic, and the Pull-to-Refresh behavior lacks proper loading animation and UI pattern consistency.
+In the previous iteration, we combined "Manage Sources" into the `TabbedDialog` along with Filter and Sort options. However, this caused a bug where **no recommendations are available/displayed** ("Gak ada rekomendasi yang tersedia"). 
+
+In Mihon's architecture, managing sources and filtering/sorting recommendations serve different purposes. Including source selection inside the filter tabs interferes with the default source query/aggregation logic, causing the manga list to return empty.
 
 ## Tasks
 
-### Step 1: Implement Global Manga Aggregation & Reference Genre Recommendation Logic
-Modify `RecommendationsViewModel` and its corresponding data repository/interactor:
-- **Combine First, Filter Later:** Ensure manga data from all sources is merged/combined into a single unified list *before* any filtering or sorting logic is applied. Do not separate or group manga by individual sources.
-- **Reference Logic from `BrowseSourceViewModel`:** Implement the daily data retrieval and genre-based recommendation logic by referencing how `applyRecommendationsFromHistory` is implemented in `app/src/main/java/eu/kanade/tachiyomi/ui/browse/source/browse/BrowseSourceViewModel.kt`. 
-- **Daily Genre Filtering:** Ensure the aggregated manga list applies the daily genre filter accurately, adapting the recommendation approach from `applyRecommendationsFromHistory` to work across all combined sources globally.
+### Step 1: Remove "Manage Sources" from Filter/Sort Dialog
+Modify `eu.kanade.tachiyomi.ui.recommendations.RecommendationsTab` and `eu.kanade.presentation.recommendations.RecommendationsScreen`:
+- Remove the "Manage Sources" tab from the `TabbedDialog` (or Filter/Sort sheet).
+- The `TabbedDialog` should **only** contain:
+  1. **Filter Tab** (for Genre filtering based on daily history recommendations).
+  2. **Sort Tab** (for sorting options like Default, Latest Update, Random, Chapter Count).
 
-### Step 2: Implement Library-Style Pull-to-Refresh & Animation
-Modify `eu.kanade.presentation.recommendations.RecommendationsScreen`:
-- **Match Library Implementation:** Align the Pull-to-Refresh logic, layout wrapper, and UI pattern directly with the implementation used in Mihon's `LibraryScreen` (or `LibraryContent`).
-- **Add Loading Animation & State Binding:** Ensure the loading spinner/indicator is visible during refreshing actions and correctly bound to `viewModel.state.isRefreshing` / `viewModel.state.isLoading` so it dismisses smoothly when loading completes.
-- **Nested Scrolling:** Ensure proper `nestedScroll` connection with the inner list/grid component so gesture handling and refresh animations behave seamlessly like in the Library screen.
+### Step 2: Separate "Manage Sources" Entry Point
+- Relocate "Manage Sources" to a dedicated action or menu item (e.g., inside an overflow menu / three-dot icon in the `TopAppBar`, or as a separate dedicated button/dialog), matching how standard Mihon tabs separate library settings from general source management.
+- Ensure that modifying sources through this separate entry point correctly updates the saved preferences without breaking the active recommendation state.
 
-### Step 3: Implement Mihon-Style Filter/Sorting UI
-Modify `RecommendationsViewModel` and `RecommendationsScreen` to match Mihon's design system:
-- Use the standard Mihon Filter/Sort Bottom Sheet (similar to the one used in the Library or Browse screens) to display genre filters and sorting options.
-- Ensure the "Filter/Sort" icon in the `TopAppBar` correctly toggles this Bottom Sheet.
+### Step 3: Fix Empty Recommendation Bug
+Review the manga aggregation and filtering logic in `RecommendationsTab`:
+- Ensure that when the screen loads, recommendations are fetched by default from the user's active/enabled sources **without requiring the user to manually select sources inside the filter dialog**.
+- Verify that `allManga` aggregation (`Combine First, Filter Later`) works correctly with the default selected sources so that the list is populated immediately on launch.
 
 ### Step 4: Testing & Clean Code (WAJIB)
 1. Jalankan `./gradlew spotlessApply` untuk merapikan format kode.
 2. Jalankan `./gradlew testDebugUnitTest` dan pastikan **BUILD SUCCESSFUL**.
-3. Verifikasi bahwa perilaku dan animasi *pull-to-refresh* sudah identik dengan fitur *pull-to-refresh* di Library, serta data dari semua *source* sudah tergabung sebelum difilter dengan logika rekomendasi yang terinspirasi dari `applyRecommendationsFromHistory`.
+3. Verifikasi bahwa daftar komik rekomendasi langsung muncul saat layar dibuka dan tidak lagi kosong (*no recommendations available*).
