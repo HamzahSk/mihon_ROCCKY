@@ -1,28 +1,49 @@
-# Project: Fix Pull-to-Refresh Bug and Align Filter UI with Mihon Template
+# Feature Request: Get & Apply Metadata from Tracker Database (MAL, AniList, etc.) for Local & Online Manga
 
-## Context
-We previously implemented Pull-to-Refresh, Animations, and Sorting for the `RecommendationsTab` in our Mihon/Tachiyomi fork. However, there are two main issues that need fixing in this iteration:
-1. **Pull-to-Refresh Bug:** The pull action doesn't trigger properly at any time. It feels stuck or unresponsive, likely due to nested scrolling issues or improper state hoisting with the `PullRefresh` layout.
-2. **Filter UI Inconsistency:** The sorting/filter menu needs to match the standard Mihon app UI template, rather than just a generic dropdown.
+## 1. Context & Objective
+Mihon currently supports integrations/trackers with external databases such as **MyAnimeList (MAL)**, **AniList**, **MangaUpdates**, etc. 
+The goal of this feature is to allow users to **fetch and apply metadata** (Cover Image, Synopsis, Genres, Author, Artist, Status) from a tracker database to update the local Manga Details.
 
-## Tasks
+**Crucial Requirement:** This feature MUST work for **both Local Source manga and Online Source manga**. For Local Source manga (or manga without an existing tracker link), the system must allow searching by the manga's **Title** (or custom title) on the tracker service to link/fetch the metadata.
 
-### Step 1: Fix Pull-to-Refresh Bug
-Modify `eu.kanade.presentation.recommendations.RecommendationsScreen`:
-- Fix the `PullToRefresh` wrapper (e.g., `PullRefreshBox` or equivalent Material 3 component).
-- **Crucial:** Ensure proper `nestedScroll` connection is applied to the inner `LazyVerticalGrid` or `LazyColumn` so the pull gesture is detected correctly when the user is at the top of the list.
-- Verify that the `refreshing` state is accurately tied to `viewModel.state.isLoading` and triggers `viewModel.refreshRecommendations()` unconditionally when pulled.
+---
 
-### Step 2: Implement Mihon-Style Filter/Sorting UI
-Modify `RecommendationsViewModel` and `RecommendationsScreen` to match Mihon's design system:
-- **ViewModel:** Keep the sorting state/enum (Default, Latest Update, Random, Chapter Count) and the logic to apply it.
-- **UI:** Instead of a simple `DropdownMenu`, implement the sorting UI using Mihon's standard components. Use the app's standard Filter/Sort Bottom Sheet (similar to the one used in the Library or Browse screen) or the standard action menu UI provided by Mihon's presentation layer. 
-- Ensure the "Filter/Sort" icon in the `TopAppBar` correctly toggles this Bottom Sheet.
+## 2. UI/UX Requirements
+* **Entry Point:** Add a new menu item inside the **3-dot menu (Overflow Menu)** on the **Manga Details Screen** (`MangaScreen`).
+* **Menu Label:** `Get metadata from tracker` (or `Fetch metadata`).
+* **Behavior / Flow:**
+    1. **Check Existing Tracker Link:** * If the manga is already linked to a tracker (e.g., MAL/AniList), directly fetch its detailed metadata from that tracker.
+    2. **Search Flow (For Local Source / Unlinked Manga):**
+       * If the manga is NOT linked to any tracker (especially common for **Local Source** manga), open a search dialog or utilize the existing tracker search flow using the manga's current **Title** (or Custom Title) as the default query.
+       * Allow the user to select the correct search result from the remote tracker (requiring an online connection to query).
+    3. **Apply Metadata:**
+       * Overwrite/fill in the local manga fields with the fetched metadata: **Cover Image, Synopsis, Genres, Author, Artist, and Status**.
+       * Immediately update the UI on the Manga Details screen.
+    4. **Feedback:** Show a Snackbar/Toast notification confirming success (e.g., *"Metadata updated"*) or failure.
 
-### Step 3: Ensure Fluid Button Animations
-Review custom UI components in `eu.kanade.presentation.recommendations.RecommendationsScreen`:
-- Make sure all custom clickable elements still have the proper Material ripple effect (`indication`).
-- Keep the subtle scale/bounce animation on press for main action buttons (using `interactionSource` and `animateFloatAsState`).
+---
+
+## 3. Implementation Steps
+
+### Step 1: UI & Menu Integration (`MangaScreen` / `MangaScreenModel`)
+1. Locate the Overflow Menu in the Manga Details screen.
+2. Add the **"Get metadata from tracker"** action item.
+3. Ensure this menu item is available for **ALL** manga sources, including `LocalSource`.
+
+### Step 2: Search & Fetch Logic (Domain & Data Layer)
+1. **Search Mechanism:** * If no tracker is attached, trigger the search API of the available/logged-in tracker(s) using the current Manga Title.
+   * Reuse existing `TrackerManager` / tracker search UI components where possible so the user can pick the right manga match online.
+2. **Data Extraction:** * Once a tracker item is matched/selected, fetch the full details from the remote API:
+     * Author / Artist
+     * Description / Synopsis
+     * Genres / Tags
+     * Cover Image URL (fetch online image and save locally)
+     * Status
+3. **Mapping:** Create a repository function/use-case (e.g., `UpdateMangaMetadataFromTracker`) to map tracker data to the local `Manga` model.
+
+### Step 3: Local Database & Cover Cache Update
+1. Update the local SQLite/Room database for this manga with the newly fetched fields.
+2. For **Local Source** manga, download the remote Cover Image URL and overwrite the local cover cache/file so the new cover is displayed without requiring an app restart.
 
 ### Step 4: Testing & Clean Code (WAJIB)
 1. Jalankan `./gradlew spotlessApply` untuk merapikan format kode.
