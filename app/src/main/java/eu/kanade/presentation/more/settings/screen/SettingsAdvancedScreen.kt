@@ -121,7 +121,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                     try {
                         context.startActivity(intent)
                     } catch (e: ActivityNotFoundException) {
-                        context.toast(MR.strings.battery_optimization_setting_activity_not_found) // Atau string lain yang sesuai
+                        context.toast(MR.strings.battery_optimization_setting_activity_not_found)
                     }
                 },
             ),
