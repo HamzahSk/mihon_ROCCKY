@@ -1,19 +1,22 @@
-Kamu adalah seorang Expert Android Developer. Tolong bantu saya memodifikasi struktur navigasi dan menambahkan fitur baru pada aplikasi (berbasis Kotlin/Jetpack Compose atau XML). 
+# Project: Fix Recommendations Tab Crash & Align UI with Library Theme
 
-Berikut adalah detail tugas yang harus dikerjakan:
+## Context
+We are working on a fork of Mihon/Tachiyomi. We recently added a `RecommendationsTab` with a `RecommendationsScreen` and `RecommendationsViewModel`. However, there are two main issues that need to be resolved:
+1. **Crash on Manga Click:** Clicking a manga from the internet throws a `NullPointerException` because the manga does not exist in the local database yet (`mangas.sq:getMangaById` returns null).
+2. **Inconsistent UI Theme:** The current `LazyVerticalGrid` and `MangaRecommendationCard` in `RecommendationsScreen` use custom cards that do not match the app's standard library grid theme.
 
-**LANGKAH 1: Memindahkan Fitur "Riwayat" (History)**
-* Hapus tab "Riwayat" dari *Bottom Navigation Bar* utama (beranda).
-* Pindahkan entri navigasi "Riwayat" tersebut ke dalam tab "Lainnya" (More).
-* Posisikan menu "Riwayat" ini secara spesifik di antara menu "Kategori" dan "Statistik" pada *list/menu* di tab "Lainnya".
+## Tasks
 
-**LANGKAH 2: Mengimplementasikan Tab "Rekomendasi" Baru**
-* Isi slot kosong di *Bottom Navigation Bar* (bekas tab Riwayat) dengan tab baru bernama "Rekomendasi".
-* Desain UI dan logika datanya: Buat tampilan datanya mirip dengan *carousel* rekomendasi yang ada di komponen `browsesource`.
-* Fitur Utama: Tambahkan fungsionalitas agar *user* bisa mengatur/memilih (menambah/menghapus) ekstensi (extensions) mana saja yang datanya ingin ditampilkan ke dalam tab "Rekomendasi" ini.
+### Step 1: Fix the Manga Click Crash in ViewModel
+Modify `eu.kanade.tachiyomi.ui.recommendations.RecommendationsViewModel`:
+- Inject `NetworkToLocalManga` (from `tachiyomi.domain.manga.interactor.NetworkToLocalManga`) into the ViewModel constructor.
+- Update the `onMangaClick` function to first sync the network manga to the local database using `networkToLocalManga.await(manga)` before invoking the `onClick` callback with the local database ID. Ensure this is done within `viewModelScope.launchIO` and switch back to the Main thread for the UI navigation callback.
 
-**LANGKAH 3: Testing & Clean Code (WAJIB)**
+### Step 2: Refactor Recommendations Grid UI to Match Library Theme
+Modify `eu.kanade.presentation.recommendations.RecommendationsScreen`:
+- Refactor the grid layout that displays the recommended mangas to use the app's standard UI components for manga grids (e.g., `MangaCompactGridItem`, `MangaComfortableGridItem`, or the standard library grid layout used elsewhere in the app).
+- Remove the custom `MangaRecommendationCard` if it's no longer needed, and ensure the aspect ratio, typography, and spacing perfectly match the main Library tab's theme.
+
+### Step 3: Testing & Clean Code (WAJIB)
 1. Jalankan `./gradlew spotlessApply` untuk merapikan format kode.
 2. Jalankan `./gradlew testDebugUnitTest` dan pastikan **BUILD SUCCESSFUL**.
-
-Tolong lakukan modifikasi kodenya secara bertahap (langkah demi langkah) mulai dari perubahan navigasi hingga implementasi UI dan logika rekomendasinya.
