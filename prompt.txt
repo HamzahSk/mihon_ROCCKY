@@ -1,50 +1,56 @@
-# Feature Request: Get & Apply Metadata from Tracker Database (MAL, AniList, etc.) for Local & Online Manga
+# Feature Request: Get & Apply Metadata from Custom MangaUpdates Scraper (`mangaupdate.js`)
 
 ## 1. Context & Objective
-Mihon currently supports integrations/trackers with external databases such as **MyAnimeList (MAL)**, **AniList**, **MangaUpdates**, etc. 
-The goal of this feature is to allow users to **fetch and apply metadata** (Cover Image, Synopsis, Genres, Author, Artist, Status) from a tracker database to update the local Manga Details.
+We have built a custom MangaUpdates scraper located in the project root directory: `mangaupdate.js`. 
+The previous metadata fetching implementation failed to retrieve data. The objective of this task is to implement the metadata fetching logic in **Kotlin**, integrating with the existing `mangaupdate.js` scraper to search and fetch full metadata (Cover Image, Synopsis, Genres, Author, Artist, Status) and apply it to the current manga.
 
-**Crucial Requirement:** This feature MUST work for **both Local Source manga and Online Source manga**. For Local Source manga (or manga without an existing tracker link), the system must allow searching by the manga's **Title** (or custom title) on the tracker service to link/fetch the metadata.
+**Crucial Requirement:** * All native application logic must be written in **Kotlin**.
+* The feature must utilize the root-level `mangaupdate.js` scraper to perform search queries and detail fetching.
+* This feature must work seamlessly for **both Local Source and Online Source manga**.
 
 ---
 
 ## 2. UI/UX Requirements
 * **Entry Point:** Add a new menu item inside the **3-dot menu (Overflow Menu)** on the **Manga Details Screen** (`MangaScreen`).
-* **Menu Label:** `Get metadata from tracker` (or `Fetch metadata`).
+* **Menu Label:** `Get metadata from MangaUpdates` (or `Fetch metadata`).
 * **Behavior / Flow:**
-    1. **Check Existing Tracker Link:** * If the manga is already linked to a tracker (e.g., MAL/AniList), directly fetch its detailed metadata from that tracker.
-    2. **Search Flow (For Local Source / Unlinked Manga):**
-       * If the manga is NOT linked to any tracker (especially common for **Local Source** manga), open a search dialog or utilize the existing tracker search flow using the manga's current **Title** (or Custom Title) as the default query.
-       * Allow the user to select the correct search result from the remote tracker (requiring an online connection to query).
-    3. **Apply Metadata:**
-       * Overwrite/fill in the local manga fields with the fetched metadata: **Cover Image, Synopsis, Genres, Author, Artist, and Status**.
-       * Immediately update the UI on the Manga Details screen.
-    4. **Feedback:** Show a Snackbar/Toast notification confirming success (e.g., *"Metadata updated"*) or failure.
+    1. **Trigger Search Popup (Always):** * When the user clicks the menu item, immediately open a **Search Dialog/Popup**.
+       * Pre-fill the search input field with the manga's current **Title** (or Custom Title) as the default query.
+    2. **Search Execution via Scraper:**
+       * When the user searches, execute the search function from `mangaupdate.js` to query manga lists.
+       * Display the search results inside the popup so the user can review and choose the correct manga.
+    3. **Select & Fetch Detail via Scraper:**
+       * When the user taps/selects a manga from the search results, invoke the detail scraper from `mangaupdate.js` to fetch the complete metadata: **Cover Image, Synopsis, Genres, Author, Artist, and Status**.
+    4. **Apply Metadata:**
+       * Overwrite/fill the local manga fields with the fetched metadata.
+       * Immediately update and refresh the UI on the Manga Details screen.
+    5. **Feedback:** Show a Snackbar/Toast notification confirming success (e.g., *"Metadata updated successfully"*) or failure.
 
 ---
 
-## 3. Implementation Steps
+## 3. Implementation Steps (Kotlin)
 
 ### Step 1: UI & Menu Integration (`MangaScreen` / `MangaScreenModel`)
 1. Locate the Overflow Menu in the Manga Details screen.
-2. Add the **"Get metadata from tracker"** action item.
-3. Ensure this menu item is available for **ALL** manga sources, including `LocalSource`.
+2. Add the **"Get metadata from MangaUpdates"** action item, ensuring it is available for **ALL** manga sources (including `LocalSource`).
+3. Create a Search Dialog/Popup composable/component that is triggered when this menu item is clicked.
 
-### Step 2: Search & Fetch Logic (Domain & Data Layer)
-1. **Search Mechanism:** * If no tracker is attached, trigger the search API of the available/logged-in tracker(s) using the current Manga Title.
-   * Reuse existing `TrackerManager` / tracker search UI components where possible so the user can pick the right manga match online.
-2. **Data Extraction:** * Once a tracker item is matched/selected, fetch the full details from the remote API:
+### Step 2: Bridge/Integrate Kotlin with `mangaupdate.js` Scraper
+1. **Search Mechanism:** * Implement a Kotlin repository/service class that interfaces with or executes the root-level `mangaupdate.js` scraper for search queries.
+   * Pass the user's query from the Search Dialog to the scraper and map the returned JSON/results into Kotlin data classes for UI rendering.
+2. **Detail Data Extraction:** * When a search result is selected, pass its identifier/URL to the detail scraping logic of `mangaupdate.js`.
+   * Parse the complete metadata response into a Kotlin domain model containing:
      * Author / Artist
      * Description / Synopsis
      * Genres / Tags
-     * Cover Image URL (fetch online image and save locally)
+     * Cover Image URL
      * Status
-3. **Mapping:** Create a repository function/use-case (e.g., `UpdateMangaMetadataFromTracker`) to map tracker data to the local `Manga` model.
 
 ### Step 3: Local Database & Cover Cache Update
-1. Update the local SQLite/Room database for this manga with the newly fetched fields.
-2. For **Local Source** manga, download the remote Cover Image URL and overwrite the local cover cache/file so the new cover is displayed without requiring an app restart.
+1. Create a Kotlin use-case/repository function (e.g., `UpdateMangaMetadata`) to map the scraped data to the local `Manga` model.
+2. Update the local SQLite/Room database for this manga with the newly fetched fields.
+3. Download the remote Cover Image URL and overwrite the local cover cache/file so the new cover is displayed immediately without requiring an app restart.
 
 ### Step 4: Testing & Clean Code (WAJIB)
-1. Jalankan `./gradlew spotlessApply` untuk merapikan format kode.
-2. Jalankan `./gradlew testDebugUnitTest` dan pastikan **BUILD SUCCESSFUL**.
+1. Run `./gradlew spotlessApply` to format and clean up the Kotlin codebase.
+2. Run `./gradlew testDebugUnitTest` and ensure **BUILD SUCCESSFUL**.
