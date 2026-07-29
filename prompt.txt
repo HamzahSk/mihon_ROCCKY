@@ -1,28 +1,28 @@
-# Project: Add Pull-to-Refresh, Animations, and Sorting to Recommendations Tab
+# Project: Fix Pull-to-Refresh Bug and Align Filter UI with Mihon Template
 
 ## Context
-We are continuing to improve the `RecommendationsTab` in our Mihon/Tachiyomi fork. The current implementation works, but lacks essential UX features: users cannot manually refresh the data, the buttons/interactions feel stiff, and there is no way to sort the recommended mangas.
+We previously implemented Pull-to-Refresh, Animations, and Sorting for the `RecommendationsTab` in our Mihon/Tachiyomi fork. However, there are two main issues that need fixing in this iteration:
+1. **Pull-to-Refresh Bug:** The pull action doesn't trigger properly at any time. It feels stuck or unresponsive, likely due to nested scrolling issues or improper state hoisting with the `PullRefresh` layout.
+2. **Filter UI Inconsistency:** The sorting/filter menu needs to match the standard Mihon app UI template, rather than just a generic dropdown.
 
 ## Tasks
 
-### Step 1: Implement Pull-to-Refresh
+### Step 1: Fix Pull-to-Refresh Bug
 Modify `eu.kanade.presentation.recommendations.RecommendationsScreen`:
-- Wrap the main content (the grid/list) in a Pull-to-Refresh layout using the app's standard Material 3 implementation (e.g., `PullToRefreshBox`, `PullRefresh`, or equivalent wrapper used in the Library/Updates screen).
-- Bind the pull action to trigger the existing `onRefresh` or `viewModel.refreshRecommendations()` function.
-- Ensure the loading indicator syncs with the `state.isLoading` boolean.
+- Fix the `PullToRefresh` wrapper (e.g., `PullRefreshBox` or equivalent Material 3 component).
+- **Crucial:** Ensure proper `nestedScroll` connection is applied to the inner `LazyVerticalGrid` or `LazyColumn` so the pull gesture is detected correctly when the user is at the top of the list.
+- Verify that the `refreshing` state is accurately tied to `viewModel.state.isLoading` and triggers `viewModel.refreshRecommendations()` unconditionally when pulled.
 
-### Step 2: Add Fluid Button Animations
-Modify UI components in `eu.kanade.presentation.recommendations.RecommendationsScreen`:
-- Ensure all custom clickable elements (especially custom buttons or cards) have a proper Material ripple effect (`indication`).
-- For the main action buttons (like the tab icon or filter buttons), implement a subtle scale/bounce animation on press (using `interactionSource` and `animateFloatAsState`) to make the UI feel less stiff and more tactile.
+### Step 2: Implement Mihon-Style Filter/Sorting UI
+Modify `RecommendationsViewModel` and `RecommendationsScreen` to match Mihon's design system:
+- **ViewModel:** Keep the sorting state/enum (Default, Latest Update, Random, Chapter Count) and the logic to apply it.
+- **UI:** Instead of a simple `DropdownMenu`, implement the sorting UI using Mihon's standard components. Use the app's standard Filter/Sort Bottom Sheet (similar to the one used in the Library or Browse screen) or the standard action menu UI provided by Mihon's presentation layer. 
+- Ensure the "Filter/Sort" icon in the `TopAppBar` correctly toggles this Bottom Sheet.
 
-### Step 3: Implement Sorting/Filter Feature
-Modify both `RecommendationsViewModel` and `RecommendationsScreen`:
-- **ViewModel:** - Introduce a sorting state/enum (Options: Default, Latest Update, Random, Chapter Count). 
-  - Create a function to update this state and apply the sorting logic to the current `recommendations` list.
-- **UI:** - Add a "Filter/Sort" icon in the `TopAppBar` actions (next to the manage sources Settings icon). 
-  - Clicking this icon should open a `DropdownMenu` or a standard Bottom Sheet displaying the sorting options.
-  - Wire the options to update the ViewModel's sorting state.
+### Step 3: Ensure Fluid Button Animations
+Review custom UI components in `eu.kanade.presentation.recommendations.RecommendationsScreen`:
+- Make sure all custom clickable elements still have the proper Material ripple effect (`indication`).
+- Keep the subtle scale/bounce animation on press for main action buttons (using `interactionSource` and `animateFloatAsState`).
 
 ### Step 4: Testing & Clean Code (WAJIB)
 1. Jalankan `./gradlew spotlessApply` untuk merapikan format kode.

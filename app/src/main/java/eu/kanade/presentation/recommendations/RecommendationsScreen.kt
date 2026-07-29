@@ -187,34 +187,22 @@ fun RecommendationsScreen(
         PullRefresh(
             refreshing = state.isLoading,
             onRefresh = onRefresh,
-            enabled = true,
+            enabled = state.recommendations.isNotEmpty(),
         ) {
-            FastScrollLazyVerticalGrid(
-                columns = GridCells.Adaptive(128.dp),
-                contentPadding = contentPadding + PaddingValues(8.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                // Wajib tambahkan fillMaxSize agar PullRefresh tahu batas layarnya
-                modifier = Modifier.fillMaxSize() 
-            ) {
-                // 1. KONDISI LOADING
-                if (state.isLoading && state.recommendations.isEmpty()) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        LoadingScreen(modifier = Modifier.fillMaxSize())
-                    }
-                } 
-                // 2. KONDISI KOSONG (Empty Screen)
-                else if (state.recommendations.isEmpty()) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        EmptyScreen(
-                            modifier = Modifier.fillMaxSize(),
-                            stringRes = MR.strings.information_empty_recommendations,
-                        )
-                    }
-                } 
-                // 3. KONDISI ADA DATANYA
-                else {
-                    // Carousel (Manga Populer)
+            if (state.isLoading && state.recommendations.isEmpty()) {
+                LoadingScreen(modifier = Modifier.padding(contentPadding))
+            } else if (state.recommendations.isEmpty()) {
+                EmptyScreen(
+                    modifier = Modifier.padding(contentPadding),
+                    stringRes = MR.strings.information_empty_recommendations,
+                )
+            } else {
+                FastScrollLazyVerticalGrid(
+                    columns = GridCells.Adaptive(128.dp),
+                    contentPadding = contentPadding + PaddingValues(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         RecommendationsCarousel(
                             mangas = state.recommendations,
@@ -222,7 +210,6 @@ fun RecommendationsScreen(
                         )
                     }
 
-                    // Teks Judul
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         Text(
                             text = stringResource(MR.strings.label_recommendations),
@@ -234,7 +221,6 @@ fun RecommendationsScreen(
                         )
                     }
 
-                    // Daftar Grid Manga
                     items(state.recommendations.size) { index ->
                         val manga = state.recommendations[index]
                         MangaCompactGridItem(
@@ -253,7 +239,6 @@ fun RecommendationsScreen(
                 }
             }
         }
-
     }
 
     if (showManageDialog) {
