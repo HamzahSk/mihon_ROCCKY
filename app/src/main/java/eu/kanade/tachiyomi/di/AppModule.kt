@@ -15,6 +15,7 @@ import eu.kanade.tachiyomi.data.download.DownloadCache
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.DownloadProvider
 import eu.kanade.tachiyomi.data.font.CustomFontManager
+import eu.kanade.tachiyomi.data.mangaupdates.MangaUpdatesScraper
 import eu.kanade.tachiyomi.data.saver.ImageSaver
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.extension.ExtensionManager
@@ -116,6 +117,7 @@ class AppModule(val app: Application) : InjektModule {
 
         addSingletonFactory { NetworkHelper(app, get()) }
         addSingletonFactory { JavaScriptEngine(app) }
+        addSingletonFactory { MangaUpdatesScraper(get()) }
 
         addSingletonFactory<SourceManager> { AndroidSourceManager(app, get(), get()) }
         addSingletonFactory { ExtensionManager(app) }

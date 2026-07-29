@@ -12,6 +12,7 @@ import eu.kanade.domain.manga.interactor.GetExcludedScanlators
 import eu.kanade.domain.manga.interactor.SetExcludedScanlators
 import eu.kanade.domain.manga.interactor.SetMangaViewerFlags
 import eu.kanade.domain.manga.interactor.UpdateManga
+import eu.kanade.domain.manga.interactor.UpdateMangaMetadataFromMangaUpdates
 import eu.kanade.domain.manga.interactor.UpdateMangaMetadataFromTracker
 import eu.kanade.domain.source.interactor.GetEnabledSources
 import eu.kanade.domain.source.interactor.GetIncognitoState
@@ -139,6 +140,7 @@ class DomainModule : InjektModule {
         addFactory { NetworkToLocalManga(get()) }
         addFactory { UpdateManga(get(), get()) }
         addFactory { UpdateMangaMetadataFromTracker(get(), get(), get(), get()) }
+        addFactory { UpdateMangaMetadataFromMangaUpdates(get(), get(), get(), get()) }
         addFactory { UpdateMangaNotes(get()) }
         addFactory { SetMangaCategories(get()) }
         addFactory { GetExcludedScanlators(get()) }

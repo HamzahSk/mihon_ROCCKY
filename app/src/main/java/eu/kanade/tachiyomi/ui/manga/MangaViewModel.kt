@@ -20,6 +20,7 @@ import eu.kanade.domain.chapter.interactor.SetReadStatus
 import eu.kanade.domain.manga.interactor.GetExcludedScanlators
 import eu.kanade.domain.manga.interactor.SetExcludedScanlators
 import eu.kanade.domain.manga.interactor.UpdateManga
+import eu.kanade.domain.manga.interactor.UpdateMangaMetadataFromMangaUpdates
 import eu.kanade.domain.manga.interactor.UpdateMangaMetadataFromTracker
 import eu.kanade.domain.manga.model.chaptersFiltered
 import eu.kanade.domain.manga.model.downloadedFilter
@@ -34,6 +35,8 @@ import eu.kanade.presentation.util.formattedMessage
 import eu.kanade.tachiyomi.data.download.DownloadCache
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.model.Download
+import eu.kanade.tachiyomi.data.mangaupdates.MangaUpdatesScraper
+import eu.kanade.tachiyomi.data.mangaupdates.MangaUpdatesSearchResult
 import eu.kanade.tachiyomi.data.track.EnhancedTracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.source.CatalogueSource
@@ -120,6 +123,8 @@ class MangaViewModel(
     private val filterChaptersForDownload: FilterChaptersForDownload = Injekt.get(),
     private val updateMangaFromRemote: UpdateMangaFromRemote = Injekt.get(),
     private val updateMangaMetadataFromTracker: UpdateMangaMetadataFromTracker = Injekt.get(),
+    private val mangaUpdatesScraper: MangaUpdatesScraper = Injekt.get(),
+    private val updateMangaMetadataFromMangaUpdates: UpdateMangaMetadataFromMangaUpdates = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
 ) : StateViewModel<MangaViewModel.State>(State.Loading) {
 
@@ -1079,7 +1084,9 @@ class MangaViewModel(
                 for (track in tracks) {
                     val tracker = trackerManager.get(track.trackerId) ?: continue
                     try {
-                        val results: List<eu.kanade.tachiyomi.data.track.model.TrackSearch> = tracker.search(manga.title)
+                        val results: List<eu.kanade.tachiyomi.data.track.model.TrackSearch> = tracker.search(
+                            manga.title,
+                        )
                         val match = results.find { it.remote_id == track.remoteId }
                             ?: results.firstOrNull()
                         if (match != null) {
@@ -1129,6 +1136,69 @@ class MangaViewModel(
         }
     }
 
+    fun showMangaUpdatesSearchDialog() {
+        val manga = successState?.manga ?: return
+        updateSuccessState {
+            it.copy(dialog = Dialog.MangaUpdatesSearch(initialQuery = manga.title))
+        }
+    }
+
+    fun closeMangaUpdatesSearchDialog() {
+        dismissDialog()
+    }
+
+    fun searchMangaUpdates(query: String) {
+        viewModelScope.launchIO {
+            updateSuccessState {
+                val current = it.dialog as? Dialog.MangaUpdatesSearch ?: return@updateSuccessState it
+                it.copy(dialog = current.copy(isLoading = true, results = emptyList()))
+            }
+            try {
+                val results = mangaUpdatesScraper.search(query)
+                updateSuccessState {
+                    val current = it.dialog as? Dialog.MangaUpdatesSearch ?: return@updateSuccessState it
+                    it.copy(dialog = current.copy(isLoading = false, results = results))
+                }
+            } catch (e: Exception) {
+                logcat(LogPriority.ERROR, e) { "MangaUpdates search failed" }
+                updateSuccessState {
+                    val current = it.dialog as? Dialog.MangaUpdatesSearch ?: return@updateSuccessState it
+                    it.copy(dialog = current.copy(isLoading = false))
+                }
+                withUIContext {
+                    snackbarHostState.showSnackbar(
+                        message = context.stringResource(MR.strings.metadata_fetch_failed),
+                    )
+                }
+            }
+        }
+    }
+
+    fun applyMangaUpdatesMetadata(searchResult: MangaUpdatesSearchResult) {
+        val state = successState ?: return
+        viewModelScope.launchIO {
+            try {
+                val detail = mangaUpdatesScraper.detail(searchResult.url)
+                val result = updateMangaMetadataFromMangaUpdates.await(state.manga, detail)
+                if (result.isSuccess) {
+                    dismissDialog()
+                    withUIContext {
+                        context.toast(context.stringResource(MR.strings.metadata_updated))
+                    }
+                } else {
+                    withUIContext {
+                        context.toast(context.stringResource(MR.strings.metadata_fetch_failed))
+                    }
+                }
+            } catch (e: Exception) {
+                logcat(LogPriority.ERROR, e) { "MangaUpdates metadata apply failed" }
+                withUIContext {
+                    context.toast(context.stringResource(MR.strings.metadata_fetch_failed))
+                }
+            }
+        }
+    }
+
     sealed interface Dialog {
         data class ChangeCategory(
             val manga: Manga,
@@ -1141,6 +1211,11 @@ class MangaViewModel(
         data object SettingsSheet : Dialog
         data object TrackSheet : Dialog
         data object FullCover : Dialog
+        data class MangaUpdatesSearch(
+            val initialQuery: String,
+            val isLoading: Boolean = false,
+            val results: List<MangaUpdatesSearchResult> = emptyList(),
+        ) : Dialog
     }
 
     fun dismissDialog() {

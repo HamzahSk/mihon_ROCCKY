@@ -34,6 +34,7 @@ import eu.kanade.presentation.manga.EditCoverAction
 import eu.kanade.presentation.manga.MangaScreen
 import eu.kanade.presentation.manga.components.DeleteChaptersDialog
 import eu.kanade.presentation.manga.components.MangaCoverDialog
+import eu.kanade.presentation.manga.components.MangaUpdatesSearchDialog
 import eu.kanade.presentation.manga.components.ScanlatorFilterDialog
 import eu.kanade.presentation.manga.components.SetIntervalDialog
 import eu.kanade.presentation.util.AssistContentScreen
@@ -186,7 +187,7 @@ class MangaScreen(
                 navigator.push(MigrationConfigScreen(successState.manga.id))
             }.takeIf { successState.manga.favorite },
             onEditNotesClicked = { navigator.push(MangaNotesScreen(manga = successState.manga)) },
-            onGetMetadataClicked = { viewModel.fetchMetadataFromTracker() },
+            onGetMetadataClicked = { viewModel.showMangaUpdatesSearchDialog() },
             onMultiBookmarkClicked = viewModel::bookmarkChapters,
             onMultiMarkAsReadClicked = viewModel::markChaptersRead,
             onMarkPreviousAsReadClicked = viewModel::markPreviousChapterRead,
@@ -319,6 +320,16 @@ class MangaScreen(
                     onDismissRequest = onDismissRequest,
                     onValueChanged = { interval: Int -> viewModel.setFetchInterval(dialog.manga, interval) }
                         .takeIf { viewModel.isUpdateIntervalEnabled },
+                )
+            }
+            is MangaViewModel.Dialog.MangaUpdatesSearch -> {
+                MangaUpdatesSearchDialog(
+                    initialQuery = dialog.initialQuery,
+                    isLoading = dialog.isLoading,
+                    results = dialog.results,
+                    onSearch = viewModel::searchMangaUpdates,
+                    onSelect = viewModel::applyMangaUpdatesMetadata,
+                    onDismiss = onDismissRequest,
                 )
             }
         }
