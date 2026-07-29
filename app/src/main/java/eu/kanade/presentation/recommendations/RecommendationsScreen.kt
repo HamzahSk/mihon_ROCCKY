@@ -26,13 +26,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.SortByAlpha
+import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +43,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,19 +52,26 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import eu.kanade.presentation.components.AdaptiveSheet
+import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
 import eu.kanade.presentation.library.components.MangaCompactGridItem
 import eu.kanade.tachiyomi.ui.recommendations.RecommendationsViewModel
 import eu.kanade.tachiyomi.ui.recommendations.SortMode
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.BaseSortItem
+import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.components.FastScrollLazyVerticalGrid
 import tachiyomi.presentation.core.components.HeadingItem
 import tachiyomi.presentation.core.components.material.PullRefresh
@@ -73,6 +81,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.util.plus
+import kotlin.time.Duration.Companion.seconds
 import tachiyomi.domain.manga.model.MangaCover as MangaCoverModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,46 +92,45 @@ fun RecommendationsScreen(
     onToggleSource: (Long) -> Unit,
     onRefresh: () -> Unit,
     onSetSortMode: (SortMode) -> Unit,
+    onToggleGenreFilter: (String) -> Unit,
+    onOpenSettings: () -> Unit,
+    onDismissDialog: () -> Unit,
+    onResetFilters: () -> Unit,
 ) {
-    var showManageDialog by remember { mutableStateOf(false) }
-    var showSortSheet by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    val nestedScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(
+                available: androidx.compose.ui.geometry.Offset,
+                source: NestedScrollSource,
+            ): androidx.compose.ui.geometry.Offset {
+                return androidx.compose.ui.geometry.Offset.Zero
+            }
+
+            override fun onPostScroll(
+                consumed: androidx.compose.ui.geometry.Offset,
+                available: androidx.compose.ui.geometry.Offset,
+                source: NestedScrollSource,
+            ): androidx.compose.ui.geometry.Offset {
+                return androidx.compose.ui.geometry.Offset.Zero
+            }
+        }
+    }
 
     Scaffold(
+        modifier = Modifier.nestedScroll(nestedScrollConnection),
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(MR.strings.label_recommendations)) },
                 actions = {
-                    val sortInteractionSource = remember { MutableInteractionSource() }
-                    val isSortPressed by sortInteractionSource.collectIsPressedAsState()
-                    val sortScale by animateFloatAsState(
-                        targetValue = if (isSortPressed) 0.9f else 1f,
-                        label = "sort_scale",
-                    )
                     IconButton(
-                        onClick = { showSortSheet = true },
-                        interactionSource = sortInteractionSource,
+                        onClick = onOpenSettings,
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.SortByAlpha,
-                            contentDescription = stringResource(MR.strings.action_sort),
-                            modifier = Modifier.scale(sortScale),
-                        )
-                    }
-
-                    val settingsInteractionSource = remember { MutableInteractionSource() }
-                    val isSettingsPressed by settingsInteractionSource.collectIsPressedAsState()
-                    val settingsScale by animateFloatAsState(
-                        targetValue = if (isSettingsPressed) 0.9f else 1f,
-                        label = "settings_scale",
-                    )
-                    IconButton(
-                        onClick = { showManageDialog = true },
-                        interactionSource = settingsInteractionSource,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Settings,
-                            contentDescription = stringResource(MR.strings.label_settings),
-                            modifier = Modifier.scale(settingsScale),
+                            imageVector = Icons.Outlined.FilterList,
+                            contentDescription = stringResource(MR.strings.action_filter),
                         )
                     }
                 },
@@ -130,8 +138,15 @@ fun RecommendationsScreen(
         },
     ) { contentPadding ->
         PullRefresh(
-            refreshing = state.isLoading,
-            onRefresh = onRefresh,
+            refreshing = isRefreshing,
+            onRefresh = {
+                onRefresh()
+                scope.launch {
+                    isRefreshing = true
+                    delay(1.seconds)
+                    isRefreshing = false
+                }
+            },
             enabled = true,
         ) {
             if (state.isLoading && state.recommendations.isEmpty()) {
@@ -186,45 +201,128 @@ fun RecommendationsScreen(
         }
     }
 
-    if (showSortSheet) {
-        AdaptiveSheet(
-            onDismissRequest = { showSortSheet = false },
+    when (state.dialog) {
+        is RecommendationsViewModel.State.Dialog.Settings -> {
+            RecommendationsSettingsDialog(
+                onDismissRequest = onDismissDialog,
+                sortMode = state.sortMode,
+                onSetSortMode = onSetSortMode,
+                selectedGenres = state.selectedGenres,
+                availableGenres = state.availableGenres,
+                onToggleGenreFilter = onToggleGenreFilter,
+                onResetFilters = onResetFilters,
+                availableSources = state.availableSources,
+                onToggleSource = onToggleSource,
+            )
+        }
+        null -> {}
+    }
+}
+
+@Composable
+fun RecommendationsSettingsDialog(
+    onDismissRequest: () -> Unit,
+    sortMode: SortMode,
+    onSetSortMode: (SortMode) -> Unit,
+    selectedGenres: Set<String>,
+    availableGenres: List<String>,
+    onToggleGenreFilter: (String) -> Unit,
+    onResetFilters: () -> Unit,
+    availableSources: List<RecommendationsViewModel.SourceItem>,
+    onToggleSource: (Long) -> Unit,
+) {
+    val tabTitles = buildList {
+        add(stringResource(MR.strings.action_filter))
+        add(stringResource(MR.strings.action_sort))
+        add(stringResource(MR.strings.pref_manage_sources))
+    }
+
+    TabbedDialog(
+        onDismissRequest = onDismissRequest,
+        tabTitles = tabTitles,
+    ) { page ->
+        Column(
+            modifier = Modifier
+                .padding(vertical = TabbedDialogPaddings.Vertical)
+                .verticalScroll(rememberScrollState()),
         ) {
-            Column(
-                modifier = Modifier
-                    .padding(vertical = TabbedDialogPaddings.Vertical)
-                    .verticalScroll(rememberScrollState()),
-            ) {
-                HeadingItem(stringResource(MR.strings.action_sort))
+            when (page) {
+                0 -> {
+                    HeadingItem(stringResource(MR.strings.action_filter))
+                    if (availableGenres.isEmpty()) {
+                        Text(
+                            text = stringResource(MR.strings.information_empty_recommendations),
+                            modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    } else {
+                        availableGenres.forEach { genre ->
+                            val isSelected = genre in selectedGenres
+                            CheckboxItem(
+                                label = genre.replaceFirstChar { it.uppercase() },
+                                checked = isSelected,
+                                onClick = { onToggleGenreFilter(genre) },
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    TextButton(onClick = onResetFilters) {
+                        Text(stringResource(MR.strings.action_reset))
+                    }
+                }
+                1 -> {
+                    HeadingItem(stringResource(MR.strings.action_sort))
 
-                val sortOptions = listOf(
-                    SortMode.DEFAULT to MR.strings.label_default,
-                    SortMode.LATEST_UPDATE to MR.strings.action_sort_last_manga_update,
-                    SortMode.RANDOM to MR.strings.action_sort_random,
-                    SortMode.CHAPTER_COUNT to MR.strings.action_sort_total,
-                )
-
-                sortOptions.forEach { (mode, labelRes) ->
-                    val selected = state.sortMode == mode
-                    BaseSortItem(
-                        label = stringResource(labelRes),
-                        icon = if (selected) Icons.Default.Check else null,
-                        onClick = {
-                            onSetSortMode(mode)
-                            showSortSheet = false
-                        },
+                    val sortOptions = listOf(
+                        SortMode.DEFAULT to MR.strings.label_default,
+                        SortMode.LATEST_UPDATE to MR.strings.action_sort_last_manga_update,
+                        SortMode.RANDOM to MR.strings.action_sort_random,
+                        SortMode.CHAPTER_COUNT to MR.strings.action_sort_total,
                     )
+
+                    sortOptions.forEach { (mode, labelRes) ->
+                        val selected = sortMode == mode
+                        BaseSortItem(
+                            label = stringResource(labelRes),
+                            icon = if (selected) Icons.Default.Check else null,
+                            onClick = {
+                                onSetSortMode(mode)
+                            },
+                        )
+                    }
+                }
+                2 -> {
+                    HeadingItem(stringResource(MR.strings.pref_manage_sources))
+                    if (availableSources.isEmpty()) {
+                        Text(
+                            text = stringResource(MR.strings.information_empty_recommendations),
+                            modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    } else {
+                        availableSources.forEach { source ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onToggleSource(source.id) }
+                                    .padding(vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Checkbox(
+                                    checked = source.enabled,
+                                    onCheckedChange = { onToggleSource(source.id) },
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = source.name,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
-    }
-
-    if (showManageDialog) {
-        ManageSourcesDialog(
-            sources = state.availableSources,
-            onToggleSource = onToggleSource,
-            onDismiss = { showManageDialog = false },
-        )
     }
 }
 
@@ -372,50 +470,4 @@ fun CarouselDotsIndicator(
             )
         }
     }
-}
-
-@Composable
-fun ManageSourcesDialog(
-    sources: List<RecommendationsViewModel.SourceItem>,
-    onToggleSource: (Long) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(MR.strings.pref_manage_sources)) },
-        text = {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-            ) {
-                if (sources.isEmpty()) {
-                    Text(stringResource(MR.strings.information_empty_recommendations))
-                } else {
-                    sources.forEach { source ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onToggleSource(source.id) }
-                                .padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Checkbox(
-                                checked = source.enabled,
-                                onCheckedChange = { onToggleSource(source.id) },
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = source.name,
-                                style = MaterialTheme.typography.bodyLarge,
-                            )
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(MR.strings.action_close))
-            }
-        },
-    )
 }
