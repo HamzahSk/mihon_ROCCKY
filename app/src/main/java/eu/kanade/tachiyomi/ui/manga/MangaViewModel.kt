@@ -20,6 +20,7 @@ import eu.kanade.domain.chapter.interactor.SetReadStatus
 import eu.kanade.domain.manga.interactor.GetExcludedScanlators
 import eu.kanade.domain.manga.interactor.SetExcludedScanlators
 import eu.kanade.domain.manga.interactor.UpdateManga
+import eu.kanade.domain.manga.interactor.UpdateMangaMetadataFromTracker
 import eu.kanade.domain.manga.model.chaptersFiltered
 import eu.kanade.domain.manga.model.downloadedFilter
 import eu.kanade.domain.track.interactor.AddTracks
@@ -118,6 +119,7 @@ class MangaViewModel(
     private val mangaRepository: MangaRepository = Injekt.get(),
     private val filterChaptersForDownload: FilterChaptersForDownload = Injekt.get(),
     private val updateMangaFromRemote: UpdateMangaFromRemote = Injekt.get(),
+    private val updateMangaMetadataFromTracker: UpdateMangaMetadataFromTracker = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
 ) : StateViewModel<MangaViewModel.State>(State.Loading) {
 
@@ -1067,6 +1069,65 @@ class MangaViewModel(
     }
 
     // Track sheet - end
+
+    fun fetchMetadataFromTracker() {
+        val state = successState ?: return
+        val manga = state.manga
+        viewModelScope.launchIO {
+            val tracks = getTracks.await(manga.id)
+            if (tracks.isNotEmpty()) {
+                for (track in tracks) {
+                    val tracker = trackerManager.get(track.trackerId) ?: continue
+                    try {
+                        val results: List<eu.kanade.tachiyomi.data.track.model.TrackSearch> = tracker.search(manga.title)
+                        val match = results.find { it.remote_id == track.remoteId }
+                            ?: results.firstOrNull()
+                        if (match != null) {
+                            val result = updateMangaMetadataFromTracker.await(manga, match)
+                            if (result.isSuccess) {
+                                withUIContext {
+                                    context.toast(context.stringResource(MR.strings.metadata_updated))
+                                }
+                                return@launchIO
+                            }
+                        }
+                    } catch (_: Exception) {
+                    }
+                }
+                withUIContext {
+                    context.toast(context.stringResource(MR.strings.metadata_fetch_failed))
+                }
+            } else {
+                val loggedIn = trackerManager.loggedInTrackers()
+                if (loggedIn.isEmpty()) {
+                    withUIContext {
+                        context.toast(context.stringResource(MR.strings.metadata_fetch_failed))
+                    }
+                    return@launchIO
+                }
+                val tracker = loggedIn.first()
+                try {
+                    val results: List<eu.kanade.tachiyomi.data.track.model.TrackSearch> = tracker.search(manga.title)
+                    if (results.isNotEmpty()) {
+                        val result = updateMangaMetadataFromTracker.await(manga, results.first())
+                        if (result.isSuccess) {
+                            withUIContext {
+                                context.toast(context.stringResource(MR.strings.metadata_updated))
+                            }
+                            return@launchIO
+                        }
+                    }
+                    withUIContext {
+                        context.toast(context.stringResource(MR.strings.metadata_fetch_failed))
+                    }
+                } catch (_: Exception) {
+                    withUIContext {
+                        context.toast(context.stringResource(MR.strings.metadata_fetch_failed))
+                    }
+                }
+            }
+        }
+    }
 
     sealed interface Dialog {
         data class ChangeCategory(
