@@ -1,56 +1,27 @@
-# Feature Request: Get & Apply Metadata from Custom MangaUpdates Scraper (`mangaupdate.js`)
+# Project: Refactor Data Aggregation, Genre Filtering, and Pull-to-Refresh Animation
 
-## 1. Context & Objective
-We have built a custom MangaUpdates scraper located in the project root directory: `mangaupdate.js`. 
-The previous metadata fetching implementation failed to retrieve data. The objective of this task is to implement the metadata fetching logic in **Kotlin**, integrating with the existing `mangaupdate.js` scraper to search and fetch full metadata (Cover Image, Synopsis, Genres, Author, Artist, Status) and apply it to the current manga.
+## Context
+We need to refine the `RecommendationsTab` in our Mihon/Tachiyomi fork to address data aggregation logic, filtering accuracy, and visual feedback during refresh actions. Currently, the data is separated by source, the genre filter is not aligned with the daily recommendation logic, and the Pull-to-Refresh feature lacks loading animation, making the UI appear unresponsive.
 
-**Crucial Requirement:** * All native application logic must be written in **Kotlin**.
-* The feature must utilize the root-level `mangaupdate.js` scraper to perform search queries and detail fetching.
-* This feature must work seamlessly for **both Local Source and Online Source manga**.
+## Tasks
 
----
+### Step 1: Implement Global Manga Aggregation Before Filtering
+Modify `RecommendationsViewModel` and its corresponding data repository/interactor:
+- **Combine First, Filter Later:** Ensure manga data from all sources is merged/combined into a single unified list *before* any filtering or sorting logic is applied. Do not separate or group manga by individual sources.
+- **Daily Genre Filtering:** Implement daily data retrieval based on genre filters, similar to the recommendation logic used in `BrowseSourceScreen`. The aggregated list should be filtered accurately according to the selected genre for the day.
 
-## 2. UI/UX Requirements
-* **Entry Point:** Add a new menu item inside the **3-dot menu (Overflow Menu)** on the **Manga Details Screen** (`MangaScreen`).
-* **Menu Label:** `Get metadata from MangaUpdates` (or `Fetch metadata`).
-* **Behavior / Flow:**
-    1. **Trigger Search Popup (Always):** * When the user clicks the menu item, immediately open a **Search Dialog/Popup**.
-       * Pre-fill the search input field with the manga's current **Title** (or Custom Title) as the default query.
-    2. **Search Execution via Scraper:**
-       * When the user searches, execute the search function from `mangaupdate.js` to query manga lists.
-       * Display the search results inside the popup so the user can review and choose the correct manga.
-    3. **Select & Fetch Detail via Scraper:**
-       * When the user taps/selects a manga from the search results, invoke the detail scraper from `mangaupdate.js` to fetch the complete metadata: **Cover Image, Synopsis, Genres, Author, Artist, and Status**.
-    4. **Apply Metadata:**
-       * Overwrite/fill the local manga fields with the fetched metadata.
-       * Immediately update and refresh the UI on the Manga Details screen.
-    5. **Feedback:** Show a Snackbar/Toast notification confirming success (e.g., *"Metadata updated successfully"*) or failure.
+### Step 2: Fix Pull-to-Refresh Loading Animation
+Modify `eu.kanade.presentation.recommendations.RecommendationsScreen`:
+- **Add Loading Indicator:** The pull-to-refresh functionality currently works logically but lacks visual feedback. Integrate a Material 3 `PullToRefresh` loading spinner/indicator (e.g., using `PullRefreshIndicator` or `PullToRefreshBox` depending on Compose version).
+- **State Management:** Ensure the animation indicator is strictly bound to `viewModel.state.isRefreshing` or `viewModel.state.isLoading`, so the spinner is visible while data is fetching and dismisses smoothly once loading completes.
+- **Nested Scrolling:** Ensure the proper `nestedScroll` connection is applied to the inner `LazyVerticalGrid` or `LazyColumn` so the pull gesture triggers the animation without layout stuttering.
 
----
-
-## 3. Implementation Steps (Kotlin)
-
-### Step 1: UI & Menu Integration (`MangaScreen` / `MangaScreenModel`)
-1. Locate the Overflow Menu in the Manga Details screen.
-2. Add the **"Get metadata from MangaUpdates"** action item, ensuring it is available for **ALL** manga sources (including `LocalSource`).
-3. Create a Search Dialog/Popup composable/component that is triggered when this menu item is clicked.
-
-### Step 2: Bridge/Integrate Kotlin with `mangaupdate.js` Scraper
-1. **Search Mechanism:** * Implement a Kotlin repository/service class that interfaces with or executes the root-level `mangaupdate.js` scraper for search queries.
-   * Pass the user's query from the Search Dialog to the scraper and map the returned JSON/results into Kotlin data classes for UI rendering.
-2. **Detail Data Extraction:** * When a search result is selected, pass its identifier/URL to the detail scraping logic of `mangaupdate.js`.
-   * Parse the complete metadata response into a Kotlin domain model containing:
-     * Author / Artist
-     * Description / Synopsis
-     * Genres / Tags
-     * Cover Image URL
-     * Status
-
-### Step 3: Local Database & Cover Cache Update
-1. Create a Kotlin use-case/repository function (e.g., `UpdateMangaMetadata`) to map the scraped data to the local `Manga` model.
-2. Update the local SQLite/Room database for this manga with the newly fetched fields.
-3. Download the remote Cover Image URL and overwrite the local cover cache/file so the new cover is displayed immediately without requiring an app restart.
+### Step 3: Implement Mihon-Style Filter/Sorting UI
+Modify `RecommendationsViewModel` and `RecommendationsScreen` to match Mihon's design system:
+- Use the standard Mihon Filter/Sort Bottom Sheet (similar to the one used in the Library or Browse screens) to display genre filters and sorting options.
+- Ensure the "Filter/Sort" icon in the `TopAppBar` correctly toggles this Bottom Sheet.
 
 ### Step 4: Testing & Clean Code (WAJIB)
-1. Run `./gradlew spotlessApply` to format and clean up the Kotlin codebase.
-2. Run `./gradlew testDebugUnitTest` and ensure **BUILD SUCCESSFUL**.
+1. Jalankan `./gradlew spotlessApply` untuk merapikan format kode.
+2. Jalankan `./gradlew testDebugUnitTest` dan pastikan **BUILD SUCCESSFUL**.
+3. Verifikasi bahwa animasi *loading* muncul saat *pull-to-refresh* dan data dari semua *source* sudah tergabung dengan benar sebelum difilter.
