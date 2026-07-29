@@ -345,7 +345,9 @@ fun ManageSourcesDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(MR.strings.pref_manage_sources)) },
         text = {
-            Column {
+            Column (
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
                 if (sources.isEmpty()) {
                     Text(stringResource(MR.strings.information_empty_recommendations))
                 } else {

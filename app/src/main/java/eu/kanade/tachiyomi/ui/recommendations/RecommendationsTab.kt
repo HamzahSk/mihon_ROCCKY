@@ -131,11 +131,11 @@ class RecommendationsViewModel(
                 try {
                     val page = source.getPopularManga(1)
                     val mangas = page.mangas.map { it.toDomainManga(source.id) }
-                    allManga.addAll(mangas.take(5))
+                    allManga.addAll(mangas.take(8))
                 } catch (e: Exception) {
                     logcat(LogPriority.ERROR, e) { "Failed to fetch recommendations from source $sourceId" }
                 }
-                if (allManga.size >= 30) break
+                if (allManga.size >= 45) break
             }
             _state.update { it.copy(isLoading = false, recommendations = allManga) }
         }
