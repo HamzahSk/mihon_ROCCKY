@@ -1,8 +1,11 @@
 package eu.kanade.presentation.recommendations
 
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,11 +25,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Numbers
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.SortByAlpha
+import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,6 +52,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -52,9 +62,11 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import eu.kanade.presentation.library.components.MangaCompactGridItem
 import eu.kanade.tachiyomi.ui.recommendations.RecommendationsViewModel
+import eu.kanade.tachiyomi.ui.recommendations.SortMode
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.FastScrollLazyVerticalGrid
+import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
@@ -69,75 +81,162 @@ fun RecommendationsScreen(
     state: RecommendationsViewModel.State,
     onClickManga: (Manga) -> Unit,
     onToggleSource: (Long) -> Unit,
+    onRefresh: () -> Unit,
+    onSetSortMode: (SortMode) -> Unit,
 ) {
     var showManageDialog by remember { mutableStateOf(false) }
+    var showSortMenu by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(MR.strings.label_recommendations)) },
                 actions = {
-                    IconButton(onClick = { showManageDialog = true }) {
+                    val sortInteractionSource = remember { MutableInteractionSource() }
+                    val isSortPressed by sortInteractionSource.collectIsPressedAsState()
+                    val sortScale by animateFloatAsState(
+                        targetValue = if (isSortPressed) 0.9f else 1f,
+                        label = "sort_scale",
+                    )
+                    Box {
+                        IconButton(
+                            onClick = { showSortMenu = true },
+                            interactionSource = sortInteractionSource,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.SortByAlpha,
+                                contentDescription = stringResource(MR.strings.action_sort),
+                                modifier = Modifier.scale(sortScale),
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = showSortMenu,
+                            onDismissRequest = { showSortMenu = false },
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(MR.strings.label_default)) },
+                                onClick = {
+                                    onSetSortMode(SortMode.DEFAULT)
+                                    showSortMenu = false
+                                },
+                                leadingIcon = if (state.sortMode == SortMode.DEFAULT) {
+                                    { Icon(Icons.Outlined.SortByAlpha, contentDescription = null) }
+                                } else {
+                                    null
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(MR.strings.action_sort_last_manga_update)) },
+                                onClick = {
+                                    onSetSortMode(SortMode.LATEST_UPDATE)
+                                    showSortMenu = false
+                                },
+                                leadingIcon = if (state.sortMode == SortMode.LATEST_UPDATE) {
+                                    { Icon(Icons.Outlined.Update, contentDescription = null) }
+                                } else {
+                                    null
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(MR.strings.action_sort_random)) },
+                                onClick = {
+                                    onSetSortMode(SortMode.RANDOM)
+                                    showSortMenu = false
+                                },
+                                leadingIcon = if (state.sortMode == SortMode.RANDOM) {
+                                    { Icon(Icons.Outlined.Refresh, contentDescription = null) }
+                                } else {
+                                    null
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(MR.strings.action_sort_total)) },
+                                onClick = {
+                                    onSetSortMode(SortMode.CHAPTER_COUNT)
+                                    showSortMenu = false
+                                },
+                                leadingIcon = if (state.sortMode == SortMode.CHAPTER_COUNT) {
+                                    { Icon(Icons.Outlined.Numbers, contentDescription = null) }
+                                } else {
+                                    null
+                                },
+                            )
+                        }
+                    }
+
+                    val settingsInteractionSource = remember { MutableInteractionSource() }
+                    val isSettingsPressed by settingsInteractionSource.collectIsPressedAsState()
+                    val settingsScale by animateFloatAsState(
+                        targetValue = if (isSettingsPressed) 0.9f else 1f,
+                        label = "settings_scale",
+                    )
+                    IconButton(
+                        onClick = { showManageDialog = true },
+                        interactionSource = settingsInteractionSource,
+                    ) {
                         Icon(
                             imageVector = Icons.Outlined.Settings,
                             contentDescription = stringResource(MR.strings.label_settings),
+                            modifier = Modifier.scale(settingsScale),
                         )
                     }
                 },
             )
         },
     ) { contentPadding ->
-        if (state.isLoading) {
-            LoadingScreen(modifier = Modifier.padding(contentPadding))
-            return@Scaffold
-        }
-
-        if (state.recommendations.isEmpty()) {
-            EmptyScreen(
-                modifier = Modifier.padding(contentPadding),
-                stringRes = MR.strings.information_empty_recommendations,
-            )
-            return@Scaffold
-        }
-
-        FastScrollLazyVerticalGrid(
-            columns = GridCells.Adaptive(128.dp),
-            contentPadding = contentPadding + PaddingValues(8.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        PullRefresh(
+            refreshing = state.isLoading,
+            onRefresh = onRefresh,
+            enabled = state.recommendations.isNotEmpty(),
         ) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                RecommendationsCarousel(
-                    mangas = state.recommendations,
-                    onMangaClick = onClickManga,
+            if (state.isLoading && state.recommendations.isEmpty()) {
+                LoadingScreen(modifier = Modifier.padding(contentPadding))
+            } else if (state.recommendations.isEmpty()) {
+                EmptyScreen(
+                    modifier = Modifier.padding(contentPadding),
+                    stringRes = MR.strings.information_empty_recommendations,
                 )
-            }
+            } else {
+                FastScrollLazyVerticalGrid(
+                    columns = GridCells.Adaptive(128.dp),
+                    contentPadding = contentPadding + PaddingValues(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        RecommendationsCarousel(
+                            mangas = state.recommendations,
+                            onMangaClick = onClickManga,
+                        )
+                    }
 
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                Text(
-                    text = stringResource(MR.strings.label_recommendations),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(
-                        horizontal = MaterialTheme.padding.medium,
-                        vertical = 4.dp,
-                    ),
-                )
-            }
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Text(
+                            text = stringResource(MR.strings.label_recommendations),
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.padding(
+                                horizontal = MaterialTheme.padding.medium,
+                                vertical = 4.dp,
+                            ),
+                        )
+                    }
 
-            items(state.recommendations.size) { index ->
-                val manga = state.recommendations[index]
-                MangaCompactGridItem(
-                    title = manga.title,
-                    coverData = MangaCoverModel(
-                        mangaId = manga.id,
-                        sourceId = manga.source,
-                        isMangaFavorite = manga.favorite,
-                        url = manga.thumbnailUrl,
-                        lastModified = manga.coverLastModified,
-                    ),
-                    onClick = { onClickManga(manga) },
-                    onLongClick = {},
-                )
+                    items(state.recommendations.size) { index ->
+                        val manga = state.recommendations[index]
+                        MangaCompactGridItem(
+                            title = manga.title,
+                            coverData = MangaCoverModel(
+                                mangaId = manga.id,
+                                sourceId = manga.source,
+                                isMangaFavorite = manga.favorite,
+                                url = manga.thumbnailUrl,
+                                lastModified = manga.coverLastModified,
+                            ),
+                            onClick = { onClickManga(manga) },
+                            onLongClick = {},
+                        )
+                    }
+                }
             }
         }
     }

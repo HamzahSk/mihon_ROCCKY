@@ -118,7 +118,11 @@ object SettingsAdvancedScreen : SearchableSettings {
                     val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
                         putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
                     }
-                    context.startActivity(intent)
+                    try {
+                        context.startActivity(intent)
+                    } catch (e: ActivityNotFoundException) {
+                        context.toast(MR.strings.battery_optimization_setting_activity_not_found) // Atau string lain yang sesuai
+                    }
                 },
             ),
             getBackgroundActivityGroup(),

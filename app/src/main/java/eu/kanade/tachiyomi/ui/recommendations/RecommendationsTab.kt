@@ -37,6 +37,7 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import kotlin.random.Random
 
 data object RecommendationsTab : Tab {
 
@@ -68,8 +69,17 @@ data object RecommendationsTab : Tab {
                 }
             },
             onToggleSource = viewModel::toggleSource,
+            onRefresh = viewModel::refreshRecommendations,
+            onSetSortMode = viewModel::setSortMode,
         )
     }
+}
+
+enum class SortMode {
+    DEFAULT,
+    LATEST_UPDATE,
+    RANDOM,
+    CHAPTER_COUNT,
 }
 
 class RecommendationsViewModel(
@@ -80,6 +90,8 @@ class RecommendationsViewModel(
 
     private val _state = MutableStateFlow(State())
     val state: StateFlow<State> = _state.asStateFlow()
+
+    private var rawRecommendations: List<Manga> = emptyList()
 
     private val recommendedSourceIds: Set<String>
         get() = sourcePreferences.recommendedSources.get()
@@ -125,6 +137,7 @@ class RecommendationsViewModel(
             _state.update { it.copy(isLoading = true) }
             val selectedIds = recommendedSourceIds.mapNotNull { it.toLongOrNull() }
             if (selectedIds.isEmpty()) {
+                rawRecommendations = emptyList()
                 _state.update { it.copy(isLoading = false, recommendations = emptyList()) }
                 return@launchIO
             }
@@ -141,7 +154,27 @@ class RecommendationsViewModel(
                 }
                 if (allManga.size >= 45) break
             }
-            _state.update { it.copy(isLoading = false, recommendations = allManga) }
+            rawRecommendations = allManga
+            val sorted = applySort(allManga, _state.value.sortMode)
+            _state.update { it.copy(isLoading = false, recommendations = sorted) }
+        }
+    }
+
+    fun setSortMode(sortMode: SortMode) {
+        _state.update {
+            it.copy(
+                sortMode = sortMode,
+                recommendations = applySort(rawRecommendations, sortMode),
+            )
+        }
+    }
+
+    private fun applySort(list: List<Manga>, sortMode: SortMode): List<Manga> {
+        return when (sortMode) {
+            SortMode.DEFAULT -> list
+            SortMode.LATEST_UPDATE -> list.sortedByDescending { it.lastUpdate }
+            SortMode.RANDOM -> list.shuffled(Random)
+            SortMode.CHAPTER_COUNT -> list
         }
     }
 
@@ -158,6 +191,7 @@ class RecommendationsViewModel(
         val isLoading: Boolean = false,
         val recommendations: List<Manga> = emptyList(),
         val availableSources: List<SourceItem> = emptyList(),
+        val sortMode: SortMode = SortMode.DEFAULT,
     )
 
     data class SourceItem(
