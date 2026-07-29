@@ -76,6 +76,7 @@ data object RecommendationsTab : Tab {
             onSetSortMode = viewModel::setSortMode,
             onToggleGenreFilter = viewModel::toggleGenreFilter,
             onOpenSettings = viewModel::openSettings,
+            onOpenManageSources = viewModel::openManageSources,
             onDismissDialog = viewModel::dismissDialog,
             onResetFilters = viewModel::resetFilters,
         )
@@ -109,7 +110,17 @@ class RecommendationsViewModel(
         refreshRecommendations()
     }
 
+    private fun getActiveSourceIds(): List<Long> {
+        val savedIds = recommendedSourceIds.mapNotNull { it.toLongOrNull() }
+        if (savedIds.isNotEmpty()) return savedIds
+        return sourceManager.getAll()
+            .filterIsInstance<CatalogueSource>()
+            .filter { it.id != 0L }
+            .map { it.id }
+    }
+
     private fun loadSources() {
+        val savedIds = recommendedSourceIds
         val sources = sourceManager.getAll()
             .filterIsInstance<CatalogueSource>()
             .filter { it.id != 0L }
@@ -120,7 +131,7 @@ class RecommendationsViewModel(
                         id = s.id,
                         name = s.name,
                         lang = s.lang,
-                        enabled = s.id.toString() in recommendedSourceIds,
+                        enabled = if (savedIds.isEmpty()) true else s.id.toString() in savedIds,
                     )
                 },
             )
@@ -163,15 +174,15 @@ class RecommendationsViewModel(
     fun refreshRecommendations() {
         viewModelScope.launchIO {
             _state.update { it.copy(isRefreshing = true) }
-            val selectedIds = recommendedSourceIds.mapNotNull { it.toLongOrNull() }
-            if (selectedIds.isEmpty()) {
+            val sourceIds = getActiveSourceIds()
+            if (sourceIds.isEmpty()) {
                 rawRecommendations = emptyList()
                 _state.update { it.copy(isRefreshing = false, isLoading = false, recommendations = emptyList()) }
                 return@launchIO
             }
 
             val allManga = mutableListOf<Manga>()
-            for (sourceId in selectedIds) {
+            for (sourceId in sourceIds) {
                 val source = sourceManager.get(sourceId) as? CatalogueSource ?: continue
                 try {
                     val page = source.getPopularManga(1)
@@ -199,7 +210,7 @@ class RecommendationsViewModel(
 
     private suspend fun getTopGenresFromHistory(): List<String> {
         return try {
-            val selectedIds = recommendedSourceIds.mapNotNull { it.toLongOrNull() }
+            val selectedIds = getActiveSourceIds()
             if (selectedIds.isEmpty()) return emptyList()
 
             val allGenres = mutableListOf<String>()
@@ -275,6 +286,10 @@ class RecommendationsViewModel(
         _state.update { it.copy(dialog = State.Dialog.Settings) }
     }
 
+    fun openManageSources() {
+        _state.update { it.copy(dialog = State.Dialog.ManageSources) }
+    }
+
     fun dismissDialog() {
         _state.update { it.copy(dialog = null) }
     }
@@ -300,6 +315,7 @@ class RecommendationsViewModel(
     ) {
         sealed interface Dialog {
             data object Settings : Dialog
+            data object ManageSources : Dialog
         }
     }
 

@@ -26,11 +26,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -94,6 +97,7 @@ fun RecommendationsScreen(
     onSetSortMode: (SortMode) -> Unit,
     onToggleGenreFilter: (String) -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenManageSources: () -> Unit,
     onDismissDialog: () -> Unit,
     onResetFilters: () -> Unit,
 ) {
@@ -122,6 +126,7 @@ fun RecommendationsScreen(
     Scaffold(
         modifier = Modifier.nestedScroll(nestedScrollConnection),
         topBar = {
+            var showMenu by remember { mutableStateOf(false) }
             TopAppBar(
                 title = { Text(stringResource(MR.strings.label_recommendations)) },
                 actions = {
@@ -131,6 +136,24 @@ fun RecommendationsScreen(
                         Icon(
                             imageVector = Icons.Outlined.FilterList,
                             contentDescription = stringResource(MR.strings.action_filter),
+                        )
+                    }
+                    IconButton(onClick = { showMenu = true }) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = stringResource(MR.strings.label_more),
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false },
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(MR.strings.pref_manage_sources)) },
+                            onClick = {
+                                showMenu = false
+                                onOpenManageSources()
+                            },
                         )
                     }
                 },
@@ -211,8 +234,13 @@ fun RecommendationsScreen(
                 availableGenres = state.availableGenres,
                 onToggleGenreFilter = onToggleGenreFilter,
                 onResetFilters = onResetFilters,
+            )
+        }
+        is RecommendationsViewModel.State.Dialog.ManageSources -> {
+            ManageSourcesDialog(
                 availableSources = state.availableSources,
                 onToggleSource = onToggleSource,
+                onDismissRequest = onDismissDialog,
             )
         }
         null -> {}
@@ -228,13 +256,10 @@ fun RecommendationsSettingsDialog(
     availableGenres: List<String>,
     onToggleGenreFilter: (String) -> Unit,
     onResetFilters: () -> Unit,
-    availableSources: List<RecommendationsViewModel.SourceItem>,
-    onToggleSource: (Long) -> Unit,
 ) {
     val tabTitles = buildList {
         add(stringResource(MR.strings.action_filter))
         add(stringResource(MR.strings.action_sort))
-        add(stringResource(MR.strings.pref_manage_sources))
     }
 
     TabbedDialog(
@@ -291,34 +316,50 @@ fun RecommendationsSettingsDialog(
                         )
                     }
                 }
-                2 -> {
-                    HeadingItem(stringResource(MR.strings.pref_manage_sources))
-                    if (availableSources.isEmpty()) {
-                        Text(
-                            text = stringResource(MR.strings.information_empty_recommendations),
-                            modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
-                            style = MaterialTheme.typography.bodyMedium,
+            }
+        }
+    }
+}
+
+@Composable
+fun ManageSourcesDialog(
+    availableSources: List<RecommendationsViewModel.SourceItem>,
+    onToggleSource: (Long) -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    AdaptiveSheet(
+        onDismissRequest = onDismissRequest,
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(vertical = TabbedDialogPaddings.Vertical)
+                .verticalScroll(rememberScrollState()),
+        ) {
+            HeadingItem(stringResource(MR.strings.pref_manage_sources))
+            if (availableSources.isEmpty()) {
+                Text(
+                    text = stringResource(MR.strings.information_empty_recommendations),
+                    modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            } else {
+                availableSources.forEach { source ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onToggleSource(source.id) }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Checkbox(
+                            checked = source.enabled,
+                            onCheckedChange = { onToggleSource(source.id) },
                         )
-                    } else {
-                        availableSources.forEach { source ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { onToggleSource(source.id) }
-                                    .padding(vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Checkbox(
-                                    checked = source.enabled,
-                                    onCheckedChange = { onToggleSource(source.id) },
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = source.name,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                )
-                            }
-                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = source.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
                     }
                 }
             }
