@@ -86,4 +86,6 @@ class SourcePreferences(
         "migration_hide_without_updates",
         false,
     )
+
+    val recommendedSources: Preference<Set<String>> = preferenceStore.getStringSet("recommended_sources", emptySet())
 }

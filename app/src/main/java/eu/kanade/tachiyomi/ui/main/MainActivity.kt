@@ -530,7 +530,7 @@ class MainActivity : BaseActivity() {
                 HomeScreen.Tab.Library(idToOpen)
             }
             Constants.SHORTCUT_UPDATES -> HomeScreen.Tab.Updates
-            Constants.SHORTCUT_HISTORY -> HomeScreen.Tab.History
+            Constants.SHORTCUT_HISTORY -> HomeScreen.Tab.More(toDownloads = false)
             Constants.SHORTCUT_SOURCES -> HomeScreen.Tab.Browse(false)
             Constants.SHORTCUT_EXTENSIONS -> HomeScreen.Tab.Browse(true)
             Constants.SHORTCUT_DOWNLOADS -> {

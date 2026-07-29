@@ -7,6 +7,7 @@ import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.GetApp
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.QueryStats
 import androidx.compose.material.icons.outlined.Settings
@@ -37,6 +38,7 @@ fun MoreScreen(
     onIncognitoModeChange: (Boolean) -> Unit,
     onClickDownloadQueue: () -> Unit,
     onClickCategories: () -> Unit,
+    onClickHistory: () -> Unit,
     onClickStats: () -> Unit,
     onClickDataAndStorage: () -> Unit,
     onClickSettings: () -> Unit,
@@ -107,6 +109,13 @@ fun MoreScreen(
                     title = stringResource(MR.strings.categories),
                     icon = Icons.AutoMirrored.Outlined.Label,
                     onPreferenceClick = onClickCategories,
+                )
+            }
+            item {
+                TextPreferenceWidget(
+                    title = stringResource(MR.strings.label_recent_manga),
+                    icon = Icons.Outlined.History,
+                    onPreferenceClick = onClickHistory,
                 )
             }
             item {
