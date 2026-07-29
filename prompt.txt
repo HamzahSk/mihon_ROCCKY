@@ -1,22 +1,29 @@
-# Project: Fix Recommendations Tab Crash & Align UI with Library Theme
+# Project: Add Pull-to-Refresh, Animations, and Sorting to Recommendations Tab
 
 ## Context
-We are working on a fork of Mihon/Tachiyomi. We recently added a `RecommendationsTab` with a `RecommendationsScreen` and `RecommendationsViewModel`. However, there are two main issues that need to be resolved:
-1. **Crash on Manga Click:** Clicking a manga from the internet throws a `NullPointerException` because the manga does not exist in the local database yet (`mangas.sq:getMangaById` returns null).
-2. **Inconsistent UI Theme:** The current `LazyVerticalGrid` and `MangaRecommendationCard` in `RecommendationsScreen` use custom cards that do not match the app's standard library grid theme.
+We are continuing to improve the `RecommendationsTab` in our Mihon/Tachiyomi fork. The current implementation works, but lacks essential UX features: users cannot manually refresh the data, the buttons/interactions feel stiff, and there is no way to sort the recommended mangas.
 
 ## Tasks
 
-### Step 1: Fix the Manga Click Crash in ViewModel
-Modify `eu.kanade.tachiyomi.ui.recommendations.RecommendationsViewModel`:
-- Inject `NetworkToLocalManga` (from `tachiyomi.domain.manga.interactor.NetworkToLocalManga`) into the ViewModel constructor.
-- Update the `onMangaClick` function to first sync the network manga to the local database using `networkToLocalManga.await(manga)` before invoking the `onClick` callback with the local database ID. Ensure this is done within `viewModelScope.launchIO` and switch back to the Main thread for the UI navigation callback.
-
-### Step 2: Refactor Recommendations Grid UI to Match Library Theme
+### Step 1: Implement Pull-to-Refresh
 Modify `eu.kanade.presentation.recommendations.RecommendationsScreen`:
-- Refactor the grid layout that displays the recommended mangas to use the app's standard UI components for manga grids (e.g., `MangaCompactGridItem`, `MangaComfortableGridItem`, or the standard library grid layout used elsewhere in the app).
-- Remove the custom `MangaRecommendationCard` if it's no longer needed, and ensure the aspect ratio, typography, and spacing perfectly match the main Library tab's theme.
+- Wrap the main content (the grid/list) in a Pull-to-Refresh layout using the app's standard Material 3 implementation (e.g., `PullToRefreshBox`, `PullRefresh`, or equivalent wrapper used in the Library/Updates screen).
+- Bind the pull action to trigger the existing `onRefresh` or `viewModel.refreshRecommendations()` function.
+- Ensure the loading indicator syncs with the `state.isLoading` boolean.
 
-### Step 3: Testing & Clean Code (WAJIB)
+### Step 2: Add Fluid Button Animations
+Modify UI components in `eu.kanade.presentation.recommendations.RecommendationsScreen`:
+- Ensure all custom clickable elements (especially custom buttons or cards) have a proper Material ripple effect (`indication`).
+- For the main action buttons (like the tab icon or filter buttons), implement a subtle scale/bounce animation on press (using `interactionSource` and `animateFloatAsState`) to make the UI feel less stiff and more tactile.
+
+### Step 3: Implement Sorting/Filter Feature
+Modify both `RecommendationsViewModel` and `RecommendationsScreen`:
+- **ViewModel:** - Introduce a sorting state/enum (Options: Default, Latest Update, Random, Chapter Count). 
+  - Create a function to update this state and apply the sorting logic to the current `recommendations` list.
+- **UI:** - Add a "Filter/Sort" icon in the `TopAppBar` actions (next to the manage sources Settings icon). 
+  - Clicking this icon should open a `DropdownMenu` or a standard Bottom Sheet displaying the sorting options.
+  - Wire the options to update the ViewModel's sorting state.
+
+### Step 4: Testing & Clean Code (WAJIB)
 1. Jalankan `./gradlew spotlessApply` untuk merapikan format kode.
 2. Jalankan `./gradlew testDebugUnitTest` dan pastikan **BUILD SUCCESSFUL**.
