@@ -187,13 +187,18 @@ fun RecommendationsScreen(
         PullRefresh(
             refreshing = state.isLoading,
             onRefresh = onRefresh,
-            enabled = state.recommendations.isNotEmpty(),
+            // 1. Ubah jadi true agar selalu bisa ditarik kapanpun
+            enabled = true, 
         ) {
             if (state.isLoading && state.recommendations.isEmpty()) {
                 LoadingScreen(modifier = Modifier.padding(contentPadding))
             } else if (state.recommendations.isEmpty()) {
                 EmptyScreen(
-                    modifier = Modifier.padding(contentPadding),
+                    // 2. Tambahkan verticalScroll agar layar kosong tetap bisa ditarik (pull-to-refresh)
+                    modifier = Modifier
+                        .padding(contentPadding)
+                        .verticalScroll(rememberScrollState())
+                        .fillMaxSize(), 
                     stringRes = MR.strings.information_empty_recommendations,
                 )
             } else {
