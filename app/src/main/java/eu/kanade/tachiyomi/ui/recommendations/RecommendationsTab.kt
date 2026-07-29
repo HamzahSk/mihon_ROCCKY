@@ -71,6 +71,7 @@ data object RecommendationsTab : Tab {
             onToggleSource = viewModel::toggleSource,
             onRefresh = viewModel::refreshRecommendations,
             onSetSortMode = viewModel::setSortMode,
+            onSetGenreFilter = viewModel::setGenreFilter,
         )
     }
 }
@@ -132,31 +133,64 @@ class RecommendationsViewModel(
         refreshRecommendations()
     }
 
+    fun setGenreFilter(genre: String?) {
+        _state.update { it.copy(genreFilter = genre) }
+        refreshRecommendations()
+    }
+
     fun refreshRecommendations() {
         viewModelScope.launchIO {
             _state.update { it.copy(isLoading = true) }
             val selectedIds = recommendedSourceIds.mapNotNull { it.toLongOrNull() }
             if (selectedIds.isEmpty()) {
                 rawRecommendations = emptyList()
-                _state.update { it.copy(isLoading = false, recommendations = emptyList()) }
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        recommendations = emptyList(),
+                        availableGenres = emptyList(),
+                    )
+                }
                 return@launchIO
             }
 
+            val genreFilter = _state.value.genreFilter
             val allManga = mutableListOf<Manga>()
+            val allGenres = mutableSetOf<String>()
+
             for (sourceId in selectedIds) {
                 val source = sourceManager.get(sourceId) as? CatalogueSource ?: continue
                 try {
-                    val page = source.getPopularManga(1)
-                    val mangas = page.mangas.map { it.toDomainManga(source.id) }
-                    allManga.addAll(mangas.take(8))
+                    val mangas = if (!genreFilter.isNullOrBlank()) {
+                        val filters = source.getFilterList()
+                        val page = source.getSearchManga(1, genreFilter, filters)
+                        page.mangas.map { it.toDomainManga(source.id) }
+                    } else {
+                        val page = source.getPopularManga(1)
+                        page.mangas.map { it.toDomainManga(source.id) }
+                    }
+
+                    mangas.forEach { manga ->
+                        manga.genre?.forEach { genre ->
+                            if (genre.isNotBlank()) allGenres.add(genre.trim())
+                        }
+                    }
+
+                    allManga.addAll(mangas)
                 } catch (e: Exception) {
                     logcat(LogPriority.ERROR, e) { "Failed to fetch recommendations from source $sourceId" }
                 }
-                if (allManga.size >= 45) break
             }
+
             rawRecommendations = allManga
             val sorted = applySort(allManga, _state.value.sortMode)
-            _state.update { it.copy(isLoading = false, recommendations = sorted) }
+            _state.update {
+                it.copy(
+                    isLoading = false,
+                    recommendations = sorted,
+                    availableGenres = allGenres.toList().sorted(),
+                )
+            }
         }
     }
 
@@ -192,6 +226,8 @@ class RecommendationsViewModel(
         val recommendations: List<Manga> = emptyList(),
         val availableSources: List<SourceItem> = emptyList(),
         val sortMode: SortMode = SortMode.DEFAULT,
+        val genreFilter: String? = null,
+        val availableGenres: List<String> = emptyList(),
     )
 
     data class SourceItem(

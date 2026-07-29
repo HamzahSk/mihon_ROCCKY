@@ -9,6 +9,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,13 +27,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.SortByAlpha
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -56,7 +58,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import eu.kanade.presentation.components.AdaptiveSheet
+import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
 import eu.kanade.presentation.library.components.MangaCompactGridItem
 import eu.kanade.tachiyomi.ui.recommendations.RecommendationsViewModel
@@ -66,6 +68,7 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.BaseSortItem
 import tachiyomi.presentation.core.components.FastScrollLazyVerticalGrid
 import tachiyomi.presentation.core.components.HeadingItem
+import tachiyomi.presentation.core.components.SettingsItemsPaddings
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
@@ -83,29 +86,30 @@ fun RecommendationsScreen(
     onToggleSource: (Long) -> Unit,
     onRefresh: () -> Unit,
     onSetSortMode: (SortMode) -> Unit,
+    onSetGenreFilter: (String?) -> Unit,
 ) {
     var showManageDialog by remember { mutableStateOf(false) }
-    var showSortSheet by remember { mutableStateOf(false) }
+    var showFilterSheet by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(MR.strings.label_recommendations)) },
                 actions = {
-                    val sortInteractionSource = remember { MutableInteractionSource() }
-                    val isSortPressed by sortInteractionSource.collectIsPressedAsState()
-                    val sortScale by animateFloatAsState(
-                        targetValue = if (isSortPressed) 0.9f else 1f,
-                        label = "sort_scale",
+                    val filterInteractionSource = remember { MutableInteractionSource() }
+                    val isFilterPressed by filterInteractionSource.collectIsPressedAsState()
+                    val filterScale by animateFloatAsState(
+                        targetValue = if (isFilterPressed) 0.9f else 1f,
+                        label = "filter_scale",
                     )
                     IconButton(
-                        onClick = { showSortSheet = true },
-                        interactionSource = sortInteractionSource,
+                        onClick = { showFilterSheet = true },
+                        interactionSource = filterInteractionSource,
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.SortByAlpha,
-                            contentDescription = stringResource(MR.strings.action_sort),
-                            modifier = Modifier.scale(sortScale),
+                            imageVector = Icons.Outlined.FilterList,
+                            contentDescription = stringResource(MR.strings.action_filter),
+                            modifier = Modifier.scale(filterScale),
                         )
                     }
 
@@ -186,33 +190,30 @@ fun RecommendationsScreen(
         }
     }
 
-    if (showSortSheet) {
-        AdaptiveSheet(
-            onDismissRequest = { showSortSheet = false },
-        ) {
+    if (showFilterSheet) {
+        TabbedDialog(
+            onDismissRequest = { showFilterSheet = false },
+            tabTitles = listOf(
+                stringResource(MR.strings.action_filter),
+                stringResource(MR.strings.action_sort),
+            ),
+        ) { page ->
             Column(
                 modifier = Modifier
                     .padding(vertical = TabbedDialogPaddings.Vertical)
                     .verticalScroll(rememberScrollState()),
             ) {
-                HeadingItem(stringResource(MR.strings.action_sort))
-
-                val sortOptions = listOf(
-                    SortMode.DEFAULT to MR.strings.label_default,
-                    SortMode.LATEST_UPDATE to MR.strings.action_sort_last_manga_update,
-                    SortMode.RANDOM to MR.strings.action_sort_random,
-                    SortMode.CHAPTER_COUNT to MR.strings.action_sort_total,
-                )
-
-                sortOptions.forEach { (mode, labelRes) ->
-                    val selected = state.sortMode == mode
-                    BaseSortItem(
-                        label = stringResource(labelRes),
-                        icon = if (selected) Icons.Default.Check else null,
-                        onClick = {
-                            onSetSortMode(mode)
-                            showSortSheet = false
-                        },
+                when (page) {
+                    0 -> FilterTab(
+                        availableGenres = state.availableGenres,
+                        selectedGenre = state.genreFilter,
+                        onSetGenreFilter = onSetGenreFilter,
+                        onDismiss = { showFilterSheet = false },
+                    )
+                    1 -> SortTab(
+                        sortMode = state.sortMode,
+                        onSetSortMode = onSetSortMode,
+                        onDismiss = { showFilterSheet = false },
                     )
                 }
             }
@@ -224,6 +225,73 @@ fun RecommendationsScreen(
             sources = state.availableSources,
             onToggleSource = onToggleSource,
             onDismiss = { showManageDialog = false },
+        )
+    }
+}
+
+@Composable
+private fun FilterTab(
+    availableGenres: List<String>,
+    selectedGenre: String?,
+    onSetGenreFilter: (String?) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    HeadingItem(stringResource(MR.strings.action_filter))
+
+    FlowRow(
+        modifier = Modifier.padding(
+            start = SettingsItemsPaddings.Horizontal,
+            end = SettingsItemsPaddings.Horizontal,
+            bottom = SettingsItemsPaddings.Vertical,
+        ),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+    ) {
+        FilterChip(
+            selected = selectedGenre == null,
+            onClick = {
+                onSetGenreFilter(null)
+                onDismiss()
+            },
+            label = { Text("All") },
+        )
+        availableGenres.forEach { genre ->
+            FilterChip(
+                selected = selectedGenre == genre,
+                onClick = {
+                    onSetGenreFilter(if (selectedGenre == genre) null else genre)
+                    onDismiss()
+                },
+                label = { Text(genre) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun SortTab(
+    sortMode: SortMode,
+    onSetSortMode: (SortMode) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    HeadingItem(stringResource(MR.strings.action_sort))
+
+    val sortOptions = listOf(
+        SortMode.DEFAULT to MR.strings.label_default,
+        SortMode.LATEST_UPDATE to MR.strings.action_sort_last_manga_update,
+        SortMode.RANDOM to MR.strings.action_sort_random,
+        SortMode.CHAPTER_COUNT to MR.strings.action_sort_total,
+    )
+
+    sortOptions.forEach { (mode, labelRes) ->
+        val selected = sortMode == mode
+        BaseSortItem(
+            label = stringResource(labelRes),
+            icon = if (selected) Icons.Default.Check else null,
+            onClick = {
+                onSetSortMode(mode)
+                onDismiss()
+            },
         )
     }
 }
