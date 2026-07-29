@@ -1,20 +1,21 @@
-# Project: Refactor Data Aggregation, Genre Filtering, and Pull-to-Refresh Animation
+# Project: Refactor Data Aggregation, Genre Filtering, and Library-Style Pull-to-Refresh
 
 ## Context
-We need to refine the `RecommendationsTab` in our Mihon/Tachiyomi fork to address data aggregation logic, filtering accuracy, and visual feedback during refresh actions. Currently, the data is separated by source, the genre filter is not aligned with the daily recommendation logic, and the Pull-to-Refresh feature lacks loading animation, making the UI appear unresponsive.
+We need to refine the `RecommendationsTab` in our Mihon/Tachiyomi fork to address data aggregation logic, filtering accuracy, and visual feedback during refresh actions. Currently, data is separated by source, genre filtering is not aligned with daily recommendation logic, and the Pull-to-Refresh behavior lacks proper loading animation and UI pattern consistency.
 
 ## Tasks
 
-### Step 1: Implement Global Manga Aggregation Before Filtering
+### Step 1: Implement Global Manga Aggregation & Reference Genre Recommendation Logic
 Modify `RecommendationsViewModel` and its corresponding data repository/interactor:
 - **Combine First, Filter Later:** Ensure manga data from all sources is merged/combined into a single unified list *before* any filtering or sorting logic is applied. Do not separate or group manga by individual sources.
-- **Daily Genre Filtering:** Implement daily data retrieval based on genre filters, similar to the recommendation logic used in `BrowseSourceScreen`. The aggregated list should be filtered accurately according to the selected genre for the day.
+- **Reference Logic from `BrowseSourceViewModel`:** Implement the daily data retrieval and genre-based recommendation logic by referencing how `applyRecommendationsFromHistory` is implemented in `app/src/main/java/eu/kanade/tachiyomi/ui/browse/source/browse/BrowseSourceViewModel.kt`. 
+- **Daily Genre Filtering:** Ensure the aggregated manga list applies the daily genre filter accurately, adapting the recommendation approach from `applyRecommendationsFromHistory` to work across all combined sources globally.
 
-### Step 2: Fix Pull-to-Refresh Loading Animation
+### Step 2: Implement Library-Style Pull-to-Refresh & Animation
 Modify `eu.kanade.presentation.recommendations.RecommendationsScreen`:
-- **Add Loading Indicator:** The pull-to-refresh functionality currently works logically but lacks visual feedback. Integrate a Material 3 `PullToRefresh` loading spinner/indicator (e.g., using `PullRefreshIndicator` or `PullToRefreshBox` depending on Compose version).
-- **State Management:** Ensure the animation indicator is strictly bound to `viewModel.state.isRefreshing` or `viewModel.state.isLoading`, so the spinner is visible while data is fetching and dismisses smoothly once loading completes.
-- **Nested Scrolling:** Ensure the proper `nestedScroll` connection is applied to the inner `LazyVerticalGrid` or `LazyColumn` so the pull gesture triggers the animation without layout stuttering.
+- **Match Library Implementation:** Align the Pull-to-Refresh logic, layout wrapper, and UI pattern directly with the implementation used in Mihon's `LibraryScreen` (or `LibraryContent`).
+- **Add Loading Animation & State Binding:** Ensure the loading spinner/indicator is visible during refreshing actions and correctly bound to `viewModel.state.isRefreshing` / `viewModel.state.isLoading` so it dismisses smoothly when loading completes.
+- **Nested Scrolling:** Ensure proper `nestedScroll` connection with the inner list/grid component so gesture handling and refresh animations behave seamlessly like in the Library screen.
 
 ### Step 3: Implement Mihon-Style Filter/Sorting UI
 Modify `RecommendationsViewModel` and `RecommendationsScreen` to match Mihon's design system:
@@ -24,4 +25,4 @@ Modify `RecommendationsViewModel` and `RecommendationsScreen` to match Mihon's d
 ### Step 4: Testing & Clean Code (WAJIB)
 1. Jalankan `./gradlew spotlessApply` untuk merapikan format kode.
 2. Jalankan `./gradlew testDebugUnitTest` dan pastikan **BUILD SUCCESSFUL**.
-3. Verifikasi bahwa animasi *loading* muncul saat *pull-to-refresh* dan data dari semua *source* sudah tergabung dengan benar sebelum difilter.
+3. Verifikasi bahwa perilaku dan animasi *pull-to-refresh* sudah identik dengan fitur *pull-to-refresh* di Library, serta data dari semua *source* sudah tergabung sebelum difilter dengan logika rekomendasi yang terinspirasi dari `applyRecommendationsFromHistory`.
