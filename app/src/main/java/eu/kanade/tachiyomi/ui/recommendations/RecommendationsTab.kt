@@ -9,7 +9,6 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import app.cash.sqldelight.async.coroutines.awaitAsList
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -31,7 +30,6 @@ import logcat.LogPriority
 import mihon.domain.manga.model.toDomainManga
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.data.Database
 import tachiyomi.domain.manga.interactor.NetworkToLocalManga
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.source.service.SourceManager
@@ -39,7 +37,6 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.util.Date
 import kotlin.random.Random
 
 data object RecommendationsTab : Tab {
@@ -74,11 +71,6 @@ data object RecommendationsTab : Tab {
             onToggleSource = viewModel::toggleSource,
             onRefresh = viewModel::refreshRecommendations,
             onSetSortMode = viewModel::setSortMode,
-            onToggleGenreFilter = viewModel::toggleGenreFilter,
-            onOpenSettings = viewModel::openSettings,
-            onOpenManageSources = viewModel::openManageSources,
-            onDismissDialog = viewModel::dismissDialog,
-            onResetFilters = viewModel::resetFilters,
         )
     }
 }
@@ -94,7 +86,6 @@ class RecommendationsViewModel(
     private val sourceManager: SourceManager = Injekt.get(),
     private val sourcePreferences: SourcePreferences = Injekt.get(),
     private val networkToLocalManga: NetworkToLocalManga = Injekt.get(),
-    private val database: Database = Injekt.get(),
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(State())
@@ -110,17 +101,7 @@ class RecommendationsViewModel(
         refreshRecommendations()
     }
 
-    private fun getActiveSourceIds(): List<Long> {
-        val savedIds = recommendedSourceIds.mapNotNull { it.toLongOrNull() }
-        if (savedIds.isNotEmpty()) return savedIds
-        return sourceManager.getAll()
-            .filterIsInstance<CatalogueSource>()
-            .filter { it.id != 0L }
-            .map { it.id }
-    }
-
     private fun loadSources() {
-        val savedIds = recommendedSourceIds
         val sources = sourceManager.getAll()
             .filterIsInstance<CatalogueSource>()
             .filter { it.id != 0L }
@@ -131,7 +112,7 @@ class RecommendationsViewModel(
                         id = s.id,
                         name = s.name,
                         lang = s.lang,
-                        enabled = if (savedIds.isEmpty()) true else s.id.toString() in savedIds,
+                        enabled = s.id.toString() in recommendedSourceIds,
                     )
                 },
             )
@@ -151,38 +132,18 @@ class RecommendationsViewModel(
         refreshRecommendations()
     }
 
-    fun toggleGenreFilter(genre: String) {
-        _state.update { current ->
-            val updated = current.selectedGenres.toMutableSet()
-            if (genre in updated) updated.remove(genre) else updated.add(genre)
-            current.copy(
-                selectedGenres = updated,
-                recommendations = applyGenreFilter(rawRecommendations, updated, current.sortMode),
-            )
-        }
-    }
-
-    fun resetFilters() {
-        _state.update { current ->
-            current.copy(
-                selectedGenres = emptySet(),
-                recommendations = applyGenreFilter(rawRecommendations, emptySet(), current.sortMode),
-            )
-        }
-    }
-
     fun refreshRecommendations() {
         viewModelScope.launchIO {
-            _state.update { it.copy(isRefreshing = true) }
-            val sourceIds = getActiveSourceIds()
-            if (sourceIds.isEmpty()) {
+            _state.update { it.copy(isLoading = true) }
+            val selectedIds = recommendedSourceIds.mapNotNull { it.toLongOrNull() }
+            if (selectedIds.isEmpty()) {
                 rawRecommendations = emptyList()
-                _state.update { it.copy(isRefreshing = false, isLoading = false, recommendations = emptyList()) }
+                _state.update { it.copy(isLoading = false, recommendations = emptyList()) }
                 return@launchIO
             }
 
             val allManga = mutableListOf<Manga>()
-            for (sourceId in sourceIds) {
+            for (sourceId in selectedIds) {
                 val source = sourceManager.get(sourceId) as? CatalogueSource ?: continue
                 try {
                     val page = source.getPopularManga(1)
@@ -193,105 +154,28 @@ class RecommendationsViewModel(
                 }
                 if (allManga.size >= 45) break
             }
-
             rawRecommendations = allManga
-
-            val topGenres = getTopGenresFromHistory()
-            _state.update { current ->
-                current.copy(
-                    availableGenres = topGenres,
-                    isLoading = false,
-                    isRefreshing = false,
-                    recommendations = applyGenreFilter(allManga, current.selectedGenres, current.sortMode),
-                )
-            }
+            val sorted = applySort(allManga, _state.value.sortMode)
+            _state.update { it.copy(isLoading = false, recommendations = sorted) }
         }
-    }
-
-    private suspend fun getTopGenresFromHistory(): List<String> {
-        return try {
-            val selectedIds = getActiveSourceIds()
-            if (selectedIds.isEmpty()) return emptyList()
-
-            val allGenres = mutableListOf<String>()
-            for (sourceId in selectedIds) {
-                try {
-                    val historyGenres = database.historyQueries.getHistoryBySource(
-                        sourceId,
-                        5L,
-                    ) { _id: Long, chapter_id: Long, last_read: Date?, time_read: Long, genres: List<String>? ->
-                        genres ?: emptyList()
-                    }.awaitAsList()
-                    allGenres.addAll(historyGenres.flatten())
-                } catch (_: Exception) {}
-            }
-
-            val flatGenres = allGenres
-                .map { it.trim() }
-                .filter { it.isNotBlank() }
-                .map { it.lowercase() }
-
-            if (flatGenres.isEmpty()) return emptyList()
-
-            flatGenres.groupingBy { it }.eachCount()
-                .entries
-                .sortedByDescending { it.value }
-                .map { it.key }
-                .take(10)
-        } catch (e: Exception) {
-            logcat(LogPriority.ERROR, e) { "Failed to read history genres for recommendations" }
-            emptyList()
-        }
-    }
-
-    private fun applyGenreFilter(
-        list: List<Manga>,
-        selectedGenres: Set<String>,
-        sortMode: SortMode,
-    ): List<Manga> {
-        val activeGenres = if (selectedGenres.isNotEmpty()) {
-            selectedGenres
-        } else {
-            _state.value.availableGenres.take(5).toSet()
-        }
-
-        val scored = list.map { manga ->
-            val mangaGenres = manga.genre?.map { it.trim().lowercase() } ?: emptyList()
-            val matchCount = mangaGenres.count { it in activeGenres }
-            manga to matchCount
-        }
-
-        val filtered = scored.filter { it.second > 0 }
-
-        val sorted = when (sortMode) {
-            SortMode.DEFAULT -> filtered.sortedByDescending { it.second }
-            SortMode.LATEST_UPDATE -> filtered.sortedByDescending { it.first.lastUpdate }
-            SortMode.RANDOM -> filtered.shuffled(Random)
-            SortMode.CHAPTER_COUNT -> filtered.sortedByDescending { it.second }
-        }
-
-        return sorted.map { it.first }
     }
 
     fun setSortMode(sortMode: SortMode) {
         _state.update {
             it.copy(
                 sortMode = sortMode,
-                recommendations = applyGenreFilter(rawRecommendations, it.selectedGenres, sortMode),
+                recommendations = applySort(rawRecommendations, sortMode),
             )
         }
     }
 
-    fun openSettings() {
-        _state.update { it.copy(dialog = State.Dialog.Settings) }
-    }
-
-    fun openManageSources() {
-        _state.update { it.copy(dialog = State.Dialog.ManageSources) }
-    }
-
-    fun dismissDialog() {
-        _state.update { it.copy(dialog = null) }
+    private fun applySort(list: List<Manga>, sortMode: SortMode): List<Manga> {
+        return when (sortMode) {
+            SortMode.DEFAULT -> list
+            SortMode.LATEST_UPDATE -> list.sortedByDescending { it.lastUpdate }
+            SortMode.RANDOM -> list.shuffled(Random)
+            SortMode.CHAPTER_COUNT -> list
+        }
     }
 
     fun onMangaClick(manga: Manga, onClick: (Long) -> Unit) {
@@ -305,19 +189,10 @@ class RecommendationsViewModel(
 
     data class State(
         val isLoading: Boolean = false,
-        val isRefreshing: Boolean = false,
         val recommendations: List<Manga> = emptyList(),
         val availableSources: List<SourceItem> = emptyList(),
         val sortMode: SortMode = SortMode.DEFAULT,
-        val dialog: Dialog? = null,
-        val selectedGenres: Set<String> = emptySet(),
-        val availableGenres: List<String> = emptyList(),
-    ) {
-        sealed interface Dialog {
-            data object Settings : Dialog
-            data object ManageSources : Dialog
-        }
-    }
+    )
 
     data class SourceItem(
         val id: Long,

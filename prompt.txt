@@ -1,27 +1,28 @@
-# Project: Separate Manage Sources from Filter/Sort Dialog and Fix Recommendation Logic
+# Task: Fix Blank/Black Image Loading Bug in Reader
 
-## Context
-In the previous iteration, we combined "Manage Sources" into the `TabbedDialog` along with Filter and Sort options. However, this caused a bug where **no recommendations are available/displayed** ("Gak ada rekomendasi yang tersedia"). 
+## 1. Context & Bug Description
+Saat membaca komik di aplikasi Mihon, beberapa halaman/gambar mengalami bug berupa tampilan **blank hitam**. 
+- Gambar yang blank masih bisa di-scroll seperti biasa.
+- Halaman/gambar setelahnya terkadang load secara normal.
+- Setelah diverifikasi ke web/source aslinya, gambar tersebut **ada dan tidak rusak** (bukan masalah pada *source scraper*).
+- Bug ini hanya terjadi pada beberapa gambar tertentu (diduga berkaitan dengan kegagalan *image decoding*, *caching*, format gambar tertentu seperti WebP/Progressive JPEG, atau *out-of-memory* pada gambar beresolusi tinggi/panjang).
 
-In Mihon's architecture, managing sources and filtering/sorting recommendations serve different purposes. Including source selection inside the filter tabs interferes with the default source query/aggregation logic, causing the manga list to return empty.
+## 2. Objective
+Perbaiki bug pada sistem *image loading* / *reader* agar semua gambar dapat di-decode dan ditampilkan dengan benar tanpa memunculkan frame hitam/blank.
 
-## Tasks
+## 3. Investigation & Action Steps
 
-### Step 1: Remove "Manage Sources" from Filter/Sort Dialog
-Modify `eu.kanade.tachiyomi.ui.recommendations.RecommendationsTab` and `eu.kanade.presentation.recommendations.RecommendationsScreen`:
-- Remove the "Manage Sources" tab from the `TabbedDialog` (or Filter/Sort sheet).
-- The `TabbedDialog` should **only** contain:
-  1. **Filter Tab** (for Genre filtering based on daily history recommendations).
-  2. **Sort Tab** (for sorting options like Default, Latest Update, Random, Chapter Count).
+### Step 1: Analyze Reader & Image Loader
+- Periksa komponen *image loader* yang digunakan pada reader (misalnya Coil, Glide, atau custom decoder Mihon).
+- Evaluasi penanganan *error callback*, *fallback*, dan *cache miss* saat gambar gagal di-decode.
 
-### Step 2: Separate "Manage Sources" Entry Point
-- Relocate "Manage Sources" to a dedicated action or menu item (e.g., inside an overflow menu / three-dot icon in the `TopAppBar`, or as a separate dedicated button/dialog), matching how standard Mihon tabs separate library settings from general source management.
-- Ensure that modifying sources through this separate entry point correctly updates the saved preferences without breaking the active recommendation state.
+### Step 2: Fix Decoding & Memory Issues
+- Pastikan aplikasi dapat menangani berbagai format gambar (JPEG, PNG, WebP, GIF, AVIF) dengan benar.
+- Jika gambar hitam disebabkan oleh *Out Of Memory* (OOM) pada bitmap beresolusi sangat tinggi/panjang (sering terjadi pada *manhwa/webtoon*), tambahkan mekanisme *downsampling*, *subsampling*, atau *retry* yang sesuai.
+- Jangan sampai perbaikan ini merusak performa *smooth scrolling* pada Reader.
 
-### Step 3: Fix Empty Recommendation Bug
-Review the manga aggregation and filtering logic in `RecommendationsTab`:
-- Ensure that when the screen loads, recommendations are fetched by default from the user's active/enabled sources **without requiring the user to manually select sources inside the filter dialog**.
-- Verify that `allManga` aggregation (`Combine First, Filter Later`) works correctly with the default selected sources so that the list is populated immediately on launch.
+### Step 3: Implement Retry / Error Recovery
+- Jika proses render gambar sempat gagal sementara, pastikan ada mekanisme *auto-retry* atau *reload* siluman sehingga gambar tidak statis menjadi hitam permanen.
 
 ### Step 4: Testing & Clean Code (WAJIB)
 1. Jalankan `./gradlew spotlessApply` untuk merapikan format kode.
