@@ -1,30 +1,34 @@
-# Task: Fix Blank/Black Image Loading Bug in Reader
+
+# Task: Handle Blank/Black Image Loading Bug with User Prompt
 
 ## 1. Context & Bug Description
-Saat membaca komik di aplikasi Mihon, beberapa halaman/gambar mengalami bug berupa tampilan **blank hitam**. 
-- Gambar yang blank masih bisa di-scroll seperti biasa.
-- Halaman/gambar setelahnya terkadang load secara normal.
-- Setelah diverifikasi ke web/source aslinya, gambar tersebut **ada dan tidak rusak** (bukan masalah pada *source scraper*).
-- Bug ini hanya terjadi pada beberapa gambar tertentu (diduga berkaitan dengan kegagalan *image decoding*, *caching*, format gambar tertentu seperti WebP/Progressive JPEG, atau *out-of-memory* pada gambar beresolusi tinggi/panjang).
-
+Saat membaca komik di aplikasi Mihon, beberapa halaman/gambar mengalami bug berupa tampilan **blank hitam**.
+ * Gambar yang blank masih bisa di-scroll seperti biasa.
+ * Halaman/gambar setelahnya terkadang *load* secara normal.
+ * Setelah diverifikasi ke web/source aslinya, gambar tersebut **ada dan tidak rusak** (bukan masalah pada *source scraper*).
+ * Bug ini umumnya disebabkan oleh kegagalan *hardware decoding* atau masalah memori (OOM) pada perangkat pengguna saat memuat gambar beresolusi tinggi/panjang.
+ * **Solusi yang diinginkan:** Daripada merombak struktur kode secara masif, lebih baik berikan notifikasi kepada pengguna terkait batasan perangkat mereka.
+ 
 ## 2. Objective
-Perbaiki bug pada sistem *image loading* / *reader* agar semua gambar dapat di-decode dan ditampilkan dengan benar tanpa memunculkan frame hitam/blank.
+Menambahkan mekanisme deteksi saat gambar gagal di-decode (layar hitam) dan menampilkan *pop-up dialog* atau peringatan yang menyuruh pengguna untuk menyesuaikan pengaturan *reader* agar gambar bisa dimuat.
 
 ## 3. Investigation & Action Steps
 
-### Step 1: Analyze Reader & Image Loader
-- Periksa komponen *image loader* yang digunakan pada reader (misalnya Coil, Glide, atau custom decoder Mihon).
-- Evaluasi penanganan *error callback*, *fallback*, dan *cache miss* saat gambar gagal di-decode.
-
-### Step 2: Fix Decoding & Memory Issues
-- Pastikan aplikasi dapat menangani berbagai format gambar (JPEG, PNG, WebP, GIF, AVIF) dengan benar.
-- Jika gambar hitam disebabkan oleh *Out Of Memory* (OOM) pada bitmap beresolusi sangat tinggi/panjang (sering terjadi pada *manhwa/webtoon*), tambahkan mekanisme *downsampling*, *subsampling*, atau *retry* yang sesuai.
-- Jangan sampai perbaikan ini merusak performa *smooth scrolling* pada Reader.
-
-### Step 3: Implement Retry / Error Recovery
-- Jika proses render gambar sempat gagal sementara, pastikan ada mekanisme *auto-retry* atau *reload* siluman sehingga gambar tidak statis menjadi hitam permanen.
-
+### Step 1: Error Detection pada Image Loader
+ * Pantau *error callback* pada komponen *image loader* (seperti Coil/Glide) yang digunakan oleh *reader*.
+ * Tangkap *exception* yang mengindikasikan kegagalan *decoding* atau *Out Of Memory* yang berujung pada halaman hitam.
+ 
+### Step 2: Implementasi Pop-Up / Dialog Peringatan
+ * Buat sebuah *pop-up dialog*, *snackbar*, atau *overlay* pada halaman yang gagal dimuat.
+ * **Pesan Pop-Up:** Instruksikan pengguna dengan kalimat yang jelas. Contoh:
+   > "Beberapa gambar gagal dimuat. Silakan masuk ke Pengaturan Reader dan aktifkan **'Gunakan decoder perangkat lama'** *(Legacy device decoder)* atau coba **turunkan kualitas format Bitmap**."
+   > 
+ * Pastikan *pop-up* tidak muncul secara *spam* (berulang-ulang pada setiap halaman secara bersamaan). Cukup tampilkan satu peringatan utama atau letakkan pesan langsung pada area gambar yang hitam.
+ 
+### Step 3: Navigasi Pengaturan (Opsional tapi Direkomendasikan)
+ * Jika memungkinkan, tambahkan tombol **"Buka Pengaturan"** pada *pop-up* tersebut agar pengguna bisa langsung diarahkan ke menu *Settings > Reader*.
+ 
 ### Step 4: Testing & Clean Code (WAJIB)
-1. Jalankan `./gradlew spotlessApply` untuk merapikan format kode.
-2. Jalankan `./gradlew testDebugUnitTest` dan pastikan **BUILD SUCCESSFUL**.
-3. Verifikasi bahwa daftar komik rekomendasi langsung muncul saat layar dibuka dan tidak lagi kosong (*no recommendations available*).
+ 1. Jalankan ./gradlew spotlessApply untuk merapikan format kode.
+ 2. Jalankan ./gradlew testDebugUnitTest dan pastikan **BUILD SUCCESSFUL**.
+ 3. Simulasikan *error decoding* (misalnya dengan gambar beresolusi sangat besar di perangkat *low-end*) dan verifikasi bahwa *pop-up* peringatan muncul dengan benar tanpa membuat aplikasi *crash*.
