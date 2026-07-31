@@ -11,6 +11,7 @@ import eu.kanade.tachiyomi.ui.reader.model.InsertPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderProgressIndicator
+import eu.kanade.tachiyomi.ui.reader.viewer.isImageDecodeError
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
 import eu.kanade.tachiyomi.widget.ViewPagerAdapter
 import kotlinx.coroutines.Job
@@ -296,6 +297,16 @@ class PagerPageHolder(
 
         errorLayout?.errorMessage?.text = with(context) { error?.formattedMessage }
             ?: context.stringResource(MR.strings.decode_image_error)
+
+        val isDecodeError = isImageDecodeError(error)
+        errorLayout?.warningMessage?.isVisible = isDecodeError
+        errorLayout?.actionOpenSettings?.isVisible = isDecodeError
+        if (isDecodeError) {
+            errorLayout?.actionOpenSettings?.viewer = viewer
+            errorLayout?.actionOpenSettings?.setOnClickListener {
+                viewer.activity.viewModel.openSettingsDialog()
+            }
+        }
 
         errorLayout?.root?.isVisible = true
         return errorLayout!!

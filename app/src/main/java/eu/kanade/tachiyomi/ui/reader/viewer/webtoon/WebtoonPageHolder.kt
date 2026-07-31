@@ -16,6 +16,7 @@ import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderProgressIndicator
+import eu.kanade.tachiyomi.ui.reader.viewer.isImageDecodeError
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
 import eu.kanade.tachiyomi.util.system.dpToPx
 import kotlinx.coroutines.Job
@@ -300,6 +301,15 @@ class WebtoonPageHolder(
 
         errorLayout?.errorMessage?.text = with(context) { error?.formattedMessage }
             ?: context.stringResource(MR.strings.decode_image_error)
+
+        val isDecodeError = isImageDecodeError(error)
+        errorLayout?.warningMessage?.isVisible = isDecodeError
+        errorLayout?.actionOpenSettings?.isVisible = isDecodeError
+        if (isDecodeError) {
+            errorLayout?.actionOpenSettings?.setOnClickListener {
+                viewer.activity.viewModel.openSettingsDialog()
+            }
+        }
 
         return errorLayout!!
     }

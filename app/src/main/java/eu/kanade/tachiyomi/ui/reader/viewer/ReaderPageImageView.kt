@@ -430,4 +430,26 @@ open class ReaderPageImageView @JvmOverloads constructor(
     }
 }
 
+/**
+ * Checks whether the given [error] indicates a failure while decoding the image on the device,
+ * such as an out-of-memory error, a hardware bitmap decoding failure or a corrupt/unsupported
+ * image. These errors usually leave the page blank/black even though the image itself exists and
+ * is not corrupted on the server.
+ *
+ * Network/stream errors are not considered decode errors so a generic error layout is shown instead.
+ */
+fun isImageDecodeError(error: Throwable?): Boolean {
+    if (error is OutOfMemoryError) return true
+    val message = error?.message?.lowercase() ?: return false
+    return message.contains("decode") ||
+        message.contains("bitmap") ||
+        message.contains("hardware") ||
+        message.contains("out of memory") ||
+        message.contains("failed to allocate") ||
+        message.contains("could not allocate") ||
+        message.contains("image size") ||
+        message.contains("exceeds supported range") ||
+        message.contains("failed to initialize")
+}
+
 private const val MAX_ZOOM_SCALE = 5F

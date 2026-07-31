@@ -40,6 +40,7 @@
     <string name="action_previous_chapter">Bab sebelumnya</string>
     <string name="action_next_chapter">Bab selanjutnya</string>
     <string name="action_retry">Coba lagi</string>
+    <string name="action_open_settings">Buka Pengaturan</string>
     <string name="action_remove">Hapus</string>
     <string name="action_resume">Lanjut</string>
     <string name="action_open_in_browser">Buka di peramban</string>
@@ -196,6 +197,7 @@
     <string name="chapter_progress">Halaman: %1$d</string>
     <string name="no_next_chapter">Bab berikutnya tak ditemukan</string>
     <string name="decode_image_error">Gambar tidak dapat dimuat</string>
+    <string name="reader_error_decode_hint">Beberapa gambar gagal ditampilkan karena keterbatasan perangkat Anda. Silakan buka Pengaturan Reader dan aktifkan decoder perangkat lama, atau coba turunkan kualitas format Bitmap.</string>
     <string name="confirm_set_image_as_cover">Gunakan gambar ini sebagai sampul?</string>
     <string name="download_queue_error">Tidak dapat mengunduh bab. Anda bisa mencoba lagi di bagian unduhan</string>
     <string name="notification_new_chapters">Bab baru ditemukan</string>
