@@ -322,8 +322,6 @@ open class ReaderPageImageView @JvmOverloads constructor(
                             onImageLoadError(result.throwable)
                         },
                     )
-                    .size(ViewSizeResolver(this@ReaderPageImageView))
-                    .precision(Precision.INEXACT)
                     .cropBorders(config.cropBorders)
                     .crossfade(false)
                     .build()
