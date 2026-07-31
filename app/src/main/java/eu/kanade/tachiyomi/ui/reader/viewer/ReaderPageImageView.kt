@@ -322,6 +322,8 @@ open class ReaderPageImageView @JvmOverloads constructor(
                             onImageLoadError(result.throwable)
                         },
                     )
+                    .size(coil3.size.Size.ORIGINAL)
+                    .precision(Precision.EXACT)
                     .cropBorders(config.cropBorders)
                     .crossfade(false)
                     .build()
