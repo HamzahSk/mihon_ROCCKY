@@ -26,6 +26,7 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.size.Precision
 import coil3.size.ViewSizeResolver
+import coil3.size.Size
 import com.davemorrissey.labs.subscaleview.ImageSource
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.EASE_IN_OUT_QUAD
@@ -312,9 +313,16 @@ open class ReaderPageImageView @JvmOverloads constructor(
                     .diskCachePolicy(CachePolicy.DISABLED)
                     .target(
                         onSuccess = { result ->
-                            val drawable = result.asDrawable(context.resources)
-                            setImage(drawable, config)
-                            return@target
+                            // Ubah hasil (Image/Drawable) ke Bitmap agar bisa dipotong-potong (tiling) oleh SSIV
+                            val bitmap = (result as? coil3.BitmapImage)?.bitmap 
+                                ?: (result.asDrawable(context.resources) as? BitmapDrawable)?.bitmap
+                            if (bitmap != null) {
+                                setImage(ImageSource.bitmap(bitmap))
+                                isVisible = true
+                                this@ReaderPageImageView.onImageLoaded()
+                            } else {
+                                onImageLoadError(IllegalArgumentException("Gagal mengonversi gambar ke Bitmap"))
+                            }
                         },
                     )
                     .listener(
@@ -322,12 +330,14 @@ open class ReaderPageImageView @JvmOverloads constructor(
                             onImageLoadError(result.throwable)
                         },
                     )
-                    .size(coil3.size.Size.ORIGINAL)
-                    .precision(Precision.EXACT)
+                    // Pakai Size.ORIGINAL supaya Coil tidak me-resize/blurin gambar panjang
+                    .size(Size.ORIGINAL)
                     .cropBorders(config.cropBorders)
+                    .customDecoder(true)
                     .crossfade(false)
                     .build()
                     .let(context.imageLoader::enqueue)
+
             }
             else -> {
                 throw IllegalArgumentException("Not implemented for class ${data::class.simpleName}")
