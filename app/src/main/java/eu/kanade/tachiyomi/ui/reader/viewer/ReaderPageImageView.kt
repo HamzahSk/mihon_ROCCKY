@@ -18,6 +18,7 @@ import androidx.annotation.StyleRes
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.os.postDelayed
 import androidx.core.view.isVisible
+import coil3.BitmapImage
 import coil3.asDrawable
 import coil3.dispose
 import coil3.imageLoader
@@ -26,7 +27,6 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.size.Precision
 import coil3.size.ViewSizeResolver
-import coil3.size.Size
 import com.davemorrissey.labs.subscaleview.ImageSource
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.EASE_IN_OUT_QUAD
@@ -35,6 +35,7 @@ import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.SCALE_TYPE_
 import com.github.chrisbanes.photoview.PhotoView
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.tachiyomi.data.coil.cropBorders
+import eu.kanade.tachiyomi.data.coil.customDecoder
 import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonSubsamplingImageView
 import eu.kanade.tachiyomi.util.system.animatorDurationScale
 import eu.kanade.tachiyomi.util.view.isVisibleOnScreen
@@ -313,16 +314,9 @@ open class ReaderPageImageView @JvmOverloads constructor(
                     .diskCachePolicy(CachePolicy.DISABLED)
                     .target(
                         onSuccess = { result ->
-                            // Ubah hasil (Image/Drawable) ke Bitmap agar bisa dipotong-potong (tiling) oleh SSIV
-                            val bitmap = (result as? coil3.BitmapImage)?.bitmap 
-                                ?: (result.asDrawable(context.resources) as? BitmapDrawable)?.bitmap
-                            if (bitmap != null) {
-                                setImage(ImageSource.bitmap(bitmap))
-                                isVisible = true
-                                this@ReaderPageImageView.onImageLoaded()
-                            } else {
-                                onImageLoadError(IllegalArgumentException("Gagal mengonversi gambar ke Bitmap"))
-                            }
+                            val image = result as BitmapImage
+                            setImage(ImageSource.bitmap(image.bitmap))
+                            isVisible = true
                         },
                     )
                     .listener(
@@ -330,14 +324,13 @@ open class ReaderPageImageView @JvmOverloads constructor(
                             onImageLoadError(result.throwable)
                         },
                     )
-                    // Pakai Size.ORIGINAL supaya Coil tidak me-resize/blurin gambar panjang
-                    .size(Size.ORIGINAL)
+                    .size(ViewSizeResolver(this@ReaderPageImageView))
+                    .precision(Precision.INEXACT)
                     .cropBorders(config.cropBorders)
                     .customDecoder(true)
                     .crossfade(false)
                     .build()
                     .let(context.imageLoader::enqueue)
-
             }
             else -> {
                 throw IllegalArgumentException("Not implemented for class ${data::class.simpleName}")
