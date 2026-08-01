@@ -105,7 +105,6 @@
     <string name="action_previous_chapter">Previous chapter</string>
     <string name="action_next_chapter">Next chapter</string>
     <string name="action_retry">Retry</string>
-    <string name="action_open_settings">Open settings</string>
     <string name="action_remove">Remove</string>
     <string name="action_remove_everything">Remove everything</string>
     <string name="action_start">Start</string>
@@ -855,7 +854,6 @@
     <string name="chapter_progress">Page: %1$d</string>
     <string name="no_next_chapter">Next chapter not found</string>
     <string name="decode_image_error">The image couldn\'t be loaded</string>
-    <string name="reader_error_decode_hint">Some images couldn\'t be displayed because of your device\'s hardware limitations. Open Reader Settings and enable the legacy device decoder, or try lowering the Bitmap format quality.</string>
     <string name="confirm_set_image_as_cover">Use this image as cover art?</string>
     <string name="pref_category_for_this_series">For this series</string>
     <string name="viewer">Reading mode</string>
