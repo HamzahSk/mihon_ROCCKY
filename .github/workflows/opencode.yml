@@ -5,7 +5,7 @@ on:
   
   push:
     paths:
-      - "prompt.txt"
+      - "prompt.md"
 
 permissions:
   contents: read
@@ -41,7 +41,7 @@ jobs:
           opencode run \
             --model opencode/deepseek-v4-flash-free \
             --auto \
-            "$(cat prompt.txt)" 2>&1 | tee ai-response-recap.txt || true
+            "$(cat prompt.md)" 2>&1 | tee ai-response-recap.txt || true
 
       - name: Collect changed files and AI recap
         run: |
