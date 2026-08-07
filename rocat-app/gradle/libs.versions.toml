@@ -1,0 +1,66 @@
+[versions]
+agp = "8.7.3"
+kotlin = "2.0.21"
+kotlinx-coroutines = "1.9.0"
+kotlinx-serialization = "1.7.3"
+coreKtx = "1.15.0"
+lifecycle = "2.8.7"
+activity-compose = "1.9.3"
+compose-bom = "2024.12.01"
+okhttp = "4.12.0"
+okio = "3.9.1"
+json = "1.7.3"
+jsoup = "1.18.1"
+junit = "4.13.2"
+androidx-junit = "1.2.1"
+espresso = "3.6.1"
+logcat = "0.4"
+
+[libraries]
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-lifecycle-viewmodel = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
+androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
+
+compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
+compose-ui = { group = "androidx.compose.ui", name = "ui" }
+compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+compose-material-icons = { group = "androidx.compose.material", name = "material-icons-extended" }
+compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
+compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
+
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+kotlinx-io = { group = "org.jetbrains.kotlinx", name = "kotlinx-io-core", version = "0.5.4" }
+
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
+okio = { group = "com.squareup.okio", name = "okio", version.ref = "okio" }
+jsoup = { group = "org.jsoup", name = "jsoup", version.ref = "jsoup" }
+injekt = { group = "com.github.mihonapp", name = "injekt", version = "91edab2317" }
+injekt-api = { group = "uy.kohesive.injekt", name = "injekt-api", version = "1.16.1" }
+logcat = { group = "com.squareup.logcat", name = "logcat", version.ref = "logcat" }
+
+rhino = { group = "org.mozilla", name = "rhino", version = "1.7.15" }
+
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-junit" }
+espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+
+[bundles]
+coroutines = ["kotlinx-coroutines-core", "kotlinx-coroutines-android"]
+okhttp = ["okhttp", "okhttp-logging", "okio"]
+serialization = ["kotlinx-serialization-json", "okio"]
