@@ -7,9 +7,13 @@ import app.rocat.core.common.injekt.Registrar
 import app.rocat.core.common.network.NetworkHelper
 import app.rocat.data.script.ScriptManager
 import app.rocat.data.script.ScriptRepositoryImpl
+import app.rocat.data.script.ScriptSourceFetcher
+import app.rocat.domain.script.DeleteScript
 import app.rocat.domain.script.ExecuteScript
 import app.rocat.domain.script.GetScripts
+import app.rocat.domain.script.ImportScript
 import app.rocat.domain.script.ScriptRepository
+import app.rocat.domain.script.SetScriptEnabled
 import app.rocat.domain.script.UpsertScript
 
 /**
@@ -34,6 +38,10 @@ class AppModule(val app: Application) : InjektModule {
         registrar.addSingleton(scriptRepository)
         registrar.addSingletonFactory { GetScripts(scriptRepository) }
         registrar.addSingletonFactory { UpsertScript(scriptRepository) }
+        registrar.addSingletonFactory { ImportScript(scriptRepository) }
+        registrar.addSingletonFactory { DeleteScript(scriptRepository) }
+        registrar.addSingletonFactory { SetScriptEnabled(scriptRepository) }
+        registrar.addSingletonFactory { ScriptSourceFetcher(networkHelper.client) }
         registrar.addSingletonFactory {
             ExecuteScript(
                 engine = scriptManager.engine,

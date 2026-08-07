@@ -1,0 +1,182 @@
+package app.rocat.ui.detail
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import app.rocat.scripting.api.model.Script
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ScriptDetailScreen(
+    scriptId: String,
+    onBack: () -> Unit,
+    viewModel: ScriptDetailViewModel = viewModel(key = "detail_$scriptId") { ScriptDetailViewModel(scriptId) },
+) {
+    val state by viewModel.detailState.collectAsState()
+    val script = state.script
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(script?.name ?: "Script") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { viewModel.delete(onBack) }) {
+                        Icon(Icons.Filled.Delete, contentDescription = "Delete script")
+                    }
+                },
+            )
+        },
+    ) { innerPadding ->
+        if (script == null) {
+            Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
+                Text("Script not found", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            return@Scaffold
+        }
+
+        Column(
+            modifier = Modifier.fillMaxSize().padding(innerPadding).verticalScroll(rememberScrollState()),
+        ) {
+            MetadataCard(script, viewModel::setEnabled)
+            MatchesCard(script)
+            CodeSection(script, viewModel)
+        }
+    }
+}
+
+@Composable
+private fun MetadataCard(script: Script, onToggle: (Boolean) -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(script.name, style = MaterialTheme.typography.titleMedium)
+                    Text("version ${script.version}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                }
+                Switch(checked = script.enabled, onCheckedChange = onToggle)
+            }
+            Spacer(Modifier.height(12.dp))
+            DetailRow("Description", script.description.ifBlank { "—" })
+            DetailRow("Author", script.author.ifBlank { "—" })
+            if (script.icon.isNotBlank()) DetailRow("Icon", script.icon)
+            DetailRow("ID", script.id)
+        }
+    }
+}
+
+@Composable
+private fun DetailRow(label: String, value: String) {
+    Column(modifier = Modifier.padding(top = 6.dp)) {
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+@Composable
+private fun MatchesCard(script: Script) {
+    if (script.matches.isEmpty()) return
+    Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("Matches", style = MaterialTheme.typography.titleSmall)
+            script.matches.forEach { match ->
+                Text(
+                    text = match,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontFamily = FontFamily.Monospace,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CodeSection(script: Script, viewModel: ScriptDetailViewModel) {
+    var editing by remember { mutableStateOf(false) }
+    var draft by remember { mutableStateOf(script.source) }
+
+    Card(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Source", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                if (!editing) {
+                    IconButton(onClick = {
+                        draft = script.source
+                        editing = true
+                    }) {
+                        Icon(Icons.Filled.Edit, contentDescription = "Edit source")
+                    }
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            HorizontalDivider()
+
+            if (editing) {
+                OutlinedTextField(
+                    value = draft,
+                    onValueChange = { draft = it },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 240.dp),
+                    textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                )
+                Spacer(Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = { viewModel.saveSource(draft) { editing = false } }) {
+                        Text("Save")
+                    }
+                    OutlinedButton(onClick = { editing = false; draft = script.source }) {
+                        Text("Cancel")
+                    }
+                }
+            } else {
+                Text(
+                    text = script.source,
+                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                    modifier = Modifier.fillMaxWidth().heightIn(max = 320.dp).verticalScroll(rememberScrollState()),
+                )
+            }
+        }
+    }
+}

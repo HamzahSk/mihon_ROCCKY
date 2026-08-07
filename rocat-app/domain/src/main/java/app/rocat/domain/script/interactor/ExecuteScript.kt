@@ -13,5 +13,6 @@ class ExecuteScript(
     private val engine: ScriptEngine,
     private val environment: ScriptEnvironment,
 ) {
-    suspend fun await(script: Script): ScriptResult = engine.execute(script, environment)
+    suspend fun await(script: Script, args: List<String> = emptyList()): ScriptResult =
+        engine.execute(script, environment, args)
 }

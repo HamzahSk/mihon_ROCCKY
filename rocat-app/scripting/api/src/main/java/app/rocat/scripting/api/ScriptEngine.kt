@@ -25,12 +25,19 @@ interface ScriptEnvironment {
 /**
  * Result of a [ScriptEnvironment.fetch] call, serializable so it can cross from the
  * JS evaluation context back into Kotlin world.
+ *
+ * Network failures never throw: they are reported through [error] with [status] set
+ * to 0 so a misbehaving script cannot crash the app.
  */
 data class FetchResult(
     val status: Int,
     val headers: Map<String, String>,
     val body: String,
-)
+    val statusText: String = "",
+    val error: String? = null,
+) {
+    val ok: Boolean get() = status in 200..299
+}
 
 /**
  * Contract for any JavaScript engine used to run user scripts. Kept intentionally
@@ -43,10 +50,16 @@ interface ScriptEngine {
     /**
      * Executes [script]'s `main` entry point with the given [environment].
      *
+     * @param args arguments forwarded to the script's `main(...)` function, e.g. the
+     *   target URL supplied by the playground.
      * @return the value the script returns (typically the JSON-serialisable result of
      *   its work, e.g. an array of scraped items).
      */
-    suspend fun execute(script: Script, environment: ScriptEnvironment): ScriptResult
+    suspend fun execute(
+        script: Script,
+        environment: ScriptEnvironment,
+        args: List<String> = emptyList(),
+    ): ScriptResult
 }
 
 /**

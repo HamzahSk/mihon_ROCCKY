@@ -24,4 +24,6 @@ dependencies {
     api(projects.core.common)
     api(libs.bundles.serialization)
     api(projects.scripting.api)
+
+    testImplementation(libs.junit)
 }

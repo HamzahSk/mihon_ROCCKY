@@ -25,4 +25,7 @@ dependencies {
     implementation(libs.rhino)
     implementation(libs.bundles.coroutines)
     implementation(libs.bundles.serialization)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.okhttp.mockwebserver)
 }

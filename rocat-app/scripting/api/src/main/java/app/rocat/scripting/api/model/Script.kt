@@ -12,6 +12,10 @@ data class Script(
     val name: String,
     val version: String = "0.0.0",
     val description: String = "",
+    /** Script author from the userscript metadata block. */
+    val author: String = "",
+    /** Icon URL from the userscript metadata block. */
+    val icon: String = "",
     /** The JavaScript source code. */
     val source: String,
     /** URL patterns (or host allow-list) this script is allowed to run against. */
@@ -19,4 +23,6 @@ data class Script(
     val matches: List<String> = emptyList(),
     /** Listed as installed/enabled by the user. */
     val enabled: Boolean = true,
+    /** Epoch millis of the last install/update. */
+    val updatedAt: Long = 0L,
 )
