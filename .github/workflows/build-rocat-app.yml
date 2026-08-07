@@ -1,0 +1,51 @@
+name: Build Rocat App
+
+on:
+  push:
+    branches: [ "main", "master" ]
+    paths:
+      - 'rocat-app/**'
+      - '.github/workflows/build-rocat-app.yml'
+  pull_request:
+    branches: [ "main", "master" ]
+    paths:
+      - 'rocat-app/**'
+  workflow_dispatch: # Memungkinkan kamu nge-trigger build manual dari tab Actions
+
+jobs:
+  build:
+    name: Build Debug APK
+    runs-on: ubuntu-latest
+
+    # Sangat penting: Set default working directory ke folder project rocat-app
+    defaults:
+      run:
+        working-directory: ./rocat-app
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Build Debug APK
+        run: ./gradlew :app:assembleDebug --no-daemon
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rocat-app-debug
+          # Path dihitung dari root repository, jadi harus pakai prefix rocat-app/
+          path: rocat-app/app/build/outputs/apk/debug/app-debug.apk
+          
