@@ -1,53 +1,30 @@
 # Role and Objective
-Kamu adalah AI Software Engineer dan Android Developer. Tahap 1 pembuatan `rocat-app` telah selesai dengan sukses (struktur modular, DI Injekt, Network Layer OkHttp ala Mihon, dan Rhino Scripting Engine dasar sudah terpasang).
+Kamu adalah AI Software Engineer dan Android Developer. Tahap 2 dan 3 untuk `rocat-app` telah diimplementasikan (Infrastruktur Script & UI Management ala Mihon). Namun, saat ini aplikasi mengalami **Force Close / Crash** saat pertama kali dibuka.
 
-Tugasmu sekarang adalah melanjutkan ke **Tahap 2** dan **Tahap 3**, fokus pada infrastruktur penanganan *script* (loader, metadata parsing, network integration) serta UI pengelolaan *script* ala Mihon.
+Tugasmu di **Tahap 4** adalah mencari akar masalah dan memperbaiki *crash* tersebut (Stabilisasi), lalu menyempurnakan alur eksekusi script.
 
 # Memory and Constraints (CRITICAL)
 1. **BACA ATURAN MEMORI:**
    - Buka dan baca file `memory_prompt.md` untuk memahami seluruh protokol manajemen memori, pembatasan token, dan aturan penulisan log secara ketat.
+   - Wajib memperbarui log di `ai_memory/00_INDEX.md` dan membuat catatan tugas setelah tahap ini selesai.
 2. **Build Verification:**
-   - Pastikan setiap perubahan kode/sub-tahap dikonfirmasi dengan `gradle build` atau `gradle assembleDebug` untuk menjamin tidak ada *error* kompilasi.
-
-# Current Baseline (Hasil Tahap 1)
-- Project Gradle modular: `app`, `core:common`, `core:viewmodel`, `domain`, `data`, `scripting:api`, `scripting:rhino`.
-- Network Layer: `NetworkHelper`, `Requests.kt`, `OkHttpExtensions`, `JsonUtil`.
-- Engine: `RhinoScriptEngine` dengan bridge `fetch()`.
-- DI lightweight Injekt bawaan di `AppModule`.
-
----
+   - Pastikan setiap perubahan kode/sub-tahap dikonfirmasi dengan `./gradlew assembleDebug` untuk menjamin tidak ada *error* kompilasi. Jangan lanjut ke tahap berikutnya jika *build* gagal.
 
 # Execution Plan (Kerjakan Secara Bertahap)
 
-### Tahap 2: Infrastructure Script Loader & Network Integration
-1. **Metadata Parser (Tampermonkey Header Style):**
-   - Buat parser di modul `domain`/`data` untuk membaca *header metadata* dari *custom script* JS.
-   - Contoh tag yang wajib di-parse: `@name`, `@version`, `@description`, `@author`, `@match` / `@include`, `@icon`.
-2. **Enhance Script Engine & Network Integration:**
-   - Dalam `RhinoScriptEngine`, sempurnakan *bridge* `fetch()` agar mendukung:
-     - Custom HTTP Headers (User-Agent, Referer, Cookie).
-     - Response Handling (Status code, Text, JSON response parsing di JS environment).
-     - Error/Timeout handling agar script yang menggantung tidak membuat aplikasi crash.
-   - Integrasikan `NetworkHelper` Mihon agar semua request dari JS melewati Interceptor/Client yang sama dengan aplikasi (termasuk penanganan CookieJar jika ada).
-3. **Local Storage & Storage Repository untuk Script:**
-   - Buat mekanisme simpan/muat *script* lokal (misalnya menggunakan database Room atau file-based storage di `data` module).
-   - Buat `ScriptRepository` / `ScriptManager` untuk operasi CRUD (Tambah, Baca, Update, Hapus, Toggle Active/Inactive script).
+### Tahap 4.1: Bug Fix & Stabilisasi UI (Prioritas Utama)
+1. **Perbaiki Dependency Injection (Injekt):**
+   - Periksa `AppModule.kt`. Registrasikan semua ViewModel baru (`ScriptsViewModel`, `ScriptDetailViewModel`, `ImportScriptViewModel`, `PlaygroundViewModel`) menggunakan Injekt factory agar UI tidak *crash* saat memanggilnya.
+2. **Review `MainActivity.kt` dan Navigasi:**
+   - Pastikan `setContent` di `MainActivity` memanggil `RoCatNav` dengan benar, dan state navigasi tidak memanggil route yang kosong/null.
+3. **Amankan File I/O (Repository):**
+   - Pastikan `ScriptRepositoryImpl` tidak memblokir baca/tulis file (I/O) di *Main Thread* (misalnya pada fungsi `save` atau inisialisasi). Pindahkan operasi I/O ke `Dispatchers.IO`.
 
-*Lakukan verifikasi build di akhir Tahap 2.*
+### Tahap 4.2: Penyempurnaan Eksekusi & Error Handling
+1. **Playground Runner Enhancement:**
+   - Pastikan argumen input URL di Playground benar-benar diteruskan ke dalam fungsi `engine.execute(...)`.
+   - Tangkap *error output* (seperti *syntax error* dari eksekusi JS) dan pastikan dirender dengan rapi di UI Playground, jangan sampai membuat *engine crash*.
+2. **Script Import Validation:**
+   - Saat melakukan import via URL di halaman Import, tambahkan validasi dasar untuk memastikan respons yang diterima adalah *plain text/JS* sebelum menyimpannya ke *storage*.
 
----
-
-### Tahap 3: UI Management & Execution Flow (Mihon Style)
-1. **Extension / Script Management UI (Compose):**
-   - Buat/rapikan UI dengan gaya tab *Extensions/Browse* khas Mihon:
-     - **Daftar Script Terinstall:** Menampilkan nama, versi, deskripsi, dan *switch* aktif/non-aktif.
-     - **Detail Script:** Halaman untuk melihat *code preview*, metadata, dan tombol hapus/edit.
-     - **Import/Add Script:** Dialog/Layar untuk menambah *script* baru (via URL, input teks manual, atau pilih file `.js`).
-2. **Script Runner / Playground UI (Verifikasi Integrasi):**
-   - Buat halaman *Playground/Test Runner* sederhana di mana pengguna bisa memilih salah satu *script* yang aktif, memasukkan URL target, lalu menjalankan fungsi *fetch/extract* dari *script* tersebut dan menampilkan hasil JSON/Text response-nya di UI.
-3. **Final Build & Integration Check:**
-   - Lakukan kompilasi ulang seluruh project (`./gradlew assembleDebug`).
-   - Pastikan tidak ada konflik dependensi, error K2/Kotlin compiler, atau issue pada DI Container.
-
----
-**Instruksi Eksekusi:** Silakan konfirmasi bahwa kamu telah membaca `memory_prompt.md` dan langsung mulai mengeksekusi **Tahap 2**. Laporkan kemajuan dan lakukan tes *build* sebelum berpindah ke Tahap 3.
+**Instruksi Eksekusi:** Silakan konfirmasi bahwa kamu telah membaca `memory_prompt.md`. Mulai eksekusi dengan Tahap 4.1. Lakukan perbaikan kode, jelaskan penyebab utama *force close* yang kamu temukan, lalu verifikasi ulang menggunakan `./gradlew assembleDebug` sebelum melaporkan penyelesaian dan menulis log memori.
