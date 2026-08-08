@@ -3,7 +3,8 @@
 Proyek: `rocat-app` — Android app modular ala Mihon untuk mengelola & menjalankan custom userscript (Rhino engine). Workspace: `rocat-app/` di root repo ini.
 
 ## Status Proyek Terkini
-- **Tahap 6 SELESAI** (2026-08-08): Fix crash Compose `SaveableStateRegistry`. Penyebab (dari crash log): `rememberSaveable { mutableStateListOf(...) }` di `RoCatNav.kt` menampung `SnapshotStateList<String>` yang tidak bisa disimpan ke Bundle. Diperbaiki dengan `saver = listSaver(save = { it.toList() }, restore = { it.toMutableStateList() })`. Build: `./gradlew :app:assembleDebug` SUCCESS.
+- **Tahap 7 SELESAI** (2026-08-08): Network & SSL + script loader. `network_security_config.xml` (cleartext + trust-anchor system/user) direferensikan di manifest → fix `CertPathValidatorException`; `NetworkHelper` ala Mihon (UA browser-grade, `MODERN_TLS`/`COMPATIBLE_TLS`, follow redirects, timeout 30s); `ScriptSourceFetcher.normalizeUrl()` (inject `https://`, rewrite GitHub blob→raw, `Dispatchers.IO`); `ImportScriptViewModel` friendly error mapping + example script Rhino-compatible; `WebViewUtil` baru (JS/DOM/database enabled, UA sync). Unit test baru `ScriptSourceFetcherTest`. Build `./gradlew :app:assembleDebug` SUCCESS, semua unit test hijau.
+- Sebelumnya (Tahap 6, 2026-08-08): Fix crash Compose `SaveableStateRegistry`. Penyebab (dari crash log): `rememberSaveable { mutableStateListOf(...) }` di `RoCatNav.kt` menampung `SnapshotStateList<String>` yang tidak bisa disimpan ke Bundle. Diperbaiki dengan `saver = listSaver(save = { it.toList() }, restore = { it.toMutableStateList() })`. Build: `./gradlew :app:assembleDebug` SUCCESS.
 - Sebelumnya (Tahap 5, 2026-08-08): Global Crash Handler. `CrashHandler` (default uncaught exception handler) menulis report ke `Android/data/app.rocat/files/crash_logs/` via `CrashLogStore`, lalu meluncurkan `CrashActivity` (Activity Compose terpisah, bukan di RoCatNav) yang menampilkan stack trace scrollable + tombol Copy to Clipboard + info path, kemudian `Process.killProcess`. Terdaftar di manifest. Build: `./gradlew :app:assembleDebug` SUCCESS.
 - Build: `./gradlew :app:assembleDebug` SUCCESS. Unit tests domain + rhino SUCCESS.
 - Sebelumnya (Tahap 4, 2026-08-08): Stabilisasi crash ViewModel factory (`AppViewModelFactory` + Injekt), I/O `Dispatchers.IO`, validasi import URL, error handling Rhino engine.
@@ -17,8 +18,10 @@ Proyek: `rocat-app` — Android app modular ala Mihon untuk mengelola & menjalan
 | 2 | 2026-08-08 | `task_20260808_0313_tahap4_stabilisasi_dan_perbaikan_script.md` | Tahap 4: fix crash ViewModel factory + I/O Dispatchers.IO, validasi import URL, error handling engine; build & test hijau. |
 | 3 | 2026-08-08 | `task_20260808_0436_tahap5_global_crash_handler.md` | Tahap 5: global crash handler + CrashLogStore (Android/data) + CrashActivity (stack trace scrollable, copy, path info); build hijau. |
 | 4 | 2026-08-08 | `task_20260808_0507_tahap6_fix_saveable_state_registry.md` | Tahap 6: fix FC crash Compose via custom `listSaver` untuk back stack navigasi di RoCatNav; build hijau. |
+| 5 | 2026-08-08 | `task_20260808_0540_tahap7_network_ssl_dan_script_loader.md` | Tahap 7: network_security_config + NetworkHelper TLS/UA ala Mihon, URL normalizer, friendly error import, WebViewUtil modern; build & test hijau. |
 
 ## Catatan Teknis Penting
+- Network (Tahap 7): `network_security_config.xml` aktif (cleartext + trust system/user); `NetworkHelper.DEFAULT_USER_AGENT` = `Chrome/141.0.0.0`; ConnectionSpec `MODERN_TLS/COMPATIBLE_TLS/CLEARTEXT`; `ScriptSourceFetcher.normalizeUrl()` otomatis inject `https://` & rewrite GitHub blob→raw; `WebViewUtil.setDefaultSettings()` utk engine fallback.
 - Rhino 1.7.15: support `let/const`, arrow fn, template literal, Promise, generator; TIDAK support `async/await`, spread, optional-chaining, class. Script sample harus ditulis sync (`fetch()` mengembalikan objek Response sync dengan `.text()`/`.json()`).
 - `fetch()` bridge: sync, melewati `scriptFetch` (OkHttp client app), balikkan `{status,statusText,ok,url,body,headers,error,text(),json()}`.
 - Watchdog: `ScriptContextFactory` + instruction budget 10M; timeout network di `NetworkHelper.newScriptClient()`.

@@ -7,6 +7,10 @@ import app.rocat.data.script.ScriptSourceFetcher
 import app.rocat.domain.script.ImportScript
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.IOException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
+import javax.net.ssl.SSLException
 
 class ImportScriptViewModel(
     private val importScript: ImportScript = Injekt.get(),
@@ -33,6 +37,8 @@ class ImportScriptViewModel(
         viewModelScope.launch {
             mutableState.update { it.copy(busy = true, error = null, message = null) }
             try {
+                // URL normalization (scheme injection + GitHub blob rewrite) happens
+                // inside the fetcher; network work runs on Dispatchers.IO there.
                 val fetched = scriptSourceFetcher.fetchSource(url)
                 val script = importScript.await(fetched)
                 mutableState.update {
@@ -40,7 +46,7 @@ class ImportScriptViewModel(
                 }
                 onImported(script.id)
             } catch (e: Exception) {
-                mutableState.update { it.copy(busy = false, error = e.message ?: "Import failed") }
+                mutableState.update { it.copy(busy = false, error = friendlyMessage(e)) }
             }
         }
     }
@@ -60,7 +66,7 @@ class ImportScriptViewModel(
                 }
                 onImported(script.id)
             } catch (e: Exception) {
-                mutableState.update { it.copy(busy = false, error = e.message ?: "Import failed") }
+                mutableState.update { it.copy(busy = false, error = friendlyMessage(e)) }
             }
         }
     }
@@ -68,7 +74,17 @@ class ImportScriptViewModel(
     fun loadExample() = mutableState.update { it.copy(source = EXAMPLE_SCRIPT) }
 
     companion object {
-        /** A small Rhino-compatible sample (no async/await) for quick verification. */
+        /** Maps raw exceptions to messages a user can actually act on. */
+        fun friendlyMessage(e: Throwable): String = when (e) {
+            is IllegalArgumentException -> e.message ?: "Invalid input"
+            is UnknownHostException -> "Cannot resolve the host (DNS error). Check the URL and your connection."
+            is SocketTimeoutException -> "The connection timed out. Try again or use a different host."
+            is SSLException -> "SSL/TLS handshake failed (untrusted certificate). ${e.message.orEmpty()}"
+            is IOException -> "Network error: ${e.message ?: e.javaClass.simpleName}"
+            else -> "Import failed: ${e.message ?: e.javaClass.simpleName}"
+        }
+
+        /** A small Rhino-compatible sample (no async/await) with a complete userscript header. */
         val EXAMPLE_SCRIPT = """
             // ==UserScript==
             // @name        Example JSON Fetcher
@@ -76,10 +92,11 @@ class ImportScriptViewModel(
             // @description Fetches the target URL and returns its raw text body.
             // @author      RoCat
             // @match       *
+            // @grant       none
             // ==/UserScript==
 
             function main(url) {
-                var res = fetch(url);
+                var res = fetch(url, "GET", {}, null);
                 if (!res.ok) {
                     return "HTTP " + res.status + " | error: " + res.error;
                 }

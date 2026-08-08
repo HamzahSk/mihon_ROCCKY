@@ -27,4 +27,7 @@ dependencies {
     implementation(libs.bundles.coroutines)
     implementation(libs.bundles.serialization)
     implementation(libs.logcat)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.okhttp)
 }
