@@ -1,77 +1,89 @@
 
 # Role and Objective
-Kamu adalah AI Software Engineer dan Android Developer handal. Kita perlu melakukan **Hotfix & Refinement UI Playground (Tahap 11.5)** karena implementasi Tahap 11 sebelumnya memiliki beberapa bug UX dan logika yang kurang optimal.
+Kamu adalah AI Software Engineer dan Android Developer handal. Kita akan melanjutkan pengembangan aplikasi ke **Tahap 12: Media Renderer & Smart Playground Inputs**.
+Tujuan utama tahap ini adalah membuat Playground bisa me-render *output* gambar/video, menyederhanakan *form* input parameter, dan memfilter fungsi mana yang boleh dieksekusi oleh pengguna (Public vs Private).
 
-# Bug & UI Requirements Analysis
-Berdasarkan pengujian manual dan *screenshot*, terdapat masalah berikut di `PlaygroundScreen`:
-1. **Bagian "Run main" Redundan:** Ada *card* "Run main" (Target URL) di bagian atas yang sudah tidak diperlukan karena kita sudah punya "Test Function" di bawahnya. Ini harus dihapus.
-2. **Auto-Detect Function Names:** *Dropdown/Function Selector* saat ini tidak mendeteksi fungsi yang ada di dalam skrip. Seharusnya ViewModel memindai kode skrip (misal menggunakan Regex `function\s+([a-zA-Z_$][\w$]*)\s*\(`) dan menampilkan daftar fungsi tersebut secara otomatis di *dropdown*.
-3. **Input Fleksibel & Cerdas:** Baris input "Key" dan "Value" default tidak boleh muncul jika skrip tidak membutuhkannya. Secara *default*, state *arguments* harus kosong (`emptyList()`). Jika *user* butuh argumen, barulah mereka menekan tombol "+ Add Input". Contoh: skrip yang hanya memiliki `function main()` tanpa parameter harus bisa langsung di-run tanpa terganggu oleh *form* input kosong.
-4. **Log/Result JSON Pretty Print & Selectable:** - Hasil *output* JSON saat ini hanya berupa *raw string* (minified). Perbaiki `ResultFormatter.kt` agar benar-benar melakukan *pretty-print* (Parse *raw string* ke `JsonElement` lalu *encode* ulang dengan `Json { prettyPrint = true }`).
-   - Teks *output* di dalam *Log Card* wajib dibungkus dengan `SelectionContainer { ... }` (Jetpack Compose) agar pengguna bisa menyeleksi (*highlight*) dan menyalin sebagian teks secara manual.
+# Memory and Constraints (CRITICAL)
+1. **BACA ATURAN MEMORI:**
+   - Buka dan baca file `memory_prompt.md`.
+   - Wajib memperbarui log di `ai_memory/00_INDEX.md` dan membuat catatan tugas terperinci di `ai_memory/task_YYYYMMDD_HHMM_tahap12_media_renderer_and_smart_inputs.md` setelah tahap ini selesai.
+2. **Build Verification:**
+   - Pastikan setiap perubahan dikonfirmasi dengan `./gradlew assembleDebug` tanpa *error* kompilasi sebelum kamu menyatakan tugas selesai.
 
-# Execution Plan (Tahap 11.5)
+---
 
-### 1. Update `PlaygroundViewModel.kt`
-- Hapus *state* atau fungsi yang berkaitan dengan *card* "Run main" lama jika masih ada.
-- Tambahkan fungsi `extractFunctionNames(scriptCode: String): List<String>` menggunakan Regex untuk mencari nama-nama fungsi di dalam skrip.
-- Saat skrip dimuat, panggil fungsi tersebut dan jadikan hasilnya sebagai opsi di *Function Selector* UI. Set fungsi pertama (jika ada) sebagai *default selected function*.
-- Ubah inisialisasi `testArgs` menjadi *list* kosong secara *default*.
+# Feature Requirements Analysis
+1. **Media Preview (Image & Video) di Result Card:**
+   - Jika skrip menghasilkan *output* JSON dengan format kontrak tertentu (misalnya memiliki properti `media_type: "image" | "video"` dan `media_url: "..."`), UI Playground tidak hanya menampilkan teks JSON-nya, tetapi juga merender medianya di atas log JSON.
+   - Gunakan pustaka **Coil** (`AsyncImage`) di Jetpack Compose untuk memuat gambar dari URL.
+   - Untuk Video, gunakan *fallback* sederhana seperti tombol "Play Video" yang memicu `Intent.ACTION_VIEW` ke aplikasi pemutar video bawaan / *browser* menggunakan URL tersebut.
+2. **Simplified Dynamic Inputs (Value Only):**
+   - Hapus konsep "Key" pada input. Saat memanggil fungsi JS, pengguna hanya perlu memasukkan nilainya (*value*) secara berurutan (Arg 1, Arg 2, dst).
+   - Secara *default*, sediakan 1 baris input (*value* saja) kosong jika daftar input belum ada. Jika *user* butuh 2 argumen (misal: URL dan Format), mereka tinggal menekan "+ Add Input" untuk menambah baris *value* kedua.
+3. **Public vs Private Functions (Visibility):**
+   - Skrip yang kompleks pasti punya banyak fungsi pembantu (*helper*). Fungsi ini tidak boleh dieksekusi langsung dari Playground.
+   - **Aturan Konvensi:** Fungsi yang namanya diawali dengan *underscore* (contoh: `_fetchData`, `_parseHTML`) dianggap sebagai **Private Function**.
+   - Fungsi normal (contoh: `main`, `getDetail`) dianggap sebagai **Public Function**.
+   - *Dropdown Selector* hanya boleh menampilkan *Public Functions*.
 
-### 2. Update `PlaygroundScreen.kt`
-- **HAPUS** *Card* "Run main" yang berada di atas. Sisakan bagian *Test Function* dan *Log/Result* saja.
-- Tampilkan daftar input *Key/Value* **hanya** jika `testArgs` tidak kosong. 
-- Hubungkan *Dropdown Menu* dengan *list* fungsi hasil deteksi dari ViewModel.
-- Bungkus komponen `Text` yang menampilkan hasil eksekusi (di dalam `CopyableResultCard` atau *Log area*) dengan `SelectionContainer` dari Jetpack Compose.
+---
 
-### 3. Update `ResultFormatter.kt`
-- Perbaiki logika `prettyJson()`. Jika hasil dari Rhino adalah *raw JSON string*, parse terlebih dahulu:
-  ```kotlin
-  try {
-      val jsonElement = Json.parseToJsonElement(rawString)
-      val format = Json { prettyPrint = true }
-      return format.encodeToString(JsonElement.serializer(), jsonElement)
-  } catch (e: Exception) {
-      return rawString // Fallback jika bukan JSON valid
-  }
+# Execution Plan (Kerjakan Secara Bertahap)
 
-```
-### 4. Build & Verifikasi
- * Uji eksekusi menggunakan contoh skrip ini (di mana main tidak memiliki argumen, jadi bisa langsung di-run):
+### Tahap 12.1: Update `PlaygroundViewModel.kt` & Regex Parser
+- Ubah state argumen dari `List<Pair<String, String>>` atau data class *Key-Value* menjadi sekadar `List<String>`. 
+- Perbarui logika Regex di `extractFunctionNames`. Gunakan *negative lookahead* agar fungsi yang diawali dengan `_` (underscore) diabaikan.
+  - Contoh Regex: `function\s+(?!_)([a-zA-Z$][\w$]*)\s*\(`
+- Sesuaikan fungsi eksekusi `runFunction()` agar hanya meneruskan daftar nilai *string* (arguments) tersebut ke `ExecuteScript.invoke()`.
+
+### Tahap 12.2: Update `PlaygroundScreen.kt` (Input UI)
+- Rombak bagian input parameter: Hilangkan kolom "Key". Cukup gunakan satu `OutlinedTextField` *full-width* dengan label "Argument Value (e.g. URL)" untuk setiap item di dalam *list* argumen.
+- Tombol hapus (ikon *Delete*) tetap ada di sebelah kanan tiap input.
+- Default state: tampilkan 1 kolom input kosong.
+
+### Tahap 12.3: Update UI Result / Media Renderer
+- Buat komponen `MediaPreviewRenderer` di dalam atau di atas `CopyableResultCard`.
+- Lakukan *parsing* hasil JSON *output* secara dinamis. Jika mengandung `"media_type": "image"` dan `"media_url"`, tampilkan `AsyncImage` (Coil) menggunakan URL tersebut dengan `contentScale = ContentScale.Fit` dan batas tinggi wajar (misal `heightIn(max = 300.dp)`).
+- Jika `"media_type": "video"`, tampilkan sebuah `OutlinedButton` atau `ElevatedCard` berisi ikon *Play* yang jika diklik akan memicu `Intent(Intent.ACTION_VIEW, Uri.parse(media_url))` dengan MIME type `video/*`.
+
+### Tahap 12.4: Verifikasi & Pembaruan Memori
+- Gunakan dan tes dengan format *script* berikut di Playground:
+
 ```javascript
 // ==UserScript==
-// @name        MythToons HTML Tester
+// @name        Media Downloader Tester
 // @version     1.0.0
-// @description Fetch & test HTML from MythToons (sync fetch + RoCatDOM).
+// @description Test Image and Video output with private functions
 // @author      Tester
-// @match       [https://mythtoons.org/](https://mythtoons.org/)*
-// @grant       none
+// @match       *://*/*
 // ==/UserScript==
 
-function main() {
-    return testHtml();
+// Fungsi ini PRIVATE (tidak akan muncul di dropdown)
+function _getResolution(url) {
+    return "1080p"; // Simulasi proses internal
 }
 
-function testHtml() {
-    var url = "[https://mythtoons.org/](https://mythtoons.org/)";
-    var res = fetch(url, "GET", {}, null);
-    if (!res.ok) { return { error: "HTTP " + res.status, message: res.body }; }
-    var html = res.text();
-    return parseTest(html, url);
-}
-
-function parseTest(html, url) {
-    var root = RoCatDOM.parse(html);
-    var titleEl = root.find("title");
+// Fungsi PUBLIC 1: Hanya butuh 1 argumen (URL)
+function getImage(url) {
     return {
-        test_url: url,
-        page_title: titleEl.length > 0 ? titleEl[0].text : "Title tidak ditemukan",
-        html_length: html.length,
-        html_preview: html.substring(0, 500) 
+        media_type: "image",
+        media_url: url,
+        title: "Test Image",
+        resolution: _getResolution(url)
+    };
+}
+
+// Fungsi PUBLIC 2: Butuh 2 argumen (URL, Format)
+function getVideo(url, format) {
+    return {
+        media_type: "video",
+        media_url: url,
+        format_requested: format,
+        resolution: _getResolution(url)
     };
 }
 
 ```
- * Pastikan ./gradlew assembleDebug berhasil.
- * Perbarui log memori di ai_memory/00_INDEX.md dengan status **Tahap 11.5 SELESAI** dan catat perubahan ini.
-Tolong kerjakan sekarang dan berikan laporan jika sudah selesai!
+ * Uji cobakan: masukkan URL gambar valid (.jpg/.png) ke dalam *Argumen 1* dan panggil fungsi getImage. Pastikan gambar ter-render di UI di atas log JSON.
+ * Jalankan ./gradlew :app:assembleDebug.
+ * Perbarui status di ai_memory/00_INDEX.md menjadi **Tahap 12 SELESAI** dan buat catatan di file memori baru sesuai instruksi (CRITICAL).
