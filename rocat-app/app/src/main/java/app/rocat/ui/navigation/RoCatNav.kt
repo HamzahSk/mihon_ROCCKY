@@ -14,7 +14,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import app.rocat.ui.detail.ScriptDetailScreen
 import app.rocat.ui.import.ImportScriptScreen
@@ -51,7 +53,12 @@ private fun decode(key: String): Screen = when {
 
 @Composable
 fun RoCatApp() {
-    val backStack = rememberSaveable { mutableStateListOf(KEY_SCRIPTS) }
+    val backStack = rememberSaveable(
+        saver = listSaver(
+            save = { it.toList() },
+            restore = { it.toMutableStateList() },
+        ),
+    ) { mutableStateListOf(KEY_SCRIPTS) }
     val current = decode(backStack.last())
 
     fun goBack() {

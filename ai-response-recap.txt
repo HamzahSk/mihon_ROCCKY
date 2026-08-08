@@ -1,200 +1,400 @@
 [0m
 > build · deepseek-v4-flash-free
 [0m
-[0m$ [0mls -la
-total 272
-drwxr-xr-x 21 runner runner  4096 Aug  8 04:29 .
-drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 ..
--rw-r--r--  1 runner runner   971 Aug  8 04:29 .editorconfig
-drwxr-xr-x  7 runner runner  4096 Aug  8 04:29 .git
--rw-r--r--  1 runner runner   304 Aug  8 04:29 .gitattributes
-drwxr-xr-x  5 runner runner  4096 Aug  8 04:29 .github
--rw-r--r--  1 runner runner   183 Aug  8 04:29 .gitignore
-drwxr-xr-x  2 runner runner  4096 Aug  8 04:29 .idea
--rw-r--r--  1 runner runner     0 Aug  8 04:29 .nomedia
--rw-r--r--  1 runner runner 73171 Aug  8 04:29 CHANGELOG.md
--rw-r--r--  1 runner runner  5296 Aug  8 04:29 CODE_OF_CONDUCT.md
--rw-r--r--  1 runner runner  2008 Aug  8 04:29 CONTRIBUTING.md
--rw-r--r--  1 runner runner 22940 Aug  8 04:29 DOCS_MLKIT.md
--rw-r--r--  1 runner runner 10173 Aug  8 04:29 LICENSE
--rw-r--r--  1 runner runner  4265 Aug  8 04:29 README.md
--rw-r--r--  1 runner runner    44 Aug  8 04:29 ai-response-recap.txt
-drwxr-xr-x  2 runner runner  4096 Aug  8 04:29 ai_memory
-drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 app
-drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 baseline-profile
--rw-r--r--  1 runner runner  1015 Aug  8 04:29 build.gradle.kts
-drwxr-xr-x  5 runner runner  4096 Aug  8 04:29 core
-drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 core-metadata
-drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 data
-drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 domain
-drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 fastlane
-drwxr-xr-x  4 runner runner  4096 Aug  8 04:29 gradle
--rw-r--r--  1 runner runner   272 Aug  8 04:29 gradle.properties
--rwxr-xr-x  1 runner runner  8656 Aug  8 04:29 gradlew
--rw-r--r--  1 runner runner  2766 Aug  8 04:29 gradlew.bat
-drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 i18n
--rw-r--r--  1 runner runner  5592 Aug  8 04:29 mangaupdate.js
--rw-r--r--  1 runner runner  2017 Aug  8 04:29 memory_prompt.md
-drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 presentation-core
-drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 presentation-widget
--rw-r--r--  1 runner runner  3198 Aug  8 04:29 prompt.md
-drwxr-xr-x  8 runner runner  4096 Aug  8 04:29 rocat-app
--rw-r--r--  1 runner runner  1015 Aug  8 04:29 settings.gradle.kts
-drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 source-api
-drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 source-local
-drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 telemetry
-[0m
-[0m✱ [0mGlob "**/memory_prompt.md"[90m 1 match[0m
 [0m→ [0mRead memory_prompt.md
 [0m→ [0mRead ai_memory/00_INDEX.md
-[0m→ [0mRead prompt.md
-[0m→ [0mRead ai_memory
-[0m→ [0mRead rocat-app
-[0m✱ [0mGlob "rocat-app/**/*.kt"[90m 40 matches[0m
-[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/RoApp.kt
-[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/main/MainActivity.kt
-[0m✱ [0mGlob "rocat-app/app/src/main/**/*.xml"[90m 6 matches[0m
-[0m→ [0mRead rocat-app/app/src/main/AndroidManifest.xml
-[0m→ [0mRead rocat-app/app/build.gradle.kts
+Membaca konteks memori. Sekarang eksplorasi struktur proyek untuk menemukan `rememberSaveable` yang bermas
+[0m→ [0mRead ai_memory/task_20260808_0436_tahap5_global_crash_handler.md
+[0m
+[0m$ [0mls -la
+total 276
+drwxr-xr-x 21 runner runner  4096 Aug  8 05:05 .
+drwxr-xr-x  3 runner runner  4096 Aug  8 05:05 ..
+-rw-r--r--  1 runner runner   971 Aug  8 05:05 .editorconfig
+drwxr-xr-x  7 runner runner  4096 Aug  8 05:05 .git
+-rw-r--r--  1 runner runner   304 Aug  8 05:05 .gitattributes
+drwxr-xr-x  5 runner runner  4096 Aug  8 05:05 .github
+-rw-r--r--  1 runner runner   183 Aug  8 05:05 .gitignore
+drwxr-xr-x  2 runner runner  4096 Aug  8 05:05 .idea
+-rw-r--r--  1 runner runner     0 Aug  8 05:05 .nomedia
+-rw-r--r--  1 runner runner 73171 Aug  8 05:05 CHANGELOG.md
+-rw-r--r--  1 runner runner  5296 Aug  8 05:05 CODE_OF_CONDUCT.md
+-rw-r--r--  1 runner runner  2008 Aug  8 05:05 CONTRIBUTING.md
+-rw-r--r--  1 runner runner 22940 Aug  8 05:05 DOCS_MLKIT.md
+-rw-r--r--  1 runner runner 10173 Aug  8 05:05 LICENSE
+-rw-r--r--  1 runner runner  4265 Aug  8 05:05 README.md
+-rw-r--r--  1 runner runner   224 Aug  8 05:05 ai-response-recap.txt
+drwxr-xr-x  2 runner runner  4096 Aug  8 05:05 ai_memory
+drwxr-xr-x  3 runner runner  4096 Aug  8 05:05 app
+drwxr-xr-x  3 runner runner  4096 Aug  8 05:05 baseline-profile
+-rw-r--r--  1 runner runner  1015 Aug  8 05:05 build.gradle.kts
+drwxr-xr-x  5 runner runner  4096 Aug  8 05:05 core
+drwxr-xr-x  3 runner runner  4096 Aug  8 05:05 core-metadata
+-rw-r--r--  1 runner runner  3804 Aug  8 05:05 crash_log_20260808_120114.txt
+drwxr-xr-x  3 runner runner  4096 Aug  8 05:05 data
+drwxr-xr-x  3 runner runner  4096 Aug  8 05:05 domain
+drwxr-xr-x  3 runner runner  4096 Aug  8 05:05 fastlane
+drwxr-xr-x  4 runner runner  4096 Aug  8 05:05 gradle
+-rw-r--r--  1 runner runner   272 Aug  8 05:05 gradle.properties
+-rwxr-xr-x  1 runner runner  8656 Aug  8 05:05 gradlew
+-rw-r--r--  1 runner runner  2766 Aug  8 05:05 gradlew.bat
+drwxr-xr-x  3 runner runner  4096 Aug  8 05:05 i18n
+-rw-r--r--  1 runner runner  5592 Aug  8 05:05 mangaupdate.js
+-rw-r--r--  1 runner runner  2017 Aug  8 05:05 memory_prompt.md
+drwxr-xr-x  3 runner runner  4096 Aug  8 05:05 presentation-core
+drwxr-xr-x  3 runner runner  4096 Aug  8 05:05 presentation-widget
+-rw-r--r--  1 runner runner  2678 Aug  8 05:05 prompt.md
+drwxr-xr-x  8 runner runner  4096 Aug  8 05:05 rocat-app
+-rw-r--r--  1 runner runner  1015 Aug  8 05:05 settings.gradle.kts
+drwxr-xr-x  3 runner runner  4096 Aug  8 05:05 source-api
+drwxr-xr-x  3 runner runner  4096 Aug  8 05:05 source-local
+drwxr-xr-x  3 runner runner  4096 Aug  8 05:05 telemetry
+[0m
+[0m→ [0mRead crash_log_20260808_120114.txt
+[0m
+[0m$ [0mfind /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app -name "*.kt" | head -50
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/domain/src/test/java/app/rocat/domain/script/ScriptMetadataParserTest.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/domain/src/main/java/app/rocat/domain/script/ScriptMetadataParser.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/domain/src/main/java/app/rocat/domain/script/ScriptRepository.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/domain/src/main/java/app/rocat/domain/script/ScriptMetadata.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/SetScriptEnabled.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/ExecuteScript.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/ImportScript.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/GetScripts.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/UpsertScript.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/DeleteScript.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/network/ScriptFetch.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/ScriptEngine.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/model/ScriptSerializers.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/model/Script.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/model/DefaultScriptEnvironment.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/crash/CrashHandler.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/crash/CrashLogStore.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailViewModel.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailScreen.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/crash/CrashActivity.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/navigation/RoCatNav.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/scripts/ScriptsViewModel.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/scripts/ScriptsScreen.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/main/MainActivity.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/main/MainViewModel.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/import/ImportScriptScreen.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/import/ImportScriptViewModel.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/RoApp.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/di/AppViewModelFactory.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/di/AppModule.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/core/common/src/main/java/app/rocat/core/common/injekt/Injekt.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/core/common/src/main/java/app/rocat/core/common/network/HttpException.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/core/common/src/main/java/app/rocat/core/common/network/OkHttpExtensions.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/core/common/src/main/java/app/rocat/core/common/network/NetworkHelper.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/core/common/src/main/java/app/rocat/core/common/network/Requests.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/core/common/src/main/java/app/rocat/core/common/util/Json.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/core/viewmodel/src/main/java/app/rocat/core/viewmodel/StateViewModel.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/data/src/main/java/app/rocat/data/script/ScriptSourceFetcher.kt
+[0m
+[0m✱ [0mGrep "rememberSaveable|mutableStateListOf|remember \{"[90m in rocat-app · 6 matches[0m
 [0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/navigation/RoCatNav.kt
-[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/di/AppViewModelFactory.kt
-[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/di/AppModule.kt
-[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/import/ImportScriptScreen.kt
-[0m→ [0mRead rocat-app/app/src/main/res/values/strings.xml
+[0m
+[0m✗ [0mInvalid Tool
+The arguments provided to the tool are invalid: Model tried to call unavailable tool 'git'. Available tools: bash, edit, glob, grep, invalid, read, skill, task, todowrite, webfetch, websearch, write.
+[0m
+Menemukan lokasi bug di `RoCatNav.kt:54`. Sekarang cek versi Compose dan file terkait untuk solusi yang
+[0m$ [0mfind /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app -name "*.gradle.kts" -path "*app*" -o -name "libs.versions.toml" | head; ls /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/domain/build.gradle.kts
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/build.gradle.kts
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/api/build.gradle.kts
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/build.gradle.kts
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/settings.gradle.kts
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/build.gradle.kts
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/gradle/libs.versions.toml
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/core/common/build.gradle.kts
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/core/viewmodel/build.gradle.kts
+/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/data/build.gradle.kts
+app
+build.gradle.kts
+core
+data
+domain
+gradle
+gradle.properties
+gradlew
+gradlew.bat
+scripting
+settings.gradle.kts
+[0m
 [0m→ [0mRead rocat-app/gradle/libs.versions.toml
-[0m→ [0mRead rocat-app/app/src/main/res/values/themes.xml
+[0m→ [0mRead rocat-app/app/build.gradle.kts
 [0m
-[0m# [0mTodos
-[•] 5.1: Create CrashLogStore utility + CrashHandler, wire into RoApp.kt
-[ ] 5.2: Create CrashActivity with Compose UI (scrollable trace, copy, path info)
-[ ] 5.3: Register CrashActivity in AndroidManifest.xml + build check
-[ ] Update ai_memory/00_INDEX.md + create task log file
-[0m
-I've read `memory_prompt.md`, `ai_memory/00_INDEX.md`, and the Tahap 4 log. Now let me plan the work.
-[0m← [0mWrite rocat-app/app/src/main/java/app/rocat/crash/CrashLogStore.kt
-Wrote file successfully.
-[0m
-Tahap 5.1: Creating the crash log store utility.
-[0m← [0mWrite rocat-app/app/src/main/java/app/rocat/crash/CrashHandler.kt
-Wrote file successfully.
-[0m
-Now the global `UncaughtExceptionHandler`:
-[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/RoApp.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/RoApp.kt
+[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/ui/navigation/RoCatNav.kt
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/navigation/RoCatNav.kt
 ===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/RoApp.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/RoApp.kt
-@@ -1,8 +1,9 @@
- package app.rocat
- 
- import android.app.Application
- import app.rocat.core.common.injekt.Injekt
-+import app.rocat.crash.CrashHandler
- import app.rocat.di.AppModule
- import logcat.LogcatLogger
- 
- class RoApp : Application() {
-@@ -12,6 +13,10 @@
-         LogcatLogger.install()
- 
-         // Mirror mihon's App.onCreate() DI bootstrap.
-         Injekt.importModule(AppModule(this))
-+
-+        // Global crash handler: persist the stack trace to Android/data/<pkg>/files/
-+        // and surface a CrashActivity instead of force-closing silently.
-+        Thread.setDefaultUncaughtExceptionHandler(CrashHandler(this))
-     }
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/navigation/RoCatNav.kt
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/navigation/RoCatNav.kt
+@@ -13,9 +13,11 @@
+ import androidx.compose.material3.Scaffold
+ import androidx.compose.material3.Text
+ import androidx.compose.runtime.Composable
+ import androidx.compose.runtime.mutableStateListOf
++import androidx.compose.runtime.saveable.listSaver
+ import androidx.compose.runtime.saveable.rememberSaveable
++import androidx.compose.runtime.toMutableStateList
+ import androidx.compose.ui.Modifier
+ import app.rocat.ui.detail.ScriptDetailScreen
+ import app.rocat.ui.import.ImportScriptScreen
+ import app.rocat.ui.playground.PlaygroundScreen
+
+[0m
+Bug ditemukan: `RoCatNav.kt:54` menggunakan `rememberSaveable { mutableStateListOf(...) }`, yang menghasilkan `SnapshotStateList` — bukan tipe yang bisa disimpan Bundle oleh `SaveableStateRegistry` default. Saya perbaiki dengan `listSaver` custom agar tetap bisa *survive process
+[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/ui/navigation/RoCatNav.kt
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/navigation/RoCatNav.kt
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/navigation/RoCatNav.kt
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/navigation/RoCatNav.kt
+@@ -52,9 +52,14 @@
  }
-\ No newline at end of file
-
-[0m
-Now wire the handler into `RoApp.kt`:
-[0m# [0mTodos
-[✓] 5.1: Create CrashLogStore utility + CrashHandler, wire into RoApp.kt
-[•] 5.2: Create CrashActivity with Compose UI (scrollable trace, copy, path info)
-[ ] 5.3: Register CrashActivity in AndroidManifest.xml + build check
-[ ] Update ai_memory/00_INDEX.md + create task log file
-[0m
-Tahap 5.1 done. Now Tahap 5.2: the `CrashActivity` with Compose UI.
-[0m← [0mWrite rocat-app/app/src/main/java/app/rocat/ui/crash/CrashActivity.kt
-Wrote file successfully.
-[0m
-[0m← [0mEdit rocat-app/app/src/main/AndroidManifest.xml
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/AndroidManifest.xml
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/AndroidManifest.xml
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/AndroidManifest.xml
-@@ -18,7 +18,12 @@
-                 <action android:name="android.intent.action.MAIN" />
-                 <category android:name="android.intent.category.LAUNCHER" />
-             </intent-filter>
-         </activity>
-+
-+        <activity
-+            android:name=".ui.crash.CrashActivity"
-+            android:exported="false"
-+            android:excludeFromRecents="true" />
-     </application>
  
- </manifest>
-\ No newline at end of file
+ @Composable
+ fun RoCatApp() {
+-    val backStack = rememberSaveable { mutableStateListOf(KEY_SCRIPTS) }
++    val backStack = rememberSaveable(
++        saver = listSaver(
++            save = { it.toList() },
++            restore = { it.toMutableStateList() },
++        ),
++    ) { mutableStateListOf(KEY_SCRIPTS) }
+     val current = decode(backStack.last())
+ 
+     fun goBack() {
+         if (backStack.size > 1) backStack.removeAt(backStack.size - 1)
 
 [0m
-Tahap 5.3: Register the activity in the manifest.
-[0m$ [0m./gradlew :app:assembleDebug --console=plain 2>&1 | tail -40
+[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/navigation/RoCatNav.kt[90m [offset=52, limit=18][0m
+[0m
+[0m$ [0m./gradlew :app:assembleDebug
 /bin/bash: line 1: ./gradlew: Permission denied
 [0m
-Now let me build to verify compilation.
-[0m$ [0mchmod +x gradlew && ls -la gradlew
--rwxr-xr-x 1 runner runner 8656 Aug  8 04:29 gradlew
-[0m
-[0m$ [0m./gradlew :app:assembleDebug --console=plain 2>&1 | tail -40
+Perbaikan diterapkan. Sek
+[0m$ [0mchmod +x gradlew && ./gradlew :app:assembleDebug
+Starting a Gradle Daemon (subsequent builds will be faster)
+Type-safe project accessors is an incubating feature.
+> Task :data:preBuild UP-TO-DATE
+> Task :domain:preBuild UP-TO-DATE
+> Task :app:preBuild UP-TO-DATE
+> Task :core:common:preBuild UP-TO-DATE
+> Task :domain:preDebugBuild UP-TO-DATE
+> Task :data:preDebugBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :core:common:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:generateDebugResValues FROM-CACHE
+> Task :core:common:generateDebugResValues FROM-CACHE
+> Task :data:generateDebugResValues FROM-CACHE
+> Task :core:common:generateDebugResources FROM-CACHE
+> Task :domain:generateDebugResources FROM-CACHE
+> Task :data:generateDebugResources FROM-CACHE
+> Task :core:common:packageDebugResources FROM-CACHE
+> Task :core:viewmodel:preBuild UP-TO-DATE
+> Task :domain:packageDebugResources FROM-CACHE
+> Task :core:viewmodel:preDebugBuild UP-TO-DATE
+> Task :scripting:api:preBuild UP-TO-DATE
+> Task :data:packageDebugResources FROM-CACHE
+> Task :scripting:rhino:preBuild UP-TO-DATE
+> Task :scripting:api:preDebugBuild UP-TO-DATE
+> Task :scripting:rhino:preDebugBuild UP-TO-DATE
+> Task :core:viewmodel:generateDebugResValues FROM-CACHE
+> Task :scripting:api:generateDebugResValues FROM-CACHE
+> Task :scripting:rhino:generateDebugResValues FROM-CACHE
+> Task :scripting:api:generateDebugResources FROM-CACHE
+> Task :scripting:rhino:generateDebugResources FROM-CACHE
+> Task :core:viewmodel:generateDebugResources FROM-CACHE
+> Task :scripting:api:packageDebugResources FROM-CACHE
+> Task :scripting:rhino:packageDebugResources FROM-CACHE
+> Task :core:viewmodel:packageDebugResources FROM-CACHE
+> Task :data:writeDebugAarMetadata
+> Task :core:common:writeDebugAarMetadata
+> Task :domain:writeDebugAarMetadata
+> Task :core:viewmodel:writeDebugAarMetadata
+> Task :scripting:rhino:writeDebugAarMetadata
+> Task :scripting:api:writeDebugAarMetadata
+> Task :domain:extractDeepLinksDebug FROM-CACHE
+> Task :core:common:extractDeepLinksDebug FROM-CACHE
+> Task :data:extractDeepLinksDebug FROM-CACHE
+> Task :data:processDebugManifest FROM-CACHE
+> Task :core:viewmodel:extractDeepLinksDebug FROM-CACHE
+> Task :domain:processDebugManifest FROM-CACHE
+> Task :core:viewmodel:processDebugManifest FROM-CACHE
+> Task :scripting:api:extractDeepLinksDebug FROM-CACHE
+> Task :core:common:processDebugManifest FROM-CACHE
+> Task :scripting:rhino:extractDeepLinksDebug FROM-CACHE
+> Task :data:compileDebugLibraryResources FROM-CACHE
+> Task :scripting:api:processDebugManifest FROM-CACHE
+> Task :scripting:rhino:processDebugManifest FROM-CACHE
+> Task :data:parseDebugLocalResources FROM-CACHE
+> Task :core:common:parseDebugLocalResources FROM-CACHE
+> Task :domain:parseDebugLocalResources FROM-CACHE
+> Task :scripting:rhino:parseDebugLocalResources FROM-CACHE
+> Task :scripting:api:parseDebugLocalResources FROM-CACHE
+> Task :domain:compileDebugLibraryResources FROM-CACHE
+> Task :core:viewmodel:compileDebugLibraryResources FROM-CACHE
+> Task :scripting:api:compileDebugLibraryResources FROM-CACHE
+> Task :core:viewmodel:parseDebugLocalResources FROM-CACHE
+> Task :scripting:rhino:compileDebugLibraryResources FROM-CACHE
+> Task :data:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :scripting:api:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :scripting:api:javaPreCompileDebug FROM-CACHE
+> Task :domain:javaPreCompileDebug FROM-CACHE
+> Task :scripting:rhino:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:common:generateDebugRFile FROM-CACHE
+> Task :core:common:compileDebugLibraryResources FROM-CACHE
+> Task :core:common:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :scripting:api:generateDebugRFile FROM-CACHE
+> Task :domain:generateDebugRFile FROM-CACHE
+> Task :scripting:rhino:generateDebugRFile FROM-CACHE
+> Task :core:viewmodel:generateDebugRFile FROM-CACHE
+> Task :scripting:rhino:javaPreCompileDebug FROM-CACHE
+> Task :core:viewmodel:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :data:generateDebugRFile FROM-CACHE
+> Task :data:javaPreCompileDebug FROM-CACHE
+> Task :data:mergeDebugShaders
+> Task :app:generateDebugResValues FROM-CACHE
+> Task :app:generateDebugResources FROM-CACHE
+> Task :core:viewmodel:compileDebugKotlin FROM-CACHE
+> Task :core:viewmodel:javaPreCompileDebug FROM-CACHE
+> Task :app:dataBindingMergeDependencyArtifactsDebug
+> Task :core:viewmodel:compileDebugJavaWithJavac NO-SOURCE
+> Task :data:compileDebugShaders NO-SOURCE
+> Task :data:generateDebugAssets UP-TO-DATE
+> Task :core:common:compileDebugKotlin FROM-CACHE
+> Task :data:packageDebugAssets
+> Task :core:common:javaPreCompileDebug FROM-CACHE
+> Task :core:common:compileDebugJavaWithJavac NO-SOURCE
+> Task :domain:mergeDebugShaders
+> Task :domain:compileDebugShaders NO-SOURCE
+> Task :domain:generateDebugAssets UP-TO-DATE
+> Task :domain:packageDebugAssets
+> Task :core:common:mergeDebugShaders
+> Task :core:common:compileDebugShaders NO-SOURCE
+> Task :core:common:generateDebugAssets UP-TO-DATE
+> Task :core:common:packageDebugAssets
+> Task :core:common:bundleLibCompileToJarDebug
+> Task :core:viewmodel:bundleLibCompileToJarDebug
+> Task :core:viewmodel:mergeDebugShaders
+> Task :scripting:rhino:mergeDebugShaders
+> Task :core:viewmodel:compileDebugShaders NO-SOURCE
+> Task :core:viewmodel:generateDebugAssets UP-TO-DATE
+> Task :scripting:rhino:compileDebugShaders NO-SOURCE
+> Task :scripting:rhino:generateDebugAssets UP-TO-DATE
+> Task :core:viewmodel:packageDebugAssets
+> Task :scripting:rhino:packageDebugAssets
+> Task :core:common:bundleLibRuntimeToJarDebug
+> Task :core:viewmodel:bundleLibRuntimeToJarDebug
+> Task :app:mergeDebugResources FROM-CACHE
+> Task :core:common:processDebugJavaRes
+> Task :core:viewmodel:processDebugJavaRes
+> Task :scripting:api:compileDebugKotlin FROM-CACHE
+> Task :scripting:api:compileDebugJavaWithJavac NO-SOURCE
+> Task :core:viewmodel:bundleLibRuntimeToDirDebug
+> Task :scripting:api:bundleLibCompileToJarDebug
+> Task :app:dataBindingGenBaseClassesDebug FROM-CACHE
+> Task :scripting:api:mergeDebugShaders
+> Task :app:generateDebugBuildConfig FROM-CACHE
+> Task :core:common:bundleLibRuntimeToDirDebug
+> Task :scripting:api:compileDebugShaders NO-SOURCE
+> Task :scripting:api:generateDebugAssets UP-TO-DATE
+> Task :scripting:api:packageDebugAssets
+> Task :domain:compileDebugKotlin FROM-CACHE
+> Task :scripting:api:bundleLibRuntimeToJarDebug
+> Task :domain:compileDebugJavaWithJavac NO-SOURCE
 > Task :domain:bundleLibCompileToJarDebug
+> Task :app:checkDebugAarMetadata
 > Task :domain:bundleLibRuntimeToJarDebug
+> Task :app:mapDebugSourceSetPaths
+> Task :app:createDebugCompatibleScreenManifests
 > Task :domain:processDebugJavaRes
-> Task :domain:bundleLibRuntimeToDirDebug
-> Task :scripting:rhino:compileDebugKotlin
+> Task :scripting:rhino:compileDebugKotlin FROM-CACHE
 > Task :scripting:rhino:compileDebugJavaWithJavac NO-SOURCE
+> Task :app:extractDeepLinksDebug FROM-CACHE
+> Task :scripting:api:processDebugJavaRes
+> Task :domain:bundleLibRuntimeToDirDebug
 > Task :scripting:rhino:bundleLibCompileToJarDebug
 > Task :scripting:rhino:bundleLibRuntimeToJarDebug
+> Task :scripting:api:bundleLibRuntimeToDirDebug
 > Task :scripting:rhino:processDebugJavaRes
+> Task :app:processDebugMainManifest FROM-CACHE
 > Task :scripting:rhino:bundleLibRuntimeToDirDebug
-> Task :data:compileDebugKotlin
+> Task :app:processDebugManifest FROM-CACHE
+> Task :app:processDebugManifestForPackage FROM-CACHE
+> Task :domain:mergeDebugJniLibFolders
+> Task :domain:mergeDebugNativeLibs NO-SOURCE
+> Task :core:common:mergeDebugJniLibFolders
+> Task :core:common:mergeDebugNativeLibs NO-SOURCE
+> Task :domain:copyDebugJniLibsProjectOnly
+> Task :data:compileDebugKotlin FROM-CACHE
+> Task :core:common:copyDebugJniLibsProjectOnly
 > Task :data:compileDebugJavaWithJavac NO-SOURCE
+> Task :core:viewmodel:mergeDebugJniLibFolders
+> Task :core:viewmodel:mergeDebugNativeLibs NO-SOURCE
+> Task :core:viewmodel:copyDebugJniLibsProjectOnly
 > Task :data:bundleLibCompileToJarDebug
-> Task :data:bundleLibRuntimeToJarDebug
+> Task :scripting:api:mergeDebugJniLibFolders
+> Task :scripting:api:mergeDebugNativeLibs NO-SOURCE
 > Task :data:processDebugJavaRes
+> Task :data:bundleLibRuntimeToJarDebug
+> Task :scripting:api:copyDebugJniLibsProjectOnly
 > Task :data:bundleLibRuntimeToDirDebug
+> Task :data:mergeDebugJniLibFolders
+> Task :scripting:rhino:mergeDebugJniLibFolders
+> Task :data:mergeDebugNativeLibs NO-SOURCE
+> Task :scripting:rhino:mergeDebugNativeLibs NO-SOURCE
+> Task :data:copyDebugJniLibsProjectOnly
+> Task :scripting:rhino:copyDebugJniLibsProjectOnly
+> Task :app:processDebugResources FROM-CACHE
+> Task :app:javaPreCompileDebug FROM-CACHE
+> Task :app:mergeDebugShaders
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets
+> Task :app:compressDebugAssets FROM-CACHE
+> Task :app:desugarDebugFileDependencies FROM-CACHE
 > Task :app:mergeDebugJniLibFolders
-> Task :app:mergeLibDexDebug
+> Task :app:checkDebugDuplicateClasses
 > Task :app:mergeDebugNativeLibs
-> Task :app:validateSigningDebug
-> Task :app:writeDebugAppMetadata
-> Task :app:writeDebugSigningConfigVersions
+> Task :app:mergeExtDexDebug FROM-CACHE
+> Task :app:mergeLibDexDebug FROM-CACHE
 
 > Task :app:stripDebugDebugSymbols
 Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so.
 
+> Task :app:validateSigningDebug
+> Task :app:writeDebugAppMetadata
+> Task :app:writeDebugSigningConfigVersions
 > Task :app:compileDebugKotlin
 > Task :app:compileDebugJavaWithJavac
 > Task :app:dexBuilderDebug
-> Task :app:mergeDebugGlobalSynthetics
+> Task :app:mergeDebugGlobalSynthetics FROM-CACHE
 > Task :app:processDebugJavaRes
 > Task :app:mergeProjectDexDebug
 > Task :app:mergeDebugJavaResource
 > Task :app:packageDebug
 > Task :app:createDebugApkListingFileRedirect
 > Task :app:assembleDebug
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1786163576779.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1786165605742.json
 
-BUILD SUCCESSFUL in 3m 31s
-151 actionable tasks: 124 executed, 27 from cache
+BUILD SUCCESSFUL in 39s
+151 actionable tasks: 75 executed, 76 from cache
 [0m
 [0m$ [0mdate +%Y%m%d_%H%M
-20260808_0436
+20260808_0507
 [0m
-Build successful. Now updating the memory system per `memory_prompt.md` protocol.
-[0m← [0mWrite ai_memory/task_20260808_0436_tahap5_global_crash_handler.md
+Build SUCCESSFUL. Sekarang saya update log memori sesuai prot
+[0m← [0mWrite ai_memory/task_20260808_0507_tahap6_fix_saveable_state_registry.md
 Wrote file successfully.
 [0m
 [0m← [0mEdit ai_memory/00_INDEX.md
@@ -202,48 +402,43 @@ Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
 ===================================================================
 --- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
 +++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
-@@ -2,18 +2,20 @@
+@@ -2,9 +2,10 @@
  
  Proyek: `rocat-app` — Android app modular ala Mihon untuk mengelola & menjalankan custom userscript (Rhino engine). Workspace: `rocat-app/` di root repo ini.
  
  ## Status Proyek Terkini
--- **Tahap 4 SELESAI** (2026-08-08): Stabilisasi crash (root cause: `viewModel()` tanpa factory utk ViewModel ber-constructor default → default factory gagal instansiasi). Fix: `AppViewModelFactory` + registrasi semua ViewModel via Injekt, semua screen pakai `viewModel(factory=...)`. I/O repository dipindah ke `Dispatchers.IO`. Penyempurnaan: validasi import URL (tolak HTML/empty), engine menangkap `EvaluatorException` (syntax error) & `StackOverflowError` tanpa crash.
-+- **Tahap 5 SELESAI** (2026-08-08): Global Crash Handler. `CrashHandler` (default uncaught exception handler) menulis report ke `Android/data/app.rocat/files/crash_logs/` via `CrashLogStore`, lalu meluncurkan `CrashActivity` (Activity Compose terpisah, bukan di RoCatNav) yang menampilkan stack trace scrollable + tombol Copy to Clipboard + info path, kemudian `Process.killProcess`. Terdaftar di manifest. Build: `./gradlew :app:assembleDebug` SUCCESS.
+-- **Tahap 5 SELESAI** (2026-08-08): Global Crash Handler. `CrashHandler` (default uncaught exception handler) menulis report ke `Android/data/app.rocat/files/crash_logs/` via `CrashLogStore`, lalu meluncurkan `CrashActivity` (Activity Compose terpisah, bukan di RoCatNav) yang menampilkan stack trace scrollable + tombol Copy to Clipboard + info path, kemudian `Process.killProcess`. Terdaftar di manifest. Build: `./gradlew :app:assembleDebug` SUCCESS.
++- **Tahap 6 SELESAI** (2026-08-08): Fix crash Compose `SaveableStateRegistry`. Penyebab (dari crash log): `rememberSaveable { mutableStateListOf(...) }` di `RoCatNav.kt` menampung `SnapshotStateList<String>` yang tidak bisa disimpan ke Bundle. Diperbaiki dengan `saver = listSaver(save = { it.toList() }, restore = { it.toMutableStateList() })`. Build: `./gradlew :app:assembleDebug` SUCCESS.
++- Sebelumnya (Tahap 5, 2026-08-08): Global Crash Handler. `CrashHandler` (default uncaught exception handler) menulis report ke `Android/data/app.rocat/files/crash_logs/` via `CrashLogStore`, lalu meluncurkan `CrashActivity` (Activity Compose terpisah, bukan di RoCatNav) yang menampilkan stack trace scrollable + tombol Copy to Clipboard + info path, kemudian `Process.killProcess`. Terdaftar di manifest. Build: `./gradlew :app:assembleDebug` SUCCESS.
  - Build: `./gradlew :app:assembleDebug` SUCCESS. Unit tests domain + rhino SUCCESS.
-+- Sebelumnya (Tahap 4, 2026-08-08): Stabilisasi crash ViewModel factory (`AppViewModelFactory` + Injekt), I/O `Dispatchers.IO`, validasi import URL, error handling Rhino engine.
+ - Sebelumnya (Tahap 4, 2026-08-08): Stabilisasi crash ViewModel factory (`AppViewModelFactory` + Injekt), I/O `Dispatchers.IO`, validasi import URL, error handling Rhino engine.
  - Sebelumnya (Tahap 2 & 3, 2026-08-07): metadata parser, fetch bridge Rhino, storage file-based JSON + CRUD, UI Mihon-style (list/detail/import/playground).
  - Baseline Tahap 1: modular gradle, NetworkHelper OkHttp, Injekt DI, RhinoScriptEngine dasar.
- 
- ## Riwayat Log
- | # | Tanggal | File | Ringkasan |
+
+[0m
+[0m← [0mEdit ai_memory/00_INDEX.md
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
+@@ -15,8 +15,9 @@
  |---|---------|------|-----------|
  | 1 | 2026-08-07 | `task_20260807_0440_tahap2_3_script_infrastruktur_dan_ui.md` | Tahap 2 (loader/metadata/fetch/storage) + Tahap 3 (UI management & playground) selesai, build & test hijau. |
  | 2 | 2026-08-08 | `task_20260808_0313_tahap4_stabilisasi_dan_perbaikan_script.md` | Tahap 4: fix crash ViewModel factory + I/O Dispatchers.IO, validasi import URL, error handling engine; build & test hijau. |
-+| 3 | 2026-08-08 | `task_20260808_0436_tahap5_global_crash_handler.md` | Tahap 5: global crash handler + CrashLogStore (Android/data) + CrashActivity (stack trace scrollable, copy, path info); build hijau. |
+ | 3 | 2026-08-08 | `task_20260808_0436_tahap5_global_crash_handler.md` | Tahap 5: global crash handler + CrashLogStore (Android/data) + CrashActivity (stack trace scrollable, copy, path info); build hijau. |
++| 4 | 2026-08-08 | `task_20260808_0507_tahap6_fix_saveable_state_registry.md` | Tahap 6: fix FC crash Compose via custom `listSaver` untuk back stack navigasi di RoCatNav; build hijau. |
  
  ## Catatan Teknis Penting
  - Rhino 1.7.15: support `let/const`, arrow fn, template literal, Promise, generator; TIDAK support `async/await`, spread, optional-chaining, class. Script sample harus ditulis sync (`fetch()` mengembalikan objek Response sync dengan `.text()`/`.json()`).
  - `fetch()` bridge: sync, melewati `scriptFetch` (OkHttp client app), balikkan `{status,statusText,ok,url,body,headers,error,text(),json()}`.
 
 [0m
-[0m# [0mTodos
-[✓] 5.1: Create CrashLogStore utility + CrashHandler, wire into RoApp.kt
-[✓] 5.2: Create CrashActivity with Compose UI (scrollable trace, copy, path info)
-[✓] 5.3: Register CrashActivity in AndroidManifest.xml + build check
-[✓] Update ai_memory/00_INDEX.md + create task log file
-[0m
-Saya sudah membaca `memory_prompt.md` dan `ai_memory/00_INDEX.md`. Tahap 5 selesai, build hijau.
+Selesai. Ringkasan **Tahap 6**:
 
-## Ringkasan Implementasi `UncaughtExceptionHandler`
+**Bug:** `RoCatNav.kt:54` — `rememberSaveable { mutableStateListOf(KEY_SCRIPTS) }` memproduksi `SnapshotStateList<String>` yang tidak dapat disimpan oleh `SaveableStateRegistry` default (hanya mendukung tipe yang muat di Bundle) → crash `IllegalArgumentException` saat inisialisasi Compose.
 
-**Tahap 5.1 — `CrashLogStore.kt`** (baru): utilitas menulis report (throwable + cause chain + device info) ke `context.getExternalFilesDir(null)/crash_logs/crash_log_<timestamp>.txt` → tersimpan di `Android/data/app.rocat/files/`, tanpa runtime permission.
+**Perbaikan** (`rocat-app/app/src/main/java/app/rocat/ui/navigation/RoCatNav.kt:56-61`): memberikan custom **`Saver`** ke `rememberSaveable` via `listSaver` — simpan sebagai `List<String>` (`it.toList()`, Bundle-compatible), pulihkan kembali ke `mutableStateList` (`it.toMutableStateList()`). Navigasi tetap *survive* config change/process death tanpa crash. Impor ditambahkan: `listSaver`, `toMutableStateList`.
 
-**`CrashHandler.kt`** (baru, dipasang dari `RoApp.kt:17`): menggantikan default handler. Alurnya: ① simpan log ke file → ② kirim `Intent` berisi stack trace + path ke `CrashActivity` (flag `NEW_TASK | CLEAR_TASK`) → ③ fallback ke default handler bila proses crash-handling sendiri gagal → ④ `Process.killProcess`. Tujuannya: crash tak menutup app secara senyap, tapi mampir ke crash screen.
+**Verifikasi:** `./gradlew :app:assembleDebug` → **BUILD SUCCESSFUL**.
 
-**Tahap 5.2 — `CrashActivity.kt`** (baru): Activity Compose terpisah dari `RoCatNav`/`MainActivity` (agar tetap muncul walau main UI yang crash). Menampilkan stack trace dalam `verticalScroll` monospace, tombol **Copy to Clipboard** (ClipboardManager + Toast), info path "Log saved to…", dan tombol Exit.
-
-**Tahap 5.3** — `CrashActivity` didaftarkan di `AndroidManifest.xml` (`exported=false`, `excludeFromRecents=true`).
-
-**Verifikasi:** `./gradlew :app:assembleDebug` → **BUILD SUCCESSFUL** (151 tasks). Log memori diperbarui (`task_20260808_0436_tahap5_global_crash_handler.md` + `00_INDEX.md`).
-
-Catatan: jika saat uji nyata crash terjadi di main thread dan CrashActivity tak sempat dirender karena race dengan `killProcess`, langkah lanjutan yang disarankan (tercatat di log memori) adalah menjalankan CrashActivity di proses terpisah (`android:process=":crash"`) dengan guard bootstrap DI di `RoApp`.
+**Memori:** `ai_memory/00_INDEX.md` diperbarui (status terkini + baris riwayat #4) dan log `ai_memory/task_20260808_0507_tahap6_fix_saveable_state_registry.md` dibuat.
