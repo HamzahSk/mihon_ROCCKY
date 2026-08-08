@@ -18,6 +18,7 @@ import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
+import app.rocat.ui.canvas.ScriptCanvasScreen
 import app.rocat.ui.detail.ScriptDetailScreen
 import app.rocat.ui.import.ImportScriptScreen
 import app.rocat.ui.playground.PlaygroundScreen
@@ -29,18 +30,22 @@ sealed interface Screen {
     data class Detail(val scriptId: String) : Screen
     data object Import : Screen
     data object Playground : Screen
+    /** The script-driven blank canvas (the script draws its own UI via `RoCatUI`). */
+    data class Canvas(val scriptId: String) : Screen
 }
 
 private const val KEY_SCRIPTS = "scripts"
 private const val KEY_IMPORT = "import"
 private const val KEY_PLAYGROUND = "playground"
 private const val KEY_DETAIL_PREFIX = "detail:"
+private const val KEY_CANVAS_PREFIX = "canvas:"
 
 private fun encode(screen: Screen): String = when (screen) {
     is Screen.Scripts -> KEY_SCRIPTS
     is Screen.Import -> KEY_IMPORT
     is Screen.Playground -> KEY_PLAYGROUND
     is Screen.Detail -> KEY_DETAIL_PREFIX + screen.scriptId
+    is Screen.Canvas -> KEY_CANVAS_PREFIX + screen.scriptId
 }
 
 private fun decode(key: String): Screen = when {
@@ -48,6 +53,7 @@ private fun decode(key: String): Screen = when {
     key == KEY_IMPORT -> Screen.Import
     key == KEY_PLAYGROUND -> Screen.Playground
     key.startsWith(KEY_DETAIL_PREFIX) -> Screen.Detail(key.removePrefix(KEY_DETAIL_PREFIX))
+    key.startsWith(KEY_CANVAS_PREFIX) -> Screen.Canvas(key.removePrefix(KEY_CANVAS_PREFIX))
     else -> Screen.Scripts
 }
 
@@ -101,12 +107,13 @@ fun RoCatApp() {
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             when (current) {
                 is Screen.Scripts -> ScriptsScreen(
-                    onOpenScript = { navigate(Screen.Detail(it)) },
+                    onOpenScript = { navigate(Screen.Canvas(it)) },
                     onImport = { navigate(Screen.Import) },
                 )
                 is Screen.Detail -> ScriptDetailScreen(scriptId = current.scriptId, onBack = ::goBack)
                 is Screen.Import -> ImportScriptScreen(onBack = ::goBack)
                 is Screen.Playground -> PlaygroundScreen(onBack = ::goBack)
+                is Screen.Canvas -> ScriptCanvasScreen(scriptId = current.scriptId, onBack = ::goBack)
             }
         }
     }

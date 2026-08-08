@@ -73,6 +73,8 @@ class ImportScriptViewModel(
 
     fun loadExample() = mutableState.update { it.copy(source = EXAMPLE_SCRIPT) }
 
+    fun loadCanvasExample() = mutableState.update { it.copy(source = CANVAS_EXAMPLE_SCRIPT) }
+
     companion object {
         /** Maps raw exceptions to messages a user can actually act on. */
         fun friendlyMessage(e: Throwable): String = when (e) {
@@ -248,6 +250,60 @@ class ImportScriptViewModel(
 
             function slugify(text) {
                 return text.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+            }
+        """.trimIndent()
+
+        /**
+         * The Tahap-13 canvas demo: a script-driven "Search -> Grid -> Detail" flow. It
+         * defines `onLaunch()` (auto-run by ScriptCanvasScreen) and navigates by calling
+         * `RoCatUI.clear()` + redrawing; `RoCatUI.addGrid(3, JSON.stringify(results),
+         * "openDetail")` produces the 3-column manga grid.
+         */
+        val CANVAS_EXAMPLE_SCRIPT = """
+            // ==UserScript==
+            // @name        Manga Scraper Mock
+            // @version     1.0.0
+            // @icon        https://via.placeholder.com/150
+            // ==/UserScript==
+
+            function onLaunch() {
+                RoCatUI.clear();
+                RoCatUI.addInput("query", "Cari Manga...");
+                RoCatUI.addButton("Search", "doSearch");
+            }
+
+            function doSearch(inputs) {
+                var q = inputs.query;
+                if (!q) { RoCatUI.log("Masukkan kata kunci!"); return; }
+
+                RoCatUI.clear();
+                RoCatUI.addButton("Back", "onLaunch");
+                RoCatUI.log("Hasil pencarian untuk: " + q);
+
+                // Mock Data Grid
+                var results = [
+                    { id: "1", title: "Manga A", image: "https://via.placeholder.com/300/FF0000" },
+                    { id: "2", title: "Manga B", image: "https://via.placeholder.com/300/00FF00" },
+                    { id: "3", title: "Manga C", image: "https://via.placeholder.com/300/0000FF" },
+                    { id: "4", title: "Manga D", image: "https://via.placeholder.com/300/FFFF00" }
+                ];
+
+                // Tampilkan Grid 3 Kolom
+                RoCatUI.addGrid(3, JSON.stringify(results), "openDetail");
+            }
+
+            function openDetail(itemJsonString) {
+                var item = JSON.parse(itemJsonString);
+                RoCatUI.clear();
+                RoCatUI.addButton("Back to Search", "onLaunch"); // Tombol kembali
+                RoCatUI.thumbnailPreview(item.image);
+                RoCatUI.log("Judul: " + item.title);
+                RoCatUI.log("ID Manga: " + item.id);
+                RoCatUI.addButton("Baca Chapter 1", "readChapter");
+            }
+
+            function readChapter() {
+                RoCatUI.log("Membuka chapter...");
             }
         """.trimIndent()
     }

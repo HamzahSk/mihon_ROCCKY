@@ -383,6 +383,9 @@ private class RoCatUiBridge(
         put("thumbnailPreview", this, Fn { args -> runSafe { ui.thumbnailPreview(argString(args, 0)) } })
         put("videoPreview", this, Fn { args -> runSafe { ui.videoPreview(argString(args, 0)) } })
         put("clear", this, Fn { runSafe { ui.clear() } })
+        put("addGrid", this, Fn { args ->
+            runSafe { ui.addGrid(argInt(args, 0), argString(args, 1), argString(args, 2)) }
+        })
         put("log", this, Fn { args -> runSafe { ui.log(argString(args, 0)) } })
     }
 
@@ -447,6 +450,17 @@ private fun argStringOrNull(args: Array<out Any?>, index: Int): String? {
     val value = args.getOrNull(index) ?: return null
     if (value === Undefined.instance) return null
     return Context.toString(value)
+}
+
+/** Reads the [index]-th JS argument as an Int, or [default] when absent/undefined. */
+private fun argInt(args: Array<out Any?>, index: Int, default: Int = 0): Int {
+    val value = args.getOrNull(index) ?: return default
+    if (value === Undefined.instance) return default
+    return when (value) {
+        is Number -> value.toInt()
+        is CharSequence -> value.toString().trim().toIntOrNull() ?: default
+        else -> runCatching { Context.toNumber(value).toInt() }.getOrDefault(default)
+    }
 }
 
 /**

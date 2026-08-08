@@ -138,6 +138,14 @@ fun PlaygroundScreen(
                     is ScriptUIComponent.Video -> VideoComponent(url = component.url)
 
                     is ScriptUIComponent.LogText -> LogComponent(text = component.text)
+
+                    is ScriptUIComponent.Grid -> GridComponent(
+                        grid = component,
+                        onItemClick = { item ->
+                            viewModel.onGridClick(component.onClickFunction, item.rawJsonPayload)
+                        },
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
                 }
                 Spacer(Modifier.height(4.dp))
             }

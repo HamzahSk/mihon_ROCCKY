@@ -1,0 +1,301 @@
+package app.rocat.ui.canvas
+
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import app.rocat.ui.playground.GridComponent
+import app.rocat.ui.playground.ScriptUIComponent
+import coil3.compose.AsyncImage
+
+/**
+ * The script "blank canvas" screen (mihon-like extension tab). Instead of a fixed
+ * playground/picker, the screen is empty except for a TopAppBar titled with the script's
+ * metadata `@name`. The script owns the page: [ScriptCanvasViewModel] calls `onLaunch()`
+ * automatically, and the script draws inputs, buttons, previews, a 3-column grid, or
+ * redraws the whole page (Search -> Grid -> Detail) through `RoCatUI`.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ScriptCanvasScreen(
+    scriptId: String,
+    onBack: () -> Unit,
+    viewModel: ScriptCanvasViewModel = viewModel(
+        key = "canvas_$scriptId",
+        factory = remember(scriptId) { ScriptCanvasViewModel.Factory(scriptId) },
+    ),
+) {
+    val state by viewModel.state.collectAsState()
+    val components = viewModel.uiComponents
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(state.script?.name ?: "Script") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = viewModel::rebuildCanvas) {
+                        Icon(Icons.Filled.Refresh, contentDescription = "Rebuild canvas")
+                    }
+                },
+            )
+        },
+    ) { innerPadding ->
+        when {
+            !state.loaded -> Box(
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator()
+            }
+
+            state.script == null -> Box(
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("Script not found", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+
+            else -> LazyColumn(
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                contentPadding = PaddingValues(bottom = 24.dp),
+            ) {
+                if (components.isEmpty() && state.output.isEmpty() && !state.executing) {
+                    item(key = "hint") {
+                        CanvasEmptyHint(onRefresh = viewModel::rebuildCanvas)
+                    }
+                }
+
+                itemsIndexed(components, key = { index, _ -> index }) { _, component ->
+                    when (component) {
+                        is ScriptUIComponent.Input -> InputComponent(
+                            component = component,
+                            onValueChange = viewModel::updateInputValue,
+                        )
+
+                        is ScriptUIComponent.Button -> ButtonComponent(
+                            label = component.label,
+                            enabled = !state.executing,
+                            onClick = { viewModel.onScriptButton(component.functionName) },
+                        )
+
+                        is ScriptUIComponent.Thumbnail -> ThumbnailComponent(url = component.url)
+
+                        is ScriptUIComponent.Video -> VideoComponent(url = component.url)
+
+                        is ScriptUIComponent.LogText -> LogComponent(text = component.text)
+
+                        is ScriptUIComponent.Grid -> GridComponent(
+                            grid = component,
+                            onItemClick = { item ->
+                                viewModel.onGridItemClick(component.onClickFunction, item.rawJsonPayload)
+                            },
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                        )
+                    }
+                    Spacer(Modifier.height(4.dp))
+                }
+
+                if (state.executing || state.output.isNotEmpty()) {
+                    item(key = "output") {
+                        ConsoleOutput(log = state.output, executing = state.executing)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CanvasEmptyHint(onRefresh: () -> Unit) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Text(
+                "Blank canvas",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "The script did not publish any UI. Canvas-driven scripts define onLaunch() " +
+                    "and draw with RoCatUI.{addInput,addButton,addGrid,log,...}.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            TextButton(onClick = onRefresh) { Text("Re-run onLaunch()") }
+        }
+    }
+}
+
+@Composable
+private fun InputComponent(
+    component: ScriptUIComponent.Input,
+    onValueChange: (String, String) -> Unit,
+) {
+    OutlinedTextField(
+        value = component.value,
+        onValueChange = { value -> onValueChange(component.id, value) },
+        label = { Text(component.hint) },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+    )
+}
+
+@Composable
+private fun ButtonComponent(
+    label: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+    ) {
+        if (!enabled) {
+            CircularProgressIndicator(modifier = Modifier.width(16.dp).height(16.dp))
+            Spacer(Modifier.width(8.dp))
+        }
+        Text(label)
+    }
+}
+
+@Composable
+private fun ThumbnailComponent(url: String) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+        AsyncImage(
+            model = url,
+            contentDescription = "Script thumbnail preview",
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 300.dp)
+                .padding(8.dp),
+        )
+    }
+}
+
+@Composable
+private fun VideoComponent(url: String) {
+    val context = LocalContext.current
+    ElevatedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                "Video preview",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(
+                onClick = {
+                    runCatching {
+                        context.startActivity(
+                            Intent(Intent.ACTION_VIEW).setDataAndType(Uri.parse(url), "video/*"),
+                        )
+                    }.onFailure {
+                        Toast.makeText(context, "No video player available", Toast.LENGTH_SHORT).show()
+                    }
+                },
+            ) {
+                Icon(Icons.Filled.PlayArrow, contentDescription = null)
+                Spacer(Modifier.width(6.dp))
+                Text("Play Video")
+            }
+        }
+    }
+}
+
+@Composable
+private fun LogComponent(text: String) {
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+        )
+    }
+}
+
+/** Console showing the return value (or error) of the last script invocation. */
+@Composable
+private fun ConsoleOutput(log: String, executing: Boolean) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                "Output",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+            )
+            if (executing) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 8.dp),
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.width(16.dp).height(16.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Running…", style = MaterialTheme.typography.bodySmall)
+                }
+            }
+            if (log.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = log,
+                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+    }
+}

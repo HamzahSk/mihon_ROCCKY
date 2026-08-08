@@ -66,6 +66,9 @@ class PlaygroundViewModel(
             uiComponents.add(ScriptUIComponent.Video(url))
         }
         override fun clear() = postUi(uiSession) { uiComponents.clear() }
+        override fun addGrid(columns: Int, itemsJsonString: String, onClickFunction: String) = postUi(uiSession) {
+            parseGrid(columns, itemsJsonString, onClickFunction)?.let { uiComponents.add(it) }
+        }
         override fun log(text: String) = postUi(uiSession) {
             uiComponents.add(ScriptUIComponent.LogText(text))
         }
@@ -179,6 +182,36 @@ class PlaygroundViewModel(
         val input = uiComponents[index] as ScriptUIComponent.Input
         if (input.value == value) return
         uiComponents[index] = input.copy(value = value)
+    }
+
+    /**
+     * Tapping a tile of a `RoCatUI` grid: forwards the tile's raw JSON payload as a
+     * string argument (e.g. `openDetail(itemJson)`) so the script can redraw the page.
+     */
+    fun onGridClick(onClickFunction: String, payload: String) {
+        val script = state.value.selectedScript ?: return
+        mutableState.update { it.copy(executing = true, log = "") }
+        viewModelScope.launch {
+            try {
+                val result = uiExecuteScript.invoke(script, onClickFunction, args = listOf(payload))
+                val message = when (result) {
+                    is ScriptResult.Success -> result.value
+                    is ScriptResult.Failure -> "Error: ${result.error}"
+                }
+                mutableState.update {
+                    it.copy(
+                        executing = false,
+                        log = message.ifEmpty { "`$onClickFunction` returned nothing" },
+                    )
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                mutableState.update {
+                    it.copy(executing = false, log = "Error: ${e.message ?: e.javaClass.simpleName}")
+                }
+            }
+        }
     }
 
     /** Adds a new input, or refreshes its hint when a script re-declares the same id. */

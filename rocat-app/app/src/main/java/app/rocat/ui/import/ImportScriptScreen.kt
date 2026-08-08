@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -122,6 +123,10 @@ fun ImportScriptScreen(
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.weight(1f),
                 )
+                OutlinedButton(onClick = viewModel::loadCanvasExample) {
+                    Text("Canvas demo")
+                }
+                Spacer(Modifier.width(8.dp))
                 OutlinedButton(onClick = viewModel::loadExample) {
                     Text("Load example")
                 }

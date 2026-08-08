@@ -29,6 +29,15 @@ interface ScriptUiBridge {
     /** Clears every currently rendered component. */
     fun clear()
 
+    /**
+     * Renders a responsive grid of [columns] columns. [itemsJsonString] is a JSON array
+     * of objects (each expected to carry at least a `title` and `image`). Tapping a tile
+     * re-invokes the script function named [onClickFunction], passing the tapped item's
+     * JSON payload as a string argument — the script can then "navigate" by calling
+     * [clear] and redrawing the detail UI.
+     */
+    fun addGrid(columns: Int, itemsJsonString: String, onClickFunction: String)
+
     /** Appends [text] to the script log area. */
     fun log(text: String)
 }

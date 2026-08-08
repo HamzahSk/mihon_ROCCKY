@@ -11,6 +11,7 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -284,6 +285,9 @@ class RhinoScriptEngineTest {
         override fun thumbnailPreview(url: String) { calls.add("thumbnail:$url") }
         override fun videoPreview(url: String) { calls.add("video:$url") }
         override fun clear() { calls.add("clear") }
+        override fun addGrid(columns: Int, itemsJsonString: String, onClickFunction: String) {
+            calls.add("grid:$columns:$onClickFunction:$itemsJsonString")
+        }
         override fun log(text: String) { calls.add("log:$text") }
     }
 
@@ -360,5 +364,114 @@ class RhinoScriptEngineTest {
         assertTrue(result is ScriptResult.Success)
         assertEquals("", (result as ScriptResult.Success).value)
         assertEquals(listOf("video:https://example.com/clip.mp4"), ui.calls)
+    }
+
+    // --- Tahap 13: Full Script-Driven Canvas & Grid System ---
+
+    @Test
+    fun `rocatui builds a 3-column grid via addGrid`() = runBlocking {
+        val ui = RecordingUiBridge()
+        val uiEnvironment = DefaultScriptEnvironment(
+            fetchImpl = { _, _, _, _ -> FetchResult(200, emptyMap(), "") },
+            ui = ui,
+        )
+        val source = """
+            function buildUI() {
+                var results = [
+                    { id: "1", title: "Manga A", image: "https://example.com/a.jpg" },
+                    { id: "2", title: "Manga B", image: "https://example.com/b.jpg" }
+                ];
+                RoCatUI.addGrid(3, JSON.stringify(results), "openDetail");
+            }
+        """.trimIndent()
+
+        val result = engine.invokeNamedFunction(script(source), uiEnvironment, "buildUI", emptyMap())
+
+        assertTrue(result is ScriptResult.Success)
+        assertEquals(1, ui.calls.size)
+        val call = ui.calls.single()
+        assertTrue("call=$call", call.startsWith("grid:3:openDetail:"))
+        assertTrue("payload missing title", call.contains("Manga A"))
+        assertTrue("payload missing custom id", call.contains("\"id\":\"2\""))
+    }
+
+    @Test
+    fun `rocatui drives the search-to-detail canvas flow`() = runBlocking {
+        val ui = RecordingUiBridge()
+        val uiEnvironment = DefaultScriptEnvironment(
+            fetchImpl = { _, _, _, _ -> FetchResult(200, emptyMap(), "") },
+            ui = ui,
+        )
+        val source = """
+            function onLaunch() {
+                RoCatUI.clear();
+                RoCatUI.addInput("query", "Cari Manga...");
+                RoCatUI.addButton("Search", "doSearch");
+            }
+            function doSearch(inputs) {
+                var q = inputs.query;
+                if (!q) { RoCatUI.log("Masukkan kata kunci!"); return; }
+                RoCatUI.clear();
+                RoCatUI.addButton("Back", "onLaunch");
+                RoCatUI.log("Hasil pencarian untuk: " + q);
+                var results = [
+                    { id: "1", title: "Manga A", image: "https://via.placeholder.com/300/FF0000" },
+                    { id: "2", title: "Manga B", image: "https://via.placeholder.com/300/00FF00" },
+                    { id: "3", title: "Manga C", image: "https://via.placeholder.com/300/0000FF" },
+                    { id: "4", title: "Manga D", image: "https://via.placeholder.com/300/FFFF00" }
+                ];
+                RoCatUI.addGrid(3, JSON.stringify(results), "openDetail");
+            }
+            function openDetail(itemRaw) {
+                var item = JSON.parse(itemRaw);
+                RoCatUI.clear();
+                RoCatUI.addButton("Back to Search", "onLaunch");
+                RoCatUI.thumbnailPreview(item.image);
+                RoCatUI.log("Judul: " + item.title);
+                RoCatUI.log("ID Manga: " + item.id);
+                RoCatUI.addButton("Baca Chapter 1", "readChapter");
+            }
+            function readChapter() {
+                RoCatUI.log("Membuka chapter...");
+            }
+        """.trimIndent()
+
+        // 1) onLaunch draws the initial search form.
+        val launch = engine.invokeNamedFunction(script(source), uiEnvironment, "onLaunch", emptyMap())
+        assertTrue(launch is ScriptResult.Success)
+        assertEquals(
+            listOf(
+                "clear",
+                "input:query:Cari Manga...",
+                "button:Search:doSearch",
+            ),
+            ui.calls,
+        )
+
+        // 2) doSearch redraws the canvas and publishes a 3-column grid.
+        ui.calls.clear()
+        val searchResult = engine.invokeNamedFunction(script(source), uiEnvironment, "doSearch", mapOf("query" to "opm"))
+        assertTrue(searchResult is ScriptResult.Success)
+        val gridCall = ui.calls.firstOrNull { it.startsWith("grid:3:") }
+        assertNotNull("expected a grid call", gridCall)
+        assertTrue("grid=$gridCall", gridCall!!.contains("Manga A"))
+        assertTrue("grid=$gridCall", gridCall.contains("openDetail"))
+
+        // 3) openDetail receives the raw item JSON string, parses it and redraws.
+        ui.calls.clear()
+        val itemJson = """{"id":"1","title":"Manga A","image":"https://via.placeholder.com/300/FF0000"}"""
+        val detailResult = engine.invokeFunction(script(source), uiEnvironment, "openDetail", listOf(itemJson))
+        assertTrue(detailResult is ScriptResult.Success)
+        assertEquals(
+            listOf(
+                "clear",
+                "button:Back to Search:onLaunch",
+                "thumbnail:https://via.placeholder.com/300/FF0000",
+                "log:Judul: Manga A",
+                "log:ID Manga: 1",
+                "button:Baca Chapter 1:readChapter",
+            ),
+            ui.calls,
+        )
     }
 }
