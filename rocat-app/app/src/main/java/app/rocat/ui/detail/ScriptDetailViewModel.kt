@@ -1,6 +1,9 @@
 package app.rocat.ui.detail
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.CreationExtras
 import app.rocat.core.common.injekt.Injekt
 import app.rocat.core.viewmodel.StateViewModel
 import app.rocat.domain.script.DeleteScript
@@ -52,5 +55,16 @@ class ScriptDetailViewModel(
             upsertScript.await(script.id, script.name, newSource, script.description)
             onSaved()
         }
+    }
+
+    /**
+     * Builds a [ScriptDetailViewModel] for a specific [scriptId]. Because this
+     * ViewModel takes a constructor argument, it cannot go through the default
+     * reflection-based factory; the factory closes over the id instead.
+     */
+    class Factory(private val scriptId: String) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T =
+            ScriptDetailViewModel(scriptId) as T
     }
 }

@@ -48,7 +48,10 @@ import app.rocat.scripting.api.model.Script
 fun ScriptDetailScreen(
     scriptId: String,
     onBack: () -> Unit,
-    viewModel: ScriptDetailViewModel = viewModel(key = "detail_$scriptId") { ScriptDetailViewModel(scriptId) },
+    viewModel: ScriptDetailViewModel = viewModel(
+        key = "detail_$scriptId",
+        factory = remember(scriptId) { ScriptDetailViewModel.Factory(scriptId) },
+    ),
 ) {
     val state by viewModel.detailState.collectAsState()
     val script = state.script

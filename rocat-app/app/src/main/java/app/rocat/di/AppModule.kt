@@ -15,6 +15,9 @@ import app.rocat.domain.script.ImportScript
 import app.rocat.domain.script.ScriptRepository
 import app.rocat.domain.script.SetScriptEnabled
 import app.rocat.domain.script.UpsertScript
+import app.rocat.ui.import.ImportScriptViewModel
+import app.rocat.ui.playground.PlaygroundViewModel
+import app.rocat.ui.scripts.ScriptsViewModel
 
 /**
  * Application-level dependency graph, mirroring mihon's `AppModule`/`PreferenceModule`.
@@ -48,5 +51,13 @@ class AppModule(val app: Application) : InjektModule {
                 environment = scriptManager.environment,
             )
         }
+
+        // ViewModels. Registered as Injekt factories so the Compose screens can build
+        // them without the reflection-based default factory (which only supports
+        // no-arg constructors and crashes for these constructor-injected ViewModels).
+        registrar.addSingletonFactory { ScriptsViewModel() }
+        registrar.addSingletonFactory { ImportScriptViewModel() }
+        registrar.addSingletonFactory { PlaygroundViewModel() }
+        registrar.addSingleton(AppViewModelFactory)
     }
 }

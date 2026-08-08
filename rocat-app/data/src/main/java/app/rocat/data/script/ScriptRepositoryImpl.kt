@@ -10,11 +10,16 @@ import app.rocat.scripting.api.model.DefaultScriptEnvironment
 import app.rocat.scripting.api.model.Script
 import app.rocat.scripting.api.network.scriptFetch
 import app.rocat.scripting.rhino.RhinoScriptEngine
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import okhttp3.OkHttpClient
@@ -30,10 +35,20 @@ class ScriptRepositoryImpl(
 
     private val storeFile = File(storageDir, "scripts.json")
 
-    private val _scripts = MutableStateFlow(load())
+    // Own scope so initial load never runs on the caller (often the main) thread.
+    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    // Starts empty; populated asynchronously in [init] so construction never blocks.
+    private val _scripts = MutableStateFlow<List<Script>>(emptyList())
     override fun getAllScripts(): Flow<List<Script>> = _scripts.asStateFlow()
 
     private val mutex = Mutex()
+
+    init {
+        ioScope.launch {
+            _scripts.value = load()
+        }
+    }
 
     override suspend fun getScriptById(id: String): Script? =
         _scripts.value.firstOrNull { it.id == id }
@@ -61,19 +76,24 @@ class ScriptRepositoryImpl(
         save(updated)
     }
 
-    private fun load(): List<Script> {
-        return try {
-            if (!storeFile.exists()) return emptyList()
-            JsonUtil.json.decodeFromString<List<Script>>(storeFile.readText())
+    private suspend fun load(): List<Script> = withContext(Dispatchers.IO) {
+        try {
+            if (!storeFile.exists()) {
+                emptyList()
+            } else {
+                JsonUtil.json.decodeFromString<List<Script>>(storeFile.readText())
+            }
         } catch (e: Exception) {
             emptyList()
         }
     }
 
-    private fun save(scripts: List<Script>) {
+    private suspend fun save(scripts: List<Script>) {
         try {
-            storeFile.parentFile?.mkdirs()
-            storeFile.writeText(JsonUtil.json.encodeToString(scripts))
+            withContext(Dispatchers.IO) {
+                storeFile.parentFile?.mkdirs()
+                storeFile.writeText(JsonUtil.json.encodeToString(scripts))
+            }
         } catch (e: Exception) {
             // Best-effort persistence; failures should not crash the app.
         }

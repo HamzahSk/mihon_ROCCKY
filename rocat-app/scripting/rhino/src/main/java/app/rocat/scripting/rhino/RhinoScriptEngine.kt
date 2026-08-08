@@ -48,6 +48,11 @@ class RhinoScriptEngine(
     ): ScriptResult = withContext(Dispatchers.IO) {
         try {
             ScriptResult.Success(evaluate(script, environment, args))
+        } catch (e: EvaluatorException) {
+            // Syntax/compile errors are reported back to the UI, never rethrown.
+            ScriptResult.Failure("JS error: ${e.message}")
+        } catch (e: StackOverflowError) {
+            ScriptResult.Failure("Script caused a stack overflow (possible infinite recursion)")
         } catch (e: Exception) {
             ScriptResult.Failure(e.message ?: e.javaClass.simpleName)
         }

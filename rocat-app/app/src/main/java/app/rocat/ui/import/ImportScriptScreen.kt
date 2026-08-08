@@ -33,12 +33,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import app.rocat.di.AppViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImportScriptScreen(
     onBack: () -> Unit,
-    viewModel: ImportScriptViewModel = viewModel(),
+    viewModel: ImportScriptViewModel = viewModel(factory = AppViewModelFactory),
 ) {
     val state by viewModel.state.collectAsState()
 

@@ -39,13 +39,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import app.rocat.di.AppViewModelFactory
 import app.rocat.scripting.api.model.Script
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaygroundScreen(
     onBack: () -> Unit,
-    viewModel: PlaygroundViewModel = viewModel(),
+    viewModel: PlaygroundViewModel = viewModel(factory = AppViewModelFactory),
 ) {
     val state by viewModel.state.collectAsState()
 

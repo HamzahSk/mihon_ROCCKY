@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import app.rocat.di.AppViewModelFactory
 import app.rocat.scripting.api.model.Script
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,7 +42,7 @@ import app.rocat.scripting.api.model.Script
 fun ScriptsScreen(
     onOpenScript: (String) -> Unit,
     onImport: () -> Unit,
-    viewModel: ScriptsViewModel = viewModel(),
+    viewModel: ScriptsViewModel = viewModel(factory = AppViewModelFactory),
 ) {
     val state by viewModel.scriptsState.collectAsState()
 
