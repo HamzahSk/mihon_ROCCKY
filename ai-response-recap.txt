@@ -3,751 +3,674 @@
 [0m
 [0m$ [0mls -la
 total 280
-drwxr-xr-x 21 runner runner  4096 Aug  8 16:14 .
-drwxr-xr-x  3 runner runner  4096 Aug  8 16:14 ..
--rw-r--r--  1 runner runner   971 Aug  8 16:14 .editorconfig
-drwxr-xr-x  7 runner runner  4096 Aug  8 16:14 .git
--rw-r--r--  1 runner runner   304 Aug  8 16:14 .gitattributes
-drwxr-xr-x  5 runner runner  4096 Aug  8 16:14 .github
--rw-r--r--  1 runner runner   183 Aug  8 16:14 .gitignore
-drwxr-xr-x  2 runner runner  4096 Aug  8 16:14 .idea
--rw-r--r--  1 runner runner     0 Aug  8 16:14 .nomedia
--rw-r--r--  1 runner runner 73171 Aug  8 16:14 CHANGELOG.md
--rw-r--r--  1 runner runner  5296 Aug  8 16:14 CODE_OF_CONDUCT.md
--rw-r--r--  1 runner runner  2008 Aug  8 16:14 CONTRIBUTING.md
--rw-r--r--  1 runner runner 22940 Aug  8 16:14 DOCS_MLKIT.md
--rw-r--r--  1 runner runner 10173 Aug  8 16:14 LICENSE
--rw-r--r--  1 runner runner  4265 Aug  8 16:14 README.md
--rw-r--r--  1 runner runner    44 Aug  8 16:14 ai-response-recap.txt
-drwxr-xr-x  2 runner runner  4096 Aug  8 16:14 ai_memory
-drwxr-xr-x  3 runner runner  4096 Aug  8 16:14 app
-drwxr-xr-x  3 runner runner  4096 Aug  8 16:14 baseline-profile
--rw-r--r--  1 runner runner  1015 Aug  8 16:14 build.gradle.kts
-drwxr-xr-x  5 runner runner  4096 Aug  8 16:14 core
-drwxr-xr-x  3 runner runner  4096 Aug  8 16:14 core-metadata
--rw-r--r--  1 runner runner  3804 Aug  8 16:14 crash_log_20260808_120114.txt
-drwxr-xr-x  3 runner runner  4096 Aug  8 16:14 data
-drwxr-xr-x  3 runner runner  4096 Aug  8 16:14 domain
-drwxr-xr-x  3 runner runner  4096 Aug  8 16:14 fastlane
-drwxr-xr-x  4 runner runner  4096 Aug  8 16:14 gradle
--rw-r--r--  1 runner runner   272 Aug  8 16:14 gradle.properties
--rwxr-xr-x  1 runner runner  8656 Aug  8 16:14 gradlew
--rw-r--r--  1 runner runner  2766 Aug  8 16:14 gradlew.bat
-drwxr-xr-x  3 runner runner  4096 Aug  8 16:14 i18n
--rw-r--r--  1 runner runner  5588 Aug  8 16:14 mangaupdate.js
--rw-r--r--  1 runner runner  2017 Aug  8 16:14 memory_prompt.md
-drwxr-xr-x  3 runner runner  4096 Aug  8 16:14 presentation-core
-drwxr-xr-x  3 runner runner  4096 Aug  8 16:14 presentation-widget
--rw-r--r--  1 runner runner  5216 Aug  8 16:14 prompt.md
-drwxr-xr-x  8 runner runner  4096 Aug  8 16:14 rocat-app
--rw-r--r--  1 runner runner  1015 Aug  8 16:14 settings.gradle.kts
-drwxr-xr-x  3 runner runner  4096 Aug  8 16:14 source-api
-drwxr-xr-x  3 runner runner  4096 Aug  8 16:14 source-local
-drwxr-xr-x  3 runner runner  4096 Aug  8 16:14 telemetry
+drwxr-xr-x 21 runner runner  4096 Aug  8 22:16 .
+drwxr-xr-x  3 runner runner  4096 Aug  8 22:16 ..
+-rw-r--r--  1 runner runner   971 Aug  8 22:16 .editorconfig
+drwxr-xr-x  7 runner runner  4096 Aug  8 22:16 .git
+-rw-r--r--  1 runner runner   304 Aug  8 22:16 .gitattributes
+drwxr-xr-x  5 runner runner  4096 Aug  8 22:16 .github
+-rw-r--r--  1 runner runner   183 Aug  8 22:16 .gitignore
+drwxr-xr-x  2 runner runner  4096 Aug  8 22:16 .idea
+-rw-r--r--  1 runner runner     0 Aug  8 22:16 .nomedia
+-rw-r--r--  1 runner runner 73171 Aug  8 22:16 CHANGELOG.md
+-rw-r--r--  1 runner runner  5296 Aug  8 22:16 CODE_OF_CONDUCT.md
+-rw-r--r--  1 runner runner  2008 Aug  8 22:16 CONTRIBUTING.md
+-rw-r--r--  1 runner runner 22940 Aug  8 22:16 DOCS_MLKIT.md
+-rw-r--r--  1 runner runner 10173 Aug  8 22:16 LICENSE
+-rw-r--r--  1 runner runner  4265 Aug  8 22:16 README.md
+-rw-r--r--  1 runner runner    44 Aug  8 22:16 ai-response-recap.txt
+drwxr-xr-x  2 runner runner  4096 Aug  8 22:16 ai_memory
+drwxr-xr-x  3 runner runner  4096 Aug  8 22:16 app
+drwxr-xr-x  3 runner runner  4096 Aug  8 22:16 baseline-profile
+-rw-r--r--  1 runner runner  1015 Aug  8 22:16 build.gradle.kts
+drwxr-xr-x  5 runner runner  4096 Aug  8 22:16 core
+drwxr-xr-x  3 runner runner  4096 Aug  8 22:16 core-metadata
+-rw-r--r--  1 runner runner  3804 Aug  8 22:16 crash_log_20260808_120114.txt
+drwxr-xr-x  3 runner runner  4096 Aug  8 22:16 data
+drwxr-xr-x  3 runner runner  4096 Aug  8 22:16 domain
+drwxr-xr-x  3 runner runner  4096 Aug  8 22:16 fastlane
+drwxr-xr-x  4 runner runner  4096 Aug  8 22:16 gradle
+-rw-r--r--  1 runner runner   272 Aug  8 22:16 gradle.properties
+-rwxr-xr-x  1 runner runner  8656 Aug  8 22:16 gradlew
+-rw-r--r--  1 runner runner  2766 Aug  8 22:16 gradlew.bat
+drwxr-xr-x  3 runner runner  4096 Aug  8 22:16 i18n
+-rw-r--r--  1 runner runner  5588 Aug  8 22:16 mangaupdate.js
+-rw-r--r--  1 runner runner  2017 Aug  8 22:16 memory_prompt.md
+drwxr-xr-x  3 runner runner  4096 Aug  8 22:16 presentation-core
+drwxr-xr-x  3 runner runner  4096 Aug  8 22:16 presentation-widget
+-rw-r--r--  1 runner runner  5226 Aug  8 22:16 prompt.md
+drwxr-xr-x  8 runner runner  4096 Aug  8 22:16 rocat-app
+-rw-r--r--  1 runner runner  1015 Aug  8 22:16 settings.gradle.kts
+drwxr-xr-x  3 runner runner  4096 Aug  8 22:16 source-api
+drwxr-xr-x  3 runner runner  4096 Aug  8 22:16 source-local
+drwxr-xr-x  3 runner runner  4096 Aug  8 22:16 telemetry
 [0m
 [0m✱ [0mGlob "**/memory_prompt.md"[90m 1 match[0m
 [0m→ [0mRead memory_prompt.md
 [0m→ [0mRead ai_memory/00_INDEX.md
 [0m
-[0m$ [0mls -la ai_memory/
-total 64
-drwxr-xr-x  2 runner runner  4096 Aug  8 16:14 .
-drwxr-xr-x 21 runner runner  4096 Aug  8 16:14 ..
--rw-r--r--  1 runner runner 12356 Aug  8 16:14 00_INDEX.md
--rw-r--r--  1 runner runner  2273 Aug  8 16:14 task_20260807_0440_tahap2_3_script_infrastruktur_dan_ui.md
--rw-r--r--  1 runner runner  1821 Aug  8 16:14 task_20260808_0313_tahap4_stabilisasi_dan_perbaikan_script.md
--rw-r--r--  1 runner runner  1623 Aug  8 16:14 task_20260808_0436_tahap5_global_crash_handler.md
--rw-r--r--  1 runner runner  1158 Aug  8 16:14 task_20260808_0507_tahap6_fix_saveable_state_registry.md
--rw-r--r--  1 runner runner  2030 Aug  8 16:14 task_20260808_0540_tahap7_network_ssl_dan_script_loader.md
--rw-r--r--  1 runner runner  1833 Aug  8 16:14 task_20260808_1201_tahap8_script_api_dan_ui_execution.md
--rw-r--r--  1 runner runner  1670 Aug  8 16:14 task_20260808_1310_tahap9_fix_rhino_class_loader.md
--rw-r--r--  1 runner runner  1921 Aug  8 16:14 task_20260808_1404_tahap10_stealth_browser_and_cloudflare.md
--rw-r--r--  1 runner runner  1948 Aug  8 16:14 task_20260808_1503_tahap11_ui_improvements_and_dynamic_playground.md
--rw-r--r--  1 runner runner  2187 Aug  8 16:14 task_20260808_1549_tahap11_5_hotfix_playground.md
+[0m$ [0mfind rocat-app -type d -name java | head; echo "---"; ls rocat-app
+rocat-app/domain/src/test/java
+rocat-app/domain/src/main/java
+rocat-app/scripting/rhino/src/test/java
+rocat-app/scripting/rhino/src/main/java
+rocat-app/scripting/api/src/main/java
+rocat-app/app/src/main/java
+rocat-app/core/common/src/main/java
+rocat-app/core/viewmodel/src/main/java
+rocat-app/data/src/test/java
+rocat-app/data/src/main/java
+---
+app
+build.gradle.kts
+core
+data
+domain
+gradle
+gradle.properties
+gradlew
+gradlew.bat
+scripting
+settings.gradle.kts
 [0m
-[0m✱ [0mGlob "**/Playground*.kt"[90m 2 matches[0m
-[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
+[0m✱ [0mGlob "**/PlaygroundScreen.kt"[90m 1 match[0m
+[0m✱ [0mGlob "**/PlaygroundViewModel.kt"[90m 1 match[0m
 [0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-[0m✱ [0mGlob "**/ResultFormatter.kt"[90m 1 match[0m
-[0m✱ [0mGlob "**/ExecuteScript.kt"[90m 1 match[0m
+[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
 [0m
-[0m$ [0mcat rocat-app/app/build.gradle.kts
-plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.kotlin.serialization)
-}
-
-android {
-    namespace = "app.rocat"
-    compileSdk = 35
-
-    defaultConfig {
-        applicationId = "app.rocat"
-        minSdk = 26
-        targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-        }
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-    buildFeatures {
-        compose = true
-        buildConfig = true
-        viewBinding = true
-    }
-}
-
-dependencies {
-    implementation(projects.core.common)
-    implementation(projects.core.viewmodel)
-    implementation(projects.domain)
-    implementation(projects.data)
-    implementation(projects.scripting.api)
-    implementation(projects.scripting.rhino)
-
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.lifecycle.viewmodel)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.lifecycle.runtime.compose)
-
-    implementation(platform(libs.compose.bom))
-    implementation(libs.compose.ui)
-    implementation(libs.compose.ui.graphics)
-    implementation(libs.compose.ui.tooling.preview)
-    implementation(libs.compose.foundation)
-    implementation(libs.compose.material3)
-    implementation(libs.compose.runtime)
-    implementation(libs.compose.material.icons)
-
-    implementation(libs.bundles.coroutines)
-    implementation(libs.bundles.serialization)
-    implementation(libs.logcat)
-
-    debugImplementation(libs.compose.ui.tooling)
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.espresso.core)
-}
+[0m$ [0mfind rocat-app/scripting -type f -name "*.kt" | sort
+rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/ScriptEngine.kt
+rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/model/DefaultScriptEnvironment.kt
+rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/model/Script.kt
+rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/model/ScriptSerializers.kt
+rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/network/ScriptFetch.kt
+rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/JsoupBridge.kt
+rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt
 [0m
-[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/playground/ResultFormatter.kt
+[0m$ [0mfind rocat-app/domain rocat-app/core -type f -name "*.kt" | sort
+rocat-app/core/common/src/main/java/app/rocat/core/common/injekt/Injekt.kt
+rocat-app/core/common/src/main/java/app/rocat/core/common/network/AndroidCookieJar.kt
+rocat-app/core/common/src/main/java/app/rocat/core/common/network/HttpException.kt
+rocat-app/core/common/src/main/java/app/rocat/core/common/network/NetworkHelper.kt
+rocat-app/core/common/src/main/java/app/rocat/core/common/network/OkHttpExtensions.kt
+rocat-app/core/common/src/main/java/app/rocat/core/common/network/Requests.kt
+rocat-app/core/common/src/main/java/app/rocat/core/common/network/interceptor/CloudflareInterceptor.kt
+rocat-app/core/common/src/main/java/app/rocat/core/common/network/interceptor/StealthHeadersInterceptor.kt
+rocat-app/core/common/src/main/java/app/rocat/core/common/util/Json.kt
+rocat-app/core/common/src/main/java/app/rocat/core/common/util/WebViewUtil.kt
+rocat-app/core/viewmodel/src/main/java/app/rocat/core/viewmodel/StateViewModel.kt
+rocat-app/domain/src/main/java/app/rocat/domain/script/ScriptMetadata.kt
+rocat-app/domain/src/main/java/app/rocat/domain/script/ScriptMetadataParser.kt
+rocat-app/domain/src/main/java/app/rocat/domain/script/ScriptRepository.kt
+rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/DeleteScript.kt
+rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/ExecuteScript.kt
+rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/GetScripts.kt
+rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/ImportScript.kt
+rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/SetScriptEnabled.kt
+rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/UpsertScript.kt
+rocat-app/domain/src/test/java/app/rocat/domain/script/ScriptMetadataParserTest.kt
+[0m
+[0m→ [0mRead rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+[0m→ [0mRead rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/ScriptEngine.kt
 [0m→ [0mRead rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/ExecuteScript.kt
 [0m
-[0m$ [0mcat gradle/libs.versions.toml 2>/dev/null || cat rocat-app/gradle/libs.versions.toml
-[versions]
-aboutLibraries = "15.0.4"
-android-desugar = "2.1.5"
-android-gradle = "9.3.0"
-androidx-activity-compose = "1.13.0"
-androidx-annotation = "1.10.0"
-androidx-appCompat = "1.7.1"
-androidx-baselineProfile = "1.5.0-alpha07"
-androidx-benchmark = "1.4.1"
-androidx-biometric = "1.2.0-alpha05"
-androidx-compose-bom = "2026.06.01"
-androidx-constraintLayout = "2.2.1"
-androidx-core = "1.19.0"
-androidx-coreSplashScreen = "1.2.0"
-androidx-glance = "1.1.1"
-androidx-interpolator = "1.0.0"
-androidx-lifecycle = "2.11.0"
-androidx-paging = "3.5.0"
-androidx-preference = "1.2.1"
-androidx-profileInstaller = "1.4.1"
-androidx-recyclerView = "1.4.0"
-androidx-sqlite = "2.7.0"
-androidx-test-espresso = "3.7.0"
-androidx-test-junit = "1.3.0"
-androidx-test-uiautomator = "2.4.0"
-androidx-viewPager = "1.1.0"
-androidx-work = "2.11.2"
-archive = "1.1.6"
-coil = "3.5.0"
-composeGrid = "1.2.2"
-composeMaterialMotion = "2.0.1"
-composeRichEditor = "1.0.0-rc13"
-composeWebview = "0.33.6"
-conscrypt = "2.6.1"
-directionalViewPager = "1.0.0"
-diskLruCache = "2.0.2"
-firebase-bom = "34.16.0"
-firebase-crashlytics = "3.0.7"
-flexibleAdapter = "c8013533"
-google-services = "4.5.0"
-image-decoder = "e03b81e18a"
-injekt = "91edab2317"
-jsoup = "1.22.2"
-junit = "6.1.2"
-kotest-assertions = "6.2.2"
-kotlin-gradle = "2.4.10"
-kotlinx-coroutines = "1.11.0"
-kotlinx-serialization = "1.11.0"
-ktlint = "1.8.0"
-leakCanary = "2.14"
-logcat = "0.4"
-markdown = "0.43.0"
-material = "1.12.0"
-materialKolor = "5.0.0"
-mockk = "1.14.11"
-moko-resources = "0.26.4"
-okhttp = "5.4.0"
-okio = "3.17.0"
-photoView = "2.3.0"
-quickJs = "547f5b1597"
-reorderable = "3.1.0"
-rxJava = "1.3.8"
-shizuku = "13.1.5"
-spotless = "8.8.0"
-sqldelight = "2.3.2"
-sqldelight-androidx-driver = "0637a964a1"
-stringSimilarity = "0.1.0"
-subsamplingScaleImageView = "66e0db195d"
-swipe = "1.3.0"
-tapmoc = "0.4.2"
-unifile = "08f224c8f9"
-voyager = "2.2.21-1.10.3"
-xmlutil = "1.0.1"
-lottie = "6.6.2"
-
-[libraries]
-aboutLibraries-compose = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutLibraries" }
-android-desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "android-desugar" }
-android-gradle = { module = "com.android.tools.build:gradle", version.ref = "android-gradle" }
-androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
-androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidx-annotation" }
-androidx-appCompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appCompat" }
-androidx-benchmark-macroJunit4 = { module = "androidx.benchmark:benchmark-macro-junit4", version.ref = "androidx-benchmark" }
-androidx-biometric = { module = "androidx.biometric:biometric-ktx", version.ref = "androidx-biometric" }
-androidx-compose-animation = { module = "androidx.compose.animation:animation" }
-androidx-compose-animationGraphics = { module = "androidx.compose.animation:animation-graphics" }
-androidx-compose-bom = { module = "androidx.compose:compose-bom-alpha", version.ref = "androidx-compose-bom" }
-androidx-compose-foundation = { module = "androidx.compose.foundation:foundation" }
-androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
-androidx-compose-materialIcons = { module = "androidx.compose.material:material-icons-extended" }
-androidx-compose-runtime = { module = "androidx.compose.runtime:runtime" }
-androidx-compose-runtimeAnnotation = { module = "androidx.compose.runtime:runtime-annotation" }
-androidx-compose-uiTooling = { module = "androidx.compose.ui:ui-tooling" }
-androidx-compose-uiToolingPreview = { module = "androidx.compose.ui:ui-tooling-preview" }
-androidx-compose-uiUtil = { module = "androidx.compose.ui:ui-util" }
-androidx-constraintLayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "androidx-constraintLayout" }
-androidx-core = { module = "androidx.core:core", version.ref = "androidx-core" }
-androidx-coreSplashScreen = { module = "androidx.core:core-splashscreen", version.ref = "androidx-coreSplashScreen" }
-androidx-glance-appWidget = { module = "androidx.glance:glance-appwidget", version.ref = "androidx-glance" }
-androidx-interpolator = { module = "androidx.interpolator:interpolator", version.ref = "androidx-interpolator" }
-androidx-lifecycle-common = { module = "androidx.lifecycle:lifecycle-common", version.ref = "androidx-lifecycle" }
-androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version.ref = "androidx-lifecycle" }
-androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime", version.ref = "androidx-lifecycle" }
-androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
-androidx-lifecycle-viewmodelCompose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
-androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "androidx-paging" }
-androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "androidx-paging" }
-androidx-preference = { module = "androidx.preference:preference-ktx", version.ref = "androidx-preference" }
-androidx-profileInstaller = { module = "androidx.profileinstaller:profileinstaller", version.ref = "androidx-profileInstaller" }
-androidx-recyclerView = { module = "androidx.recyclerview:recyclerview", version.ref = "androidx-recyclerView" }
-androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "androidx-sqlite" }
-androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "androidx-test-espresso" }
-androidx-test-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-test-junit" }
-androidx-test-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "androidx-test-uiautomator" }
-androidx-viewPager = { module = "androidx.viewpager:viewpager", version.ref = "androidx-viewPager" }
-androidx-work = { module = "androidx.work:work-runtime", version.ref = "androidx-work" }
-archive = { module = "me.zhanghai.android.libarchive:library", version.ref = "archive" }
-coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
-coil-core = { module = "io.coil-kt.coil3:coil", version.ref = "coil" }
-coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
-coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
-composeGrid = { module = "io.woong.compose.grid:grid", version.ref = "composeGrid" }
-composeMaterialMotion = { module = "io.github.fornewid:material-motion-compose-core", version.ref = "composeMaterialMotion" }
-composeRichEditor = { module = "com.mohamedrejeb.richeditor:richeditor-compose", version.ref = "composeRichEditor" }
-composeWebview = { module = "io.github.kevinnzou:compose-webview", version.ref = "composeWebview" }
-conscrypt = { module = "org.conscrypt:conscrypt-android", version.ref = "conscrypt" }
-directionalViewPager = { module = "com.github.tachiyomiorg:DirectionalViewPager", version.ref = "directionalViewPager" }
-diskLruCache = { module = "com.jakewharton:disklrucache", version.ref = "diskLruCache" }
-firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
-firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
-firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
-flexibleAdapter = { module = "com.github.arkon.FlexibleAdapter:flexible-adapter", version.ref = "flexibleAdapter" }
-image-decoder = { module = "com.github.mihonapp:image-decoder", version.ref = "image-decoder" }
-injekt = { module = "com.github.mihonapp:injekt", version.ref = "injekt" }
-jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
-junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
-junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
-kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest-assertions" }
-kotlin-compose-compiler-gradle = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlin-gradle" }
-kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin-gradle" }
-kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin-gradle" }
-kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
-kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
-kotlinx-coroutines-guava = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-guava", version.ref = "kotlinx-coroutines" }
-kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
-kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
-kotlinx-serialization-jsonOkio = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json-okio", version.ref = "kotlinx-serialization" }
-kotlinx-serialization-protobuf = { module = "org.jetbrains.kotlinx:kotlinx-serialization-protobuf", version.ref = "kotlinx-serialization" }
-ktlint-bom = { module = "com.pinterest.ktlint:ktlint-bom", version.ref = "ktlint" }
-leakCanary-core = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakCanary" }
-leakCanary-plumber = { module = "com.squareup.leakcanary:plumber-android", version.ref = "leakCanary" }
-logcat = { module = "com.squareup.logcat:logcat", version.ref = "logcat" }
-markdown-coil = { module = "com.mikepenz:multiplatform-markdown-renderer-coil3", version.ref = "markdown" }
-markdown-core = { module = "com.mikepenz:multiplatform-markdown-renderer", version.ref = "markdown" }
-material = { module = "com.google.android.material:material", version.ref = "material" }
-materialKolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
-mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
-moko-resources = { module = "dev.icerock.moko:resources", version.ref = "moko-resources" }
-natural-comparator = { module = "com.github.gpanther:java-nat-sort", version = "natural-comparator-1.1" }
-okhttp-brotli = { module = "com.squareup.okhttp3:okhttp-brotli", version.ref = "okhttp" }
-okhttp-core = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
-okhttp-dnsOverHttps = { module = "com.squareup.okhttp3:okhttp-dnsoverhttps", version.ref = "okhttp" }
-okhttp-logging = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
-okhttp-zstd = { module = "com.squareup.okhttp3:okhttp-zstd", version.ref = "okhttp" }
-okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
-photoView = { module = "com.github.chrisbanes:PhotoView", version.ref = "photoView" }
-quickJs = { module = "com.github.zhanghai.quickjs-java:quickjs-android", version.ref = "quickJs" }
-reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
-rxJava = { module = "io.reactivex:rxjava", version.ref = "rxJava" }
-shizuku-api = { module = "dev.rikka.shizuku:api", version.ref = "shizuku" }
-shizuku-provider = { module = "dev.rikka.shizuku:provider", version.ref = "shizuku" }
-spotless-gradle = { module = "com.diffplug.spotless:spotless-plugin-gradle", version.ref = "spotless" }
-sqldelight-androidxDriver = { module = "com.github.mihon.sqldelight-androidx-driver:sqldelight-androidx-driver", version.ref = "sqldelight-androidx-driver" }
-sqldelight-androidxPaging = { module = "app.cash.sqldelight:androidx-paging3-extensions", version.ref = "sqldelight" }
-sqldelight-async = { module = "app.cash.sqldelight:async-extensions", version.ref = "sqldelight" }
-sqldelight-coroutines = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
-sqldelight-sqliteDialect338 = { module = "app.cash.sqldelight:sqlite-3-38-dialect", version.ref = "sqldelight" }
-stringSimilarity = { module = "com.aallam.similarity:string-similarity-kotlin", version.ref = "stringSimilarity" }
-subsamplingScaleImageView = { module = "com.github.tachiyomiorg:subsampling-scale-image-view", version.ref = "subsamplingScaleImageView" }
-swipe = { module = "me.saket.swipe:swipe", version.ref = "swipe" }
-tapmoc-gradle = { module = "com.gradleup.tapmoc:tapmoc-gradle-plugin", version.ref = "tapmoc" }
-unifile = { module = "com.github.mihon:unifile", version.ref = "unifile" }
-voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
-voyager-tabNavigator = { module = "cafe.adriel.voyager:voyager-tab-navigator", version.ref = "voyager" }
-voyager-transitions = { module = "cafe.adriel.voyager:voyager-transitions", version.ref = "voyager" }
-lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottie" }
-xmlutil-core = { module = "io.github.pdvrieze.xmlutil:core-android", version.ref = "xmlutil" }
-xmlutil-serialization = { module = "io.github.pdvrieze.xmlutil:serialization", version.ref = "xmlutil" }
-
-[plugins]
-aboutLibraries = { id = "com.mikepenz.aboutlibraries.plugin.android", version.ref = "aboutLibraries" }
-android-application = { id = "com.android.application", version.ref = "android-gradle" }
-android-kmp-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "android-gradle" }
-android-library = { id = "com.android.library", version.ref = "android-gradle" }
-android-test = { id = "com.android.test", version.ref = "android-gradle" }
-androidx-baselineProfile = { id = "androidx.baselineprofile", version.ref = "androidx-baselineProfile" }
-firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebase-crashlytics" }
-google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
-kotlin-compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin-gradle" }
-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-gradle" }
-kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin-gradle" }
-kotlin-samWithReceiver = { id = "org.jetbrains.kotlin.plugin.sam.with.receiver", version.ref = "kotlin-gradle" }
-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin-gradle" }
-moko-resources = { id = "dev.icerock.mobile.multiplatform-resources", version.ref = "moko-resources" }
-spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
-sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
-
-[bundles]
-androidx-lifecycle = ["androidx-lifecycle-common", "androidx-lifecycle-process", "androidx-lifecycle-runtime", "androidx-lifecycle-viewmodel", "androidx-lifecycle-viewmodelCompose"]
-coil = ["coil-core", "coil-gif", "coil-compose", "coil-network-okhttp"]
-kotlinx-coroutines = ["kotlinx-coroutines-core", "kotlinx-coroutines-android", "kotlinx-coroutines-guava"]
-markdown = ["markdown-core", "markdown-coil"]
-okhttp = ["okhttp-core", "okhttp-logging", "okhttp-brotli", "okhttp-dnsOverHttps", "okhttp-zstd"]
-serialization = ["kotlinx-serialization-json", "kotlinx-serialization-jsonOkio", "kotlinx-serialization-protobuf", "xmlutil-core", "xmlutil-serialization"]
-shizuku = ["shizuku-api", "shizuku-provider"]
-sqldelight = ["sqldelight-androidxDriver", "sqldelight-async", "sqldelight-coroutines", "sqldelight-androidxPaging"]
-test = ["junit-jupiter", "kotest-assertions", "mockk"]
-voyager = ["voyager-navigator", "voyager-tabNavigator", "voyager-transitions"]
-[0m
-[0m✱ [0mGrep "coil"[90m in rocat-app · 0 matches[0m
-[0m✱ [0mGrep "AsyncImage"[90m in rocat-app · 0 matches[0m
-[0m✱ [0mGrep "coil-network-okhttp|libs.coil"[90m 1 match[0m
-[0m→ [0mRead presentation-widget/build.gradle.kts
-[0m
-[0m$ [0mls rocat-app/app/src/main/java/app/rocat/ui/ rocat-app/app/src/main/AndroidManifest.xml
-rocat-app/app/src/main/AndroidManifest.xml
-
-rocat-app/app/src/main/java/app/rocat/ui/:
-crash
-detail
-import
-main
-navigation
-playground
-scripts
-[0m
-[0m✱ [0mGrep "import coil3.compose.AsyncImage"[90m 8 matches[0m
-[0m
-[0m$ [0mgrep -rn "coil" settings.gradle.kts 2>/dev/null; grep -rn "coil" rocat-app/settings.gradle.kts 2>/dev/null
-(no output)
-[0m
-[0m$ [0mgrep -n "coil\|network-okhttp" app/build.gradle.kts
-192:            "-opt-in=coil3.annotation.ExperimentalCoilApi",
-287:    implementation(libs.bundles.coil)
-[0m
-[0m$ [0mgrep -rn "libs.coil" app/build.gradle.kts presentation-core/build.gradle.kts 2>/dev/null; echo "---"; grep -rn "coil-network-okhttp" app/build.gradle.kts 2>/dev/null
----
-[0m
-[0m→ [0mRead app/build.gradle.kts[90m [offset=180, limit=20][0m
-[0m→ [0mRead app/build.gradle.kts[90m [offset=280, limit=15][0m
-[0m
-[0m$ [0mfind rocat-app -maxdepth 2 -name "*.toml" -o -maxdepth 2 -name "build.gradle.kts" | head -30; echo "---settings---"; cat rocat-app/settings.gradle.kts 2>/dev/null | head -40
-rocat-app/domain/build.gradle.kts
-rocat-app/build.gradle.kts
-rocat-app/app/build.gradle.kts
-rocat-app/gradle/libs.versions.toml
-rocat-app/data/build.gradle.kts
----settings---
-pluginManagement {
-    repositories {
-        google {
-            content {
-                includeGroupByRegex("com\\.android.*")
-                includeGroupByRegex("com\\.google.*")
-                includeGroupByRegex("androidx.*")
-            }
-        }
-        mavenCentral()
-        gradlePluginPortal()
-        maven(url = "https://www.jitpack.io")
-    }
-}
-
-dependencyResolutionManagement {
-    @Suppress("UnstableApiUsage")
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-
-    @Suppress("UnstableApiUsage")
-    repositories {
-        google()
-        mavenCentral()
-        maven(url = "https://www.jitpack.io")
-    }
-}
-
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
-
-rootProject.name = "rocat-app"
-
-include(":app")
-include(":core:common")
-include(":core:viewmodel")
-include(":domain")
-include(":data")
-include(":scripting:api")
-include(":scripting:rhino")
-[0m
-[0m→ [0mRead rocat-app/gradle/libs.versions.toml
-[0m
-[0m$ [0mfind rocat-app -path "*/test/*" -name "*.kt" | head -40
-rocat-app/domain/src/test/java/app/rocat/domain/script/ScriptMetadataParserTest.kt
-rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt
-rocat-app/data/src/test/java/app/rocat/data/script/ScriptSourceFetcherTest.kt
-[0m
-[0m$ [0mfind rocat-app -name "*.kt" | xargs grep -ln "TestArg\|extractFunctionNames" 2>/dev/null
+[0m$ [0mfind rocat-app/app/src/main/java -type f -name "*.kt" | sort
+rocat-app/app/src/main/java/app/rocat/RoApp.kt
+rocat-app/app/src/main/java/app/rocat/crash/CrashHandler.kt
+rocat-app/app/src/main/java/app/rocat/crash/CrashLogStore.kt
+rocat-app/app/src/main/java/app/rocat/di/AppModule.kt
+rocat-app/app/src/main/java/app/rocat/di/AppViewModelFactory.kt
+rocat-app/app/src/main/java/app/rocat/ui/crash/CrashActivity.kt
+rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailScreen.kt
+rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailViewModel.kt
+rocat-app/app/src/main/java/app/rocat/ui/import/ImportScriptScreen.kt
+rocat-app/app/src/main/java/app/rocat/ui/import/ImportScriptViewModel.kt
+rocat-app/app/src/main/java/app/rocat/ui/main/MainActivity.kt
+rocat-app/app/src/main/java/app/rocat/ui/main/MainViewModel.kt
+rocat-app/app/src/main/java/app/rocat/ui/navigation/RoCatNav.kt
 rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
 rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
+rocat-app/app/src/main/java/app/rocat/ui/playground/ResultFormatter.kt
+rocat-app/app/src/main/java/app/rocat/ui/scripts/ScriptsScreen.kt
+rocat-app/app/src/main/java/app/rocat/ui/scripts/ScriptsViewModel.kt
+[0m
+[0m→ [0mRead rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/model/DefaultScriptEnvironment.kt
+[0m✗ [0mRead rocat-app/di/AppModule.kt failed
+[91m[1mError: [0mFile not found: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/di/AppModule.kt
+[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/di/AppModule.kt
+[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/di/AppViewModelFactory.kt
+[0m
+[0m$ [0mfind rocat-app/data -type f -name "*.kt" | xargs ls
+rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
+rocat-app/data/src/main/java/app/rocat/data/script/ScriptSourceFetcher.kt
+rocat-app/data/src/test/java/app/rocat/data/script/ScriptSourceFetcherTest.kt
+[0m
+[0m✗ [0mRead rocat-app/data/src/main/java/app/rocat/data/script/ScriptManager.kt failed
+[91m[1mError: [0mFile not found: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/data/src/main/java/app/rocat/data/script/ScriptManager.kt
+[0m✱ [0mGrep "class ScriptManager"[90m 1 match[0m
+[0m→ [0mRead rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
+[0m→ [0mRead rocat-app/core/viewmodel/src/main/java/app/rocat/core/viewmodel/StateViewModel.kt
+[0m✗ [0mRead /home/runner/work/ao100_COMMENTS/rocat-app/app/src/main/java/app/rocat/ui/playground/ResultFormatter.kt failed
+[91m[1mError: [0mFile not found: /home/runner/work/ao100_COMMENTS/rocat-app/app/src/main/java/app/rocat/ui/playground/ResultFormatter.kt
+[0m✗ [0mRead /home/runner/work/mihon_ROCCKKY/mihon_ROCCKY/rocat-app/app/build.gradle.kts failed
+[91m[1mError: [0mFile not found: /home/runner/work/mihon_ROCCKKY/mihon_ROCCKY/rocat-app/app/build.gradle.kts
+[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/playground/ResultFormatter.kt
+[0m→ [0mRead rocat-app/app/build.gradle.kts
+[0m→ [0mRead rocat-app/scripting/rhino/build.gradle.kts
+[0m→ [0mRead rocat-app/settings.gradle.kts
+[0m→ [0mRead rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt
+[0m✱ [0mGrep "executeScript|ExecuteScript|invokeFunction|runFunction"[90m in rocat-app/app · 7 matches[0m
+[0m→ [0mRead rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/network/ScriptFetch.kt
+[0m→ [0mRead rocat-app/data/build.gradle.kts
+[0m→ [0mRead rocat-app/scripting/api/build.gradle.kts
 [0m
 [0m# [0mTodos
-[•] Update PlaygroundViewModel: args List<String>, regex negative lookahead, default 1 empty input
-[ ] Add Coil dependency to rocat-app catalog + app module
-[ ] Update PlaygroundScreen input UI (value only, remove Key)
-[ ] Add MediaPreviewRenderer (image AsyncImage + video ACTION_VIEW)
-[ ] Build ./gradlew :app:assembleDebug verification
-[ ] Update ai_memory logs (00_INDEX + task file)
+[•] Add ScriptUiBridge interface + ui property on ScriptEnvironment + invoke function for named inputs in scripting/api
+[ ] Expose RoCatUI global in RhinoScriptEngine + implement invokeNamedFunction
+[ ] Add ScriptManager.createEnvironment(ui) helper in data module
+[ ] Add ScriptUIComponent sealed class in app
+[ ] Rework PlaygroundViewModel (SnapshotStateList, buildUI auto-load, button click input collection)
+[ ] Rework PlaygroundScreen.kt to a script-driven LazyColumn renderer
+[ ] Build verification ./gradlew :app:assembleDebug
+[ ] Update ai_memory/00_INDEX.md + create task log file
 [0m
-Now I have a clear picture. Let me set up a todo list and start implementing.
-[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
+[0m← [0mWrite rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/ScriptUiBridge.kt
+Wrote file successfully.
+[0m
+Now let me create the new files and make
+[0m← [0mEdit rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/ScriptUiBridge.kt
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/ScriptUiBridge.kt
 ===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
-@@ -13,22 +13,14 @@
- import kotlinx.coroutines.launch
- import kotlinx.coroutines.withContext
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/ScriptUiBridge.kt
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/ScriptUiBridge.kt
+@@ -2,10 +2,9 @@
  
  /**
-- * One editable argument row in the playground: an optional label/name plus the
-- * value that gets forwarded to the invoked script function.
-- */
--data class TestArg(
--    val label: String = "",
--    val value: String = "",
--)
--
--/**
-  * Test runner for installed scripts. The "Test Function" section can invoke any named
-  * function inside the script (`main`, `search`, `detail`, ...) with a dynamic,
-- * user-controlled list of args. Function names are detected automatically from the
-- * script source, so no manual entry is required; the default argument state is empty
-- * unless the user explicitly adds inputs.
-+ * user-controlled list of plain values. Functions are detected automatically from the
-+ * script source; only public (non-underscore-prefixed) functions are offered as
-+ * suggestions. The default argument state is a single empty value row, and the user
-+ * adds more rows with "+ Add Input" when the function needs more arguments.
+  * Callbacks invoked by a user script through the global `RoCatUI` object to build a
+  * dynamic, script-driven Compose UI (the mihon-style extension tab). Implementations
+- * typically queue new [components][app.rocat.ui.playground.ScriptUIComponent] into the
+- * ViewModel that owns the rendered list.
++ * typically queue new components into the ViewModel that owns the rendered list.
   *
-  * Every execution failure (engine error, validation, or a stray Throwable) is written
-  * INTO the log area instead of being rendered as floating red text, and is caught so a
-  * runtime error from JS never force-closes the app.
+  * MUST be safe to call from any thread: the Rhino engine evaluates scripts on a
+  * background coroutine, so implementations are responsible for hopping back to the
+  * main thread before touching Compose state.
 
 [0m
-Now let me update the ViewModel (Tahap 12.1):
-[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
+[0m← [0mEdit rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/ScriptEngine.kt
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/ScriptEngine.kt
 ===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
-@@ -30,17 +30,18 @@
-     private val executeScript: ExecuteScript = Injekt.get(),
- ) : StateViewModel<PlaygroundViewModel.State>(State()) {
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/ScriptEngine.kt
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/ScriptEngine.kt
+@@ -19,8 +19,16 @@
+     ): FetchResult
  
-     companion object {
--        private val FUNCTION_NAME_REGEX = Regex("function\\s+([a-zA-Z_$][\\w$]*)\\s*\\(")
-+        private val FUNCTION_NAME_REGEX = Regex("function\\s+(?!_)([a-zA-Z$][\\w$]*)\\s*\\(")
-+        private const val DEFAULT_ARGS_COUNT = 1
-     }
- 
-     data class State(
-         val scripts: List<Script> = emptyList(),
-         val selectedId: String? = null,
-         val testFunction: String = "",
-         val testFunctionSuggestions: List<String> = emptyList(),
--        val testArgs: List<TestArg> = emptyList(),
-+        val testArgs: List<String> = List(DEFAULT_ARGS_COUNT) { "" },
-         val executing: Boolean = false,
-         val log: String = "",
-     ) {
-         val selectedScript: Script? get() = scripts.firstOrNull { it.id == selectedId }
-
-[0m
-[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
-@@ -64,9 +64,9 @@
-                 scripts = enabled,
-                 selectedId = selection,
-                 testFunctionSuggestions = functions,
-                 testFunction = if (selectionChanged) (functions.firstOrNull() ?: "") else current.testFunction,
--                testArgs = if (selectionChanged) emptyList() else current.testArgs,
-+                testArgs = if (selectionChanged) List(DEFAULT_ARGS_COUNT) { "" } else current.testArgs,
-             )
-         }
-     }
- }
-
-[0m
-[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
-@@ -72,10 +72,11 @@
-     }
+     /** Optional DOM-ish object a script can manipulate; `null` when unavailable. */
+     val document: Any?
++
++    /**
++     * Optional bridge exposed to the script as the global `RoCatUI`. When non-null the
++     * engine installs the `RoCatUI.*` functions so scripts can drive a dynamic Compose
++     * UI (inputs, buttons, image/video previews, logs). `null` for plain executions.
++     */
++    val ui: ScriptUiBridge?
++        get() = null
  }
  
  /**
-- * Scans a script's source code and returns the names of every function declared
-- * with the classic `function name(...)` syntax.
-+ * Scans a script's source code and returns the names of every PUBLIC function
-+ * declared with the classic `function name(...)` syntax. Private functions whose
-+ * name starts with an underscore (`_helper`) are excluded.
-  */
- fun extractFunctionNames(scriptCode: String): List<String> =
-     FUNCTION_NAME_REGEX.findAll(scriptCode).map { it.groupValues[1] }.toList()
+  * Result of a [ScriptEnvironment.fetch] call, serializable so it can cross from the
+
+[0m
+Now update `ScriptEnvironment` to hold the bridge
+[0m← [0mEdit rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/ScriptEngine.kt
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/ScriptEngine.kt
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/ScriptEngine.kt
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/ScriptEngine.kt
+@@ -85,8 +85,26 @@
+         environment: ScriptEnvironment,
+         functionName: String,
+         args: List<String> = emptyList(),
+     ): ScriptResult
++
++    /**
++     * Evaluates [script] to register its functions, then invokes the function named
++     * [functionName] passing the collected inputs as a single JS object argument. This
++     * is the entry point used by script-driven buttons: the UI gathers every input
++     * value into [inputs] (`id -> value`) and the target function receives them keyed by
++     * id (e.g. `function onExtractClick(inputs) { inputs.video_url }`).
++     *
++     * @return the function's return value serialized to JSON (empty for a `void`
++     *   function), or a [ScriptResult.Failure] if the script does not compile, the
++     *   function is missing, or it throws.
++     */
++    suspend fun invokeNamedFunction(
++        script: Script,
++        environment: ScriptEnvironment,
++        functionName: String,
++        inputs: Map<String, String>,
++    ): ScriptResult
+ }
  
-@@ -85,30 +86,25 @@
-     current.copy(
-         selectedId = id,
-         testFunctionSuggestions = functions,
-         testFunction = functions.firstOrNull() ?: "",
--        testArgs = emptyList(),
-+        testArgs = List(DEFAULT_ARGS_COUNT) { "" },
-         log = "",
+ /**
+  * Outcome of a script execution.
+
+[0m
+Now add the `invokeNamedFunction` to the `ScriptEngine` interface
+[0m← [0mEdit rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/model/DefaultScriptEnvironment.kt
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/model/DefaultScriptEnvironment.kt
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/model/DefaultScriptEnvironment.kt
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/model/DefaultScriptEnvironment.kt
+@@ -1,16 +1,18 @@
+ package app.rocat.scripting.api.model
+ 
+ import app.rocat.scripting.api.FetchResult
+ import app.rocat.scripting.api.ScriptEnvironment
++import app.rocat.scripting.api.ScriptUiBridge
+ 
+ /**
+  * Default [ScriptEnvironment] provided to the engine, containing the app's current
+  * network client. Implemented in the RApi module so the engine only depends on the API.
+  */
+ class DefaultScriptEnvironment(
+     private val fetchImpl: suspend (String, String, Map<String, String>, String?) -> FetchResult,
+     override val document: Any? = null,
++    override val ui: ScriptUiBridge? = null,
+ ) : ScriptEnvironment {
+ 
+     override suspend fun fetch(
+         url: String,
+
+[0m
+[0m← [0mEdit rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+@@ -3,8 +3,9 @@
+ import app.rocat.scripting.api.FetchResult
+ import app.rocat.scripting.api.ScriptEngine
+ import app.rocat.scripting.api.ScriptEnvironment
+ import app.rocat.scripting.api.ScriptResult
++import app.rocat.scripting.api.ScriptUiBridge
+ import app.rocat.scripting.api.model.Script
+ import app.rocat.scripting.api.network.scriptFetch
+ import kotlinx.coroutines.CancellationException
+ import kotlinx.coroutines.Dispatchers
+
+[0m
+Now update `RhinoScriptEngine.kt`. First the imports and adding `invokeNamedFunction`
+[0m← [0mEdit rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+@@ -104,26 +104,9 @@
+     }
+ }
+ 
+ private fun evaluate(script: Script, environment: ScriptEnvironment, args: List<String>): String {
+-    val cx = contextFactory.enterContext()
+-    return try {
+-        cx.setLanguageVersion(Context.VERSION_ES6)
+-        val scope = createScope(cx, environment)
+ 
+-        val evaluated = cx.evaluateString(scope, script.source, script.name, 1, null)
+-        val mainFn = scope.get("main", scope)
+-        if (mainFn is Function) {
+-            val jsArgs = args.map { Context.javaToJS(it, scope) }.toTypedArray()
+-            val result = mainFn.call(cx, scope, scope, jsArgs)
+-            return valueToString(result)
+-        }
+-        valueToString(evaluated)
+-    } finally {
+-        Context.exit()
+-    }
+-}
+-
+ /**
+  * Builds the standard execution scope shared by [evaluate] and [invokeFunction]:
+  * standard objects + `fetch` + the [RoCatDOM] DOM bridge (+ optional `document`).
+  */
+
+[0m
+[0m→ [0mRead rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt[90m [offset=68, limit=55][0m
+[0m
+[0m← [0mEdit rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+@@ -103,14 +103,82 @@
+         ScriptResult.Failure(e.message ?: e.javaClass.simpleName)
+     }
+ }
+ 
+-private fun evaluate(script: Script, environment: ScriptEnvironment, args: List<String>): String {
+-
+ /**
+- * Builds the standard execution scope shared by [evaluate] and [invokeFunction]:
+- * standard objects + `fetch` + the [RoCatDOM] DOM bridge (+ optional `document`).
++ * Script-driven entry point used by the playground's `RoCatUI` buttons. Evaluates
++ * the script and invokes [functionName] passing the collected inputs as a single JS
++ * object (keys = input ids). Undefined return values are mapped to an empty string
++ * so a void handler renders as "returned nothing" instead of "null"/"undefined".
+  */
++override suspend fun invokeNamedFunction(
++    script: Script,
++    environment: ScriptEnvironment,
++    functionName: String,
++    inputs: Map<String, String>,
++): ScriptResult = withContext(Dispatchers.IO) {
++    try {
++        val cx = contextFactory.enterContext()
++        try {
++            cx.setLanguageVersion(Context.VERSION_ES6)
++            val scope = createScope(cx, environment)
++            cx.evaluateString(scope, script.source, script.name, 1, null)
++
++            val fn = scope.get(functionName, scope)
++            if (fn !is Function) {
++                ScriptResult.Failure("Script has no function named '$functionName'")
++            } else {
++                val jsArgs = if (inputs.isEmpty()) {
++                    emptyArray()
++                } else {
++                    val objectArg = cx.newObject(scope)
++                    inputs.forEach { (name, value) ->
++                        ScriptableObject.putProperty(objectArg, name, Context.javaToJS(value, scope))
++                    }
++                    arrayOf<Any?>(objectArg)
++                }
++                val result = fn.call(cx, scope, scope, jsArgs)
++                val value = if (result === Undefined.instance) {
++                    ""
++                } else {
++                    NativeJSON.stringify(cx, scope, result, null, null)?.toString() ?: ""
++                }
++                ScriptResult.Success(value)
++            }
++        } finally {
++            Context.exit()
++        }
++    } catch (e: CancellationException) {
++        throw e
++    } catch (e: EvaluatorException) {
++        ScriptResult.Failure("JS error: ${e.message}")
++    } catch (e: StackOverflowError) {
++        ScriptResult.Failure("Script caused a stack overflow (possible infinite recursion)")
++    } catch (e: Exception) {
++        ScriptResult.Failure(e.message ?: e.javaClass.simpleName)
++    } catch (e: Throwable) {
++        ScriptResult.Failure(e.message ?: e.javaClass.simpleName)
++    }
++}
++
++private fun evaluate(script: Script, environment: ScriptEnvironment, args: List<String>): String {
++    val cx = contextFactory.enterContext()
++    return try {
++        cx.setLanguageVersion(Context.VERSION_ES6)
++        val scope = createScope(cx, environment)
++
++        val evaluated = cx.evaluateString(scope, script.source, script.name, 1, null)
++        val mainFn = scope.get("main", scope)
++        if (mainFn is Function) {
++            val jsArgs = args.map { Context.javaToJS(it, scope) }.toTypedArray()
++            val result = mainFn.call(cx, scope, scope, jsArgs)
++            return valueToString(result)
++        }
++        valueToString(evaluated)
++    } finally {
++        Context.exit()
++    }
++}
+ private fun createScope(cx: Context, environment: ScriptEnvironment): Scriptable {
+     val scope = cx.initStandardObjects()
+ 
+     // Expose fetch(); internally it bridges to OkHttp (see runFetch).
+
+[0m
+[0m→ [0mRead rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt[90m [limit=80, offset=100][0m
+[0m→ [0mRead rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt[90m [limit=50, offset=180][0m
+[0m
+[0m← [0mEdit rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+@@ -189,8 +189,14 @@
+ 
+ // Expose the Jsoup-backed DOM bridge as the global `RoCatDOM` object.
+ ScriptableObject.putProperty(scope, "RoCatDOM", RoCatDomBridge(cx, scope))
+ 
++// Expose the script-driven Compose UI bridge as the global `RoCatUI` object.
++val uiBridge = environment.ui
++if (uiBridge != null) {
++    ScriptableObject.putProperty(scope, "RoCatUI", RoCatUiBridge(cx, scope, uiBridge))
++}
++
+ if (environment.document != null) {
+     val docWrapper = Context.javaToJS(environment.document, scope)
+     ScriptableObject.putProperty(scope, "document", docWrapper)
+ }
+
+[0m
+[0m← [0mEdit rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+@@ -365,9 +365,8 @@
+     override fun getClassName(): String = "RoCatDomBridge"
+ }
+ 
+ /** Converts a [JsoupElement] into a plain JS object with a Cheerio-like API. */
+-private fun elementToJs(cx: Context, scope: Scriptable, el: JsoupElement): Scriptable {
+     val obj = cx.newObject(scope)
+     ScriptableObject.putProperty(obj, "text", el.text)
+     ScriptableObject.putProperty(obj, "html", el.html)
+     ScriptableObject.putProperty(obj, "innerHtml", el.innerHtml)
+
+[0m
+Now add the `RoCatUiBridge` class near the other bridge definitions
+[0m→ [0mRead rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt[90m [limit=40, offset=355][0m
+[0m
+[0m← [0mEdit rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+@@ -365,8 +365,9 @@
+     override fun getClassName(): String = "RoCatDomBridge"
+ }
+ 
+ /** Converts a [JsoupElement] into a plain JS object with a Cheerio-like API. */
++private fun elementToJs(cx: Context, scope: Scriptable, el: JsoupElement): Scriptable {
+     val obj = cx.newObject(scope)
+     ScriptableObject.putProperty(obj, "text", el.text)
+     ScriptableObject.putProperty(obj, "html", el.html)
+     ScriptableObject.putProperty(obj, "innerHtml", el.innerHtml)
+
+[0m
+I need to fix that accidental deletion — restore the function signature and add the `RoCatUiBridge` class
+[0m← [0mEdit rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+@@ -364,8 +364,40 @@
+ 
+     override fun getClassName(): String = "RoCatDomBridge"
+ }
+ 
++/**
++ * The `RoCatUI` global: the script-driven Compose UI bridge exposed to user scripts.
++ * Every function forwards its (string) arguments to the [ScriptUiBridge] implementation
++ * supplied by the host app, which is responsible for hopping back to the main thread
++ * before updating the rendered UI. Failures inside the bridge never crash the script.
++ */
++private class RoCatUiBridge(
++    private val cx: Context,
++    private val scope: Scriptable,
++    private val ui: ScriptUiBridge,
++) : ScriptableObject() {
++
++    init {
++        put("addInput", this, Fn { args -> runSafe { ui.addInput(argString(args, 0), argString(args, 1)) } })
++        put("addButton", this, Fn { args -> runSafe { ui.addButton(argString(args, 0), argString(args, 1)) } })
++        put("thumbnailPreview", this, Fn { args -> runSafe { ui.thumbnailPreview(argString(args, 0)) } })
++        put("videoPreview", this, Fn { args -> runSafe { ui.videoPreview(argString(args, 0)) } })
++        put("clear", this, Fn { runSafe { ui.clear() } })
++        put("log", this, Fn { args -> runSafe { ui.log(argString(args, 0)) } })
++    }
++
++    override fun getClassName(): String = "RoCatUiBridge"
++
++    private fun runSafe(block: () -> Unit) {
++        try {
++            block()
++        } catch (_: Throwable) {
++            // A UI bridge failure must never crash the script evaluation.
++        }
++    }
++}
++
+ /** Converts a [JsoupElement] into a plain JS object with a Cheerio-like API. */
+ private fun elementToJs(cx: Context, scope: Scriptable, el: JsoupElement): Scriptable {
+     val obj = cx.newObject(scope)
+     ScriptableObject.putProperty(obj, "text", el.text)
+
+[0m
+Now insert the `RoCatUiBridge` class before `element
+[0m← [0mEdit rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/ExecuteScript.kt
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/ExecuteScript.kt
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/ExecuteScript.kt
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/ExecuteScript.kt
+@@ -18,12 +18,18 @@
+ 
+     /**
+      * Runs a named function inside the script (e.g. `search(query)` or
+      * `detail(url)`) and returns its value serialized to JSON. Used by the
+-     * playground's "Test Execution" section.
++     * playground's function picker.
+      */
+     suspend fun invoke(
+         script: Script,
+         functionName: String,
+         args: List<String> = emptyList(),
+-    ): ScriptResult = engine.invokeFunction(script, environment, functionName, args)
++        inputs: Map<String, String> = emptyMap(),
++    ): ScriptResult =
++        if (inputs.isEmpty()) {
++            engine.invokeFunction(script, environment, functionName, args)
++        } else {
++            engine.invokeNamedFunction(script, environment, functionName, inputs)
++        }
+ }
+\ No newline at end of file
+
+[0m
+Now update
+[0m← [0mEdit rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
+@@ -5,8 +5,9 @@
+ import app.rocat.domain.script.ScriptRepository
+ import app.rocat.scripting.api.FetchResult
+ import app.rocat.scripting.api.ScriptEngine
+ import app.rocat.scripting.api.ScriptEnvironment
++import app.rocat.scripting.api.ScriptUiBridge
+ import app.rocat.scripting.api.model.DefaultScriptEnvironment
+ import app.rocat.scripting.api.model.Script
+ import app.rocat.scripting.api.network.scriptFetch
+ import app.rocat.scripting.rhino.RhinoScriptEngine
+
+[0m
+[0m← [0mEdit rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
+@@ -118,5 +118,18 @@
+         fetchImpl = { url: String, method: String, headers: Map<String, String>, body: String? ->
+             scriptClient.scriptFetch(url, method, headers, body)
+         },
+     )
++
++    /**
++     * Builds a fresh environment wired to the same network stack but exposing [ui] as
++     * the script's global `RoCatUI` object, letting a script drive a dynamic Compose
++     * UI (used by the playground).
++     */
++    fun createEnvironment(ui: ScriptUiBridge? = null): ScriptEnvironment =
++        DefaultScriptEnvironment(
++            fetchImpl = { url: String, method: String, headers: Map<String, String>, body: String? ->
++                scriptClient.scriptFetch(url, method, headers, body)
++            },
++            ui = ui,
++        )
+ }
+\ No newline at end of file
+
+[0m
+[0m# [0mTodos
+[✓] Add ScriptUiBridge interface + ui property on ScriptEnvironment + invoke function for named inputs in scripting/api
+[✓] Expose RoCatUI global in RhinoScriptEngine + implement invokeNamedFunction
+[✓] Add ScriptManager.createEnvironment(ui) helper in data module
+[•] Add ScriptUIComponent sealed class in app
+[ ] Rework PlaygroundViewModel (SnapshotStateList, buildUI auto-load, button click input collection)
+[ ] Rework PlaygroundScreen.kt to a script-driven LazyColumn renderer
+[ ] Build verification ./gradlew :app:assembleDebug
+[ ] Update ai_memory/00_INDEX.md + create task log file
+[0m
+[0m← [0mWrite rocat-app/app/src/main/java/app/rocat/ui/playground/ScriptUIComponent.kt
+Wrote file successfully.
+[0m
+[0m← [0mWrite rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
+Wrote file successfully.
+[0m
+Now rewrite the `Playground
+[0m← [0mWrite rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
+Wrote file successfully.
+[0m
+Now rewrite the `PlaygroundScreen.kt` as a script-driven render
+[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
+@@ -223,20 +223,18 @@
+     }
+ }
+ 
+ @Composable
+-private fun TextInput(
+-    text: String,
+-    onValueChange: (String) -> Unit,
+-    hint: String,
+-    modifier: Modifier = Modifier,
++private fun InputComponent(
++    component: ScriptUIComponent.Input,
++    onValueChange: (String, String) -> Unit,
+ ) {
+     OutlinedTextField(
+-        value = text,
+-        onValueChange = onValueChange,
+-        label = { Text(hint) },
++        value = component.value,
++        onValueChange = { value -> onValueChange(component.id, value) },
++        label = { Text(component.hint) },
+         singleLine = true,
+-        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp),
++        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
      )
  }
  
- fun onTestFunctionChange(value: String) = mutableState.update { it.copy(testFunction = value) }
- 
--fun addArg() = mutableState.update { it.copy(testArgs = it.testArgs + TestArg()) }
-+fun addArg() = mutableState.update { it.copy(testArgs = it.testArgs + "") }
- 
- fun removeArg(index: Int) = mutableState.update {
-     if (index < 0 || index >= it.testArgs.size) it
-     else it.copy(testArgs = it.testArgs.filterIndexed { i, _ -> i != index })
- }
- 
--fun updateArgLabel(index: Int, label: String) = mutableState.update {
--    if (index < 0 || index >= it.testArgs.size) it
--    else it.copy(testArgs = it.testArgs.mapIndexed { i, arg -> if (i == index) arg.copy(label = label) else arg })
--}
--
- fun updateArgValue(index: Int, value: String) = mutableState.update {
-     if (index < 0 || index >= it.testArgs.size) it
--    else it.copy(testArgs = it.testArgs.mapIndexed { i, arg -> if (i == index) arg.copy(value = value) else arg })
-+    else it.copy(testArgs = it.testArgs.mapIndexed { i, arg -> if (i == index) value else arg })
- }
- 
- /**
-  * Invokes the currently selected function name inside the script, forwarding the
-@@ -126,9 +122,9 @@
-         mutableState.update { it.copy(log = "Enter a function name first") }
-         return
-     }
-     val args = current.testArgs
--        .map { it.value.trim() }
-+        .map { it.trim() }
-         .filter { it.isNotEmpty() }
-     viewModelScope.launch(Dispatchers.IO) {
-         try {
-             mutableState.update { it.copy(executing = true, log = "") }
-
-[0m
-[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
-[0m
-[0m← [0mEdit rocat-app/gradle/libs.versions.toml
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/gradle/libs.versions.toml
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/gradle/libs.versions.toml
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/gradle/libs.versions.toml
-@@ -14,8 +14,9 @@
- junit = "4.13.2"
- androidx-junit = "1.2.1"
- espresso = "3.6.1"
- logcat = "0.4"
-+coil = "3.0.4"
- 
- [libraries]
- androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
- androidx-lifecycle-viewmodel = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
-
-[0m
-Now add Coil to the catalog and app module (Tahap 12.2):
-[0m← [0mEdit rocat-app/gradle/libs.versions.toml
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/gradle/libs.versions.toml
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/gradle/libs.versions.toml
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/gradle/libs.versions.toml
-@@ -50,8 +50,11 @@
- logcat = { group = "com.squareup.logcat", name = "logcat", version.ref = "logcat" }
- 
- rhino = { group = "org.mozilla", name = "rhino", version = "1.7.15" }
- 
-+coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
-+coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
-+
- junit = { group = "junit", name = "junit", version.ref = "junit" }
- androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-junit" }
- espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso" }
- 
-
-[0m
-[0m← [0mEdit rocat-app/app/build.gradle.kts
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/build.gradle.kts
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/build.gradle.kts
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/build.gradle.kts
-@@ -63,8 +63,11 @@
- implementation(libs.bundles.coroutines)
- implementation(libs.bundles.serialization)
- implementation(libs.logcat)
- 
-+implementation(libs.coil.compose)
-+implementation(libs.coil.network.okhttp)
-+
- debugImplementation(libs.compose.ui.tooling)
- 
- testImplementation(libs.junit)
- androidTestImplementation(libs.androidx.junit)
-
-[0m
-[0m$ [0mcat rocat-app/build.gradle.kts
-plugins {
-    alias(libs.plugins.android.application) apply false
-    alias(libs.plugins.android.library) apply false
-    alias(libs.plugins.kotlin.android) apply false
-    alias(libs.plugins.kotlin.compose) apply false
-    alias(libs.plugins.kotlin.serialization) apply false
-}
-[0m
-[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-@@ -1,6 +1,9 @@
- package app.rocat.ui.playground
- 
-+import android.content.Intent
-+import android.net.Uri
-+import android.widget.Toast
- import androidx.compose.foundation.layout.Arrangement
- import androidx.compose.foundation.layout.Box
- import androidx.compose.foundation.layout.Column
- import androidx.compose.foundation.layout.Row
-@@ -18,8 +21,9 @@
- import androidx.compose.material.icons.automirrored.filled.ArrowBack
- import androidx.compose.material.icons.filled.Add
- import androidx.compose.material.icons.filled.ContentCopy
- import androidx.compose.material.icons.filled.Delete
-+import androidx.compose.material.icons.filled.PlayArrow
- import androidx.compose.material3.Button
- import androidx.compose.material3.CircularProgressIndicator
- import androidx.compose.material3.DropdownMenuItem
- import androidx.compose.material3.ElevatedCard
-@@ -44,18 +48,24 @@
- import androidx.compose.runtime.remember
- import androidx.compose.runtime.setValue
- import androidx.compose.ui.Alignment
- import androidx.compose.ui.Modifier
-+import androidx.compose.ui.layout.ContentScale
- import androidx.compose.ui.platform.LocalClipboardManager
- import androidx.compose.ui.platform.LocalContext
- import androidx.compose.ui.text.AnnotatedString
- import androidx.compose.ui.text.font.FontFamily
- import androidx.compose.ui.text.font.FontWeight
- import androidx.compose.ui.unit.dp
--import android.widget.Toast
- import androidx.lifecycle.viewmodel.compose.viewModel
- import app.rocat.di.AppViewModelFactory
- import app.rocat.scripting.api.model.Script
-+import coil3.compose.AsyncImage
-+import kotlinx.serialization.json.Json
-+import kotlinx.serialization.json.JsonObject
-+import kotlinx.serialization.json.JsonPrimitive
-+import kotlinx.serialization.json.contentOrNull
-+import kotlinx.serialization.json.jsonObject
- 
- @OptIn(ExperimentalMaterial3Api::class)
- @Composable
- fun PlaygroundScreen(
-
-[0m
-Now update `PlaygroundScreen.kt` (Tahap 12.2 & 12.3). First the imports:
-[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-@@ -62,9 +62,8 @@
- import coil3.compose.AsyncImage
- import kotlinx.serialization.json.Json
- import kotlinx.serialization.json.JsonObject
- import kotlinx.serialization.json.JsonPrimitive
--import kotlinx.serialization.json.contentOrNull
- import kotlinx.serialization.json.jsonObject
- 
- @OptIn(ExperimentalMaterial3Api::class)
  @Composable
 
 [0m
@@ -756,352 +679,617 @@ Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/a
 ===================================================================
 --- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
 +++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-@@ -114,9 +114,8 @@
- onFunctionChange = viewModel::onTestFunctionChange,
- args = state.testArgs,
- onAddArg = viewModel::addArg,
- onRemoveArg = viewModel::removeArg,
--onLabelChange = viewModel::updateArgLabel,
- onValueChange = viewModel::updateArgValue,
- onRun = viewModel::runFunction,
- executing = state.executing,
- log = state.log,
-
-[0m
-Now update the `TestFunctionSection` call site and the function signature:
-[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-@@ -162,11 +162,96 @@
-     }
- }
- 
- /**
-+ * A parsed media payload returned by a script function, following the contract
-+ * `{ "media_type": "image" | "video", "media_url": "..." }`.
-+ */
-+private sealed interface MediaPreview {
-+    data class Image(val url: String) : MediaPreview
-+    data class Video(val url: String) : MediaPreview
-+}
-+
-+/**
-+ * Extracts a [MediaPreview] from the script's JSON output when it follows the media
-+ * contract; returns null for anything else (plain JSON, arrays, invalid text).
-+ */
-+private fun parseMediaPreview(raw: String): MediaPreview? {
-+    val element = try {
-+        Json.parseToJsonElement(raw)
-+    } catch (e: Exception) {
-+        return null
-+    }
-+    val obj = element as? JsonObject ?: return null
-+    val mediaType = (obj["media_type"] as? JsonPrimitive)?.content ?: return null
-+    val url = (obj["media_url"] as? JsonPrimitive)?.content ?: return null
-+    return when (mediaType) {
-+        "image" -> MediaPreview.Image(url)
-+        "video" -> MediaPreview.Video(url)
-+        else -> null
-+    }
-+}
-+
-+/**
-+ * Renders a [MediaPreview] above the JSON log: images are loaded with Coil's
-+ * [AsyncImage], videos show a "Play Video" button that opens the system video player.
-+ */
-+@Composable
-+private fun MediaPreviewRenderer(preview: MediaPreview, modifier: Modifier = Modifier) {
-+    val context = LocalContext.current
-+    when (preview) {
-+        is MediaPreview.Image -> {
-+            ElevatedCard(modifier = modifier.fillMaxWidth()) {
-+                AsyncImage(
-+                    model = preview.url,
-+                    contentDescription = "Script media preview",
-+                    contentScale = ContentScale.Fit,
-+                    modifier = Modifier
-+                        .fillMaxWidth()
-+                        .heightIn(max = 300.dp)
-+                        .padding(8.dp),
-+                )
-+            }
-+        }
-+
-+        is MediaPreview.Video -> {
-+            ElevatedCard(modifier = modifier.fillMaxWidth()) {
-+                Column(
-+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-+                    horizontalAlignment = Alignment.CenterHorizontally,
-+                ) {
-+                    Text(
-+                        "Media output (video)",
-+                        style = MaterialTheme.typography.labelMedium,
-+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-+                    )
-+                    Spacer(Modifier.height(8.dp))
-+                    OutlinedButton(
-+                        onClick = {
-+                            val intent = Intent(Intent.ACTION_VIEW).apply {
-+                                setDataAndType(Uri.parse(preview.url), "video/*")
-+                            }
-+                            runCatching { context.startActivity(intent) }
-+                                .onFailure {
-+                                    Toast.makeText(context, "No video player available", Toast.LENGTH_SHORT).show()
-+                                }
-+                        },
-+                    ) {
-+                        Icon(Icons.Filled.PlayArrow, contentDescription = null)
-+                        Spacer(Modifier.width(6.dp))
-+                        Text("Play Video")
-+                    }
-+                }
-+            }
-+        }
-+    }
-+}
-+
-+/**
-  * Card that renders [content] in a scrollable monospace text area and offers a small
-  * action bar to copy the output to the clipboard either as pretty-printed JSON or as
-- * the raw text/HTML.
-+ * the raw text/HTML. When the output follows the media contract, a preview of the
-+ * image/video is rendered above the text.
+@@ -324,12 +324,8 @@
+  * Renders the return value (or error) of the last script button invocation. Reuses the
+  * copyable/pretty-printed card so the output behaves like a console.
   */
  @Composable
- private fun CopyableResultCard(
-     title: String,
-@@ -177,8 +262,9 @@
- ) {
-     val clipboard = LocalClipboardManager.current
-     val context = LocalContext.current
-     val displayText = ResultFormatter.prettyJson(content)
-+    val mediaPreview = remember(content) { parseMediaPreview(content) }
- 
-     ElevatedCard(modifier = modifier) {
-         Column(modifier = Modifier.padding(16.dp)) {
-             Row(verticalAlignment = Alignment.CenterVertically) {
-@@ -197,8 +283,12 @@
-                     style = MaterialTheme.typography.bodySmall,
-                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                 )
-             } else {
-+                if (mediaPreview != null) {
-+                    MediaPreviewRenderer(preview = mediaPreview)
-+                    Spacer(Modifier.height(12.dp))
-+                }
-                 Row(
-                     verticalAlignment = Alignment.CenterVertically,
-                     horizontalArrangement = Arrangement.End,
-                     modifier = Modifier.fillMaxWidth(),
-
-[0m
-Now the `CopyableResultCard` with media preview:
-[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-@@ -343,12 +343,11 @@
- private fun TestFunctionSection(
-     function: String,
-     suggestions: List<String>,
-     onFunctionChange: (String) -> Unit,
--    args: List<TestArg>,
-+    args: List<String>,
-     onAddArg: () -> Unit,
-     onRemoveArg: (Int) -> Unit,
--    onLabelChange: (Int, String) -> Unit,
-     onValueChange: (Int, String) -> Unit,
-     onRun: () -> Unit,
-     executing: Boolean,
+-private fun LogConsole() {
+-}
+-
+-@Composable
+ private fun OutputConsole(
      log: String,
-@@ -362,9 +361,9 @@
-                 style = MaterialTheme.typography.titleSmall,
-                 fontWeight = FontWeight.SemiBold,
-             )
-             Text(
--                text = "Invoke any named function inside the script. Add as many inputs as it needs.",
-+                text = "Invoke any public function inside the script. Add as many value inputs as it needs.",
-                 style = MaterialTheme.typography.bodySmall,
-                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-             )
-             Spacer(Modifier.height(12.dp))
-@@ -399,46 +398,36 @@
-             }
- 
-             Spacer(Modifier.height(12.dp))
- 
--            if (args.isNotEmpty()) {
--                Text(
--                    "Inputs",
--                    style = MaterialTheme.typography.labelMedium,
--                    color = MaterialTheme.colorScheme.onSurfaceVariant,
--                )
--                Spacer(Modifier.height(4.dp))
-+            Text(
-+                "Inputs",
-+                style = MaterialTheme.typography.labelMedium,
-+                color = MaterialTheme.colorScheme.onSurfaceVariant,
-+            )
-+            Spacer(Modifier.height(4.dp))
- 
--                args.forEachIndexed { index, arg ->
--                    Row(
--                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
--                        verticalAlignment = Alignment.CenterVertically,
-+            args.forEachIndexed { index, value ->
-+                Row(
-+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-+                    verticalAlignment = Alignment.CenterVertically,
-+                ) {
-+                    OutlinedTextField(
-+                        value = value,
-+                        onValueChange = { onValueChange(index, it) },
-+                        modifier = Modifier.weight(1f),
-+                        label = { Text("Argument Value (e.g. URL)") },
-+                        singleLine = true,
-+                    )
-+                    Spacer(Modifier.width(4.dp))
-+                    IconButton(
-+                        onClick = { onRemoveArg(index) },
-                     ) {
--                        OutlinedTextField(
--                            value = arg.label,
--                            onValueChange = { onLabelChange(index, it) },
--                            modifier = Modifier.width(100.dp),
--                            label = { Text("Key") },
--                            singleLine = true,
-+                        Icon(
-+                            Icons.Filled.Delete,
-+                            contentDescription = "Remove input",
-+                            tint = MaterialTheme.colorScheme.error,
-                         )
--                        Spacer(Modifier.width(8.dp))
--                        OutlinedTextField(
--                            value = arg.value,
--                            onValueChange = { onValueChange(index, it) },
--                            modifier = Modifier.weight(1f),
--                            label = { Text("Value") },
--                            singleLine = true,
--                        )
--                        Spacer(Modifier.width(4.dp))
--                        IconButton(
--                            onClick = { onRemoveArg(index) },
--                        ) {
--                            Icon(
--                                Icons.Filled.Delete,
--                                contentDescription = "Remove input",
--                                tint = MaterialTheme.colorScheme.error,
--                            )
--                        }
-                     }
-                 }
-             }
- 
+     executing: Boolean,
+ ) {
 
 [0m
-Now update the `TestFunctionSection` signature and input UI:
-[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
+[0m✱ [0mGrep "PlaygroundViewModel\("[90m 3 matches[0m
+[0m✱ [0mGrep "ScriptUiBridge|invokeNamedFunction|createEnvironment"[90m 39 matches[0m
+[0m→ [0mRead rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt[90m [offset=352, limit=120][0m
+Let me verify the rhino engine file is structurally
 [0m
-[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-@@ -62,9 +62,8 @@
- import coil3.compose.AsyncImage
- import kotlinx.serialization.json.Json
- import kotlinx.serialization.json.JsonObject
- import kotlinx.serialization.json.JsonPrimitive
--import kotlinx.serialization.json.jsonObject
- 
- @OptIn(ExperimentalMaterial3Api::class)
- @Composable
- fun PlaygroundScreen(
-
-[0m
-[0m# [0mTodos
-[✓] Update PlaygroundViewModel: args List<String>, regex negative lookahead, default 1 empty input
-[✓] Add Coil dependency to rocat-app catalog + app module
-[✓] Update PlaygroundScreen input UI (value only, remove Key)
-[✓] Add MediaPreviewRenderer (image AsyncImage + video ACTION_VIEW)
-[•] Build ./gradlew :app:assembleDebug verification
-[ ] Update ai_memory logs (00_INDEX + task file)
-[0m
-[0m$ [0m./gradlew :app:assembleDebug 2>&1 | tail -30
+[0m$ [0m./gradlew :app:assembleDebug 2>&1 | tail -60
 /bin/bash: line 1: ./gradlew: Permission denied
 [0m
-[0m$ [0msh ./gradlew :app:assembleDebug 2>&1 | tail -30
+Now let me build
+[0m$ [0mchmod +x gradlew && ./gradlew :app:assembleDebug 2>&1 | tail -80
+> Task :core:common:mergeDebugJniLibFolders
+> Task :core:common:mergeDebugNativeLibs NO-SOURCE
+> Task :core:common:copyDebugJniLibsProjectOnly
+> Task :core:viewmodel:mergeDebugJniLibFolders
+> Task :scripting:rhino:mergeDebugJniLibFolders
+> Task :core:viewmodel:mergeDebugNativeLibs NO-SOURCE
+> Task :scripting:rhino:mergeDebugNativeLibs NO-SOURCE
+> Task :core:viewmodel:copyDebugJniLibsProjectOnly
+> Task :scripting:rhino:copyDebugJniLibsProjectOnly
+> Task :app:processDebugMainManifest FROM-CACHE
+> Task :app:processDebugManifest FROM-CACHE
+> Task :app:processDebugManifestForPackage FROM-CACHE
+> Task :app:processDebugResources FROM-CACHE
+> Task :app:javaPreCompileDebug FROM-CACHE
+> Task :app:mergeDebugShaders
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets
+> Task :app:compressDebugAssets FROM-CACHE
+> Task :app:desugarDebugFileDependencies FROM-CACHE
+> Task :app:mergeDebugJniLibFolders
+> Task :app:checkDebugDuplicateClasses
+> Task :app:mergeDebugNativeLibs
+> Task :app:mergeExtDexDebug FROM-CACHE
+
+> Task :app:stripDebugDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so.
+
+> Task :app:validateSigningDebug
+> Task :app:writeDebugAppMetadata
+> Task :app:writeDebugSigningConfigVersions
+> Task :scripting:api:compileDebugKotlin
+> Task :scripting:api:compileDebugJavaWithJavac NO-SOURCE
+> Task :scripting:api:bundleLibCompileToJarDebug
+> Task :scripting:api:bundleLibRuntimeToJarDebug
+> Task :scripting:api:processDebugJavaRes
+> Task :scripting:api:bundleLibRuntimeToDirDebug
+> Task :domain:compileDebugKotlin
+> Task :domain:compileDebugJavaWithJavac NO-SOURCE
+> Task :domain:bundleLibCompileToJarDebug
+> Task :domain:bundleLibRuntimeToJarDebug
+> Task :domain:processDebugJavaRes
+> Task :domain:bundleLibRuntimeToDirDebug
+
+> Task :scripting:rhino:compileDebugKotlin
+w: file:///home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt:460:41 Comparison with '==' might not be intended because 'kotlin.Float' and 'kotlin.Double' are incompatible types.
+
+> Task :scripting:rhino:compileDebugJavaWithJavac NO-SOURCE
+> Task :scripting:rhino:bundleLibCompileToJarDebug
+> Task :scripting:rhino:bundleLibRuntimeToJarDebug
+> Task :scripting:rhino:processDebugJavaRes
+> Task :scripting:rhino:bundleLibRuntimeToDirDebug
 > Task :data:compileDebugKotlin
 > Task :data:compileDebugJavaWithJavac NO-SOURCE
 > Task :data:bundleLibCompileToJarDebug
 > Task :data:bundleLibRuntimeToJarDebug
 > Task :data:processDebugJavaRes
 > Task :data:bundleLibRuntimeToDirDebug
-> Task :app:mergeDebugJniLibFolders
 > Task :app:mergeLibDexDebug
-> Task :app:mergeDebugNativeLibs
-> Task :app:validateSigningDebug
-> Task :app:writeDebugAppMetadata
-> Task :app:writeDebugSigningConfigVersions
 
-> Task :app:stripDebugDebugSymbols
-Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so.
+> Task :app:compileDebugKotlin FAILED
+e: file:///home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt:112:21 No parameter with name 'selectedId' found.
+e: file:///home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt:113:21 No value passed for parameter 'selected'.
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1786227683588.json
 
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 36s
+143 actionable tasks: 73 executed, 70 from cache
+[0m
+[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
+@@ -108,9 +108,9 @@
+ ) {
+     item(key = "script_picker") {
+         ScriptPicker(
+             scripts = state.scripts,
+-            selectedId = state.selectedId,
++            selected = state.selectedId,
+             onSelect = viewModel::select,
+         )
+     }
+ 
+
+[0m
+[0m$ [0m./gradlew :app:assembleDebug 2>&1 | tail -40
+> Task :app:dataBindingGenBaseClassesDebug UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
 > Task :app:compileDebugKotlin
 > Task :app:compileDebugJavaWithJavac
 > Task :app:dexBuilderDebug
-> Task :app:mergeDebugGlobalSynthetics
+> Task :app:mergeDebugGlobalSynthetics FROM-CACHE
 > Task :app:processDebugJavaRes
 > Task :app:mergeProjectDexDebug
 > Task :app:mergeDebugJavaResource
 > Task :app:packageDebug
 > Task :app:createDebugApkListingFileRedirect
 > Task :app:assembleDebug
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1786205853506.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1786227719155.json
 
-BUILD SUCCESSFUL in 2m 32s
-151 actionable tasks: 125 executed, 26 from cache
+BUILD SUCCESSFUL in 15s
+151 actionable tasks: 8 executed, 1 from cache, 142 up-to-date
 [0m
-Build succeeded. Let me also run the unit tests to be safe:
-[0m$ [0msh ./gradlew test 2>&1 | tail -15
+Build succeeded. Let me also run the tests since I touched the engine/domain layers
+[0m$ [0m./gradlew test 2>&1 | tail -40
+> Task :domain:processReleaseUnitTestJavaRes
+> Task :domain:testReleaseUnitTest
+> Task :domain:test
+
+> Task :scripting:rhino:compileReleaseKotlin
+w: file:///home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt:460:41 Comparison with '==' might not be intended because 'kotlin.Float' and 'kotlin.Double' are incompatible types.
+
+> Task :scripting:rhino:compileReleaseJavaWithJavac NO-SOURCE
+> Task :scripting:rhino:bundleLibCompileToJarRelease
+> Task :scripting:rhino:bundleLibRuntimeToJarRelease
+> Task :scripting:rhino:processReleaseJavaRes
+> Task :scripting:rhino:compileReleaseUnitTestKotlin
+> Task :scripting:rhino:compileReleaseUnitTestJavaWithJavac NO-SOURCE
+> Task :scripting:rhino:processReleaseUnitTestJavaRes
+> Task :data:compileReleaseKotlin
+> Task :data:compileReleaseJavaWithJavac NO-SOURCE
+> Task :data:bundleLibCompileToJarRelease
+> Task :data:bundleLibRuntimeToJarRelease
+> Task :data:processReleaseJavaRes
+> Task :data:compileReleaseUnitTestKotlin
+> Task :data:compileReleaseUnitTestJavaWithJavac NO-SOURCE
+> Task :data:processReleaseUnitTestJavaRes
+> Task :scripting:rhino:testReleaseUnitTest
 > Task :scripting:rhino:test
+> Task :data:testReleaseUnitTest
+> Task :data:test
 > Task :app:compileReleaseKotlin
 > Task :app:compileReleaseJavaWithJavac
 > Task :app:processReleaseJavaRes
-> Task :app:bundleReleaseClassesToCompileJar
 > Task :app:bundleReleaseClassesToRuntimeJar
+> Task :app:bundleReleaseClassesToCompileJar
 > Task :app:compileReleaseUnitTestKotlin NO-SOURCE
 > Task :app:compileReleaseUnitTestJavaWithJavac NO-SOURCE
 > Task :app:processReleaseUnitTestJavaRes NO-SOURCE
 > Task :app:testReleaseUnitTest NO-SOURCE
 > Task :app:test UP-TO-DATE
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1786206005371.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1786227737236.json
 
-BUILD SUCCESSFUL in 20s
-253 actionable tasks: 81 executed, 70 from cache, 102 up-to-date
+BUILD SUCCESSFUL in 16s
+253 actionable tasks: 58 executed, 93 from cache, 102 up-to-date
 [0m
-[0m$ [0mpython3 -c "
-import re
-script = open('/home/runner/work/mihon_ROCCKY/mihon_ROCCKY/mangaupdate.js').read() + '''
-function _getResolution(url) { return '1080p'; }
-function getImage(url) { return {}; }
-function getVideo(url, format) { return {}; }
-'''
-r = re.compile(r'function\s+(?!_)([a-zA-Z\$][\w\$]*)\s*\(')
-print(r.findall(script))
-"
-['main', 'search', 'parseSearch', 'detail', 'parseDetail', 'mapNamedLinks', 'orNull', 'firstYear', 'lastText', 'splitComma', 'collapse', 'slugify', 'getImage', 'getVideo']
+[0m← [0mEdit rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt
+@@ -1,8 +1,9 @@
+ package app.rocat.scripting.rhino
+ 
+ import app.rocat.scripting.api.FetchResult
+ import app.rocat.scripting.api.ScriptResult
++import app.rocat.scripting.api.ScriptUiBridge
+ import app.rocat.scripting.api.model.DefaultScriptEnvironment
+ import app.rocat.scripting.api.model.Script
+ import kotlinx.coroutines.runBlocking
+ import okhttp3.OkHttpClient
+
 [0m
-Let me verify the regex against the provided test script:
+Tests pass. Let me add a unit test covering the new script-driven bridge to lock in behavior
+[0m← [0mEdit rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt
+@@ -273,5 +273,92 @@
+         assertTrue(result is ScriptResult.Failure)
+         val error = (result as ScriptResult.Failure).error
+         assertTrue("error=$error", error.contains("search"))
+     }
++
++    // --- Tahap 12: Script-Driven UI (RoCatUI bridge) ---
++
++    private class RecordingUiBridge : ScriptUiBridge {
++        val calls = mutableListOf<String>()
++        override fun addInput(id: String, hint: String) = calls.add("input:$id:$hint")
++        override fun addButton(label: String, functionName: String) = calls.add("button:$label:$functionName")
++        override fun thumbnailPreview(url: String) = calls.add("thumbnail:$url")
++        override fun videoPreview(url: String) = calls.add("video:$url")
++        override fun clear() = calls.add("clear")
++        override fun log(text: String) = calls.add("log:$text")
++    }
++
++    @Test
++    fun `rocatui builds a script-driven ui through the bridge`() = runBlocking {
++        val ui = RecordingUiBridge()
++        val uiEnvironment = DefaultScriptEnvironment(
++            fetchImpl = { _, _, _, _ -> FetchResult(200, emptyMap(), "") },
++            ui = ui,
++        )
++        val source = """
++            function buildUI() {
++                RoCatUI.clear();
++                RoCatUI.addInput("video_url", "Masukkan URL Video / Halaman");
++                RoCatUI.addButton("Extract Video", "onExtractClick");
++                RoCatUI.thumbnailPreview("https://example.com/thumb.jpg");
++                RoCatUI.videoPreview("https://example.com/v.mp4");
++                RoCatUI.log("ready");
++            }
++            function onExtractClick(inputs) {
++                RoCatUI.log("got:" + inputs.video_url);
++                return { found: inputs.video_url === "data://x", url: inputs.video_url };
++            }
++        """.trimIndent()
++
++        val buildResult = engine.invokeNamedFunction(script(source), uiEnvironment, "buildUI", emptyMap())
++        assertTrue(buildResult is ScriptResult.Success)
++
++        assertEquals(
++            listOf(
++                "clear",
++                "input:video_url:Masukkan URL Video / Halaman",
++                "button:Extract Video:onExtractClick",
++                "thumbnail:https://example.com/thumb.jpg",
++                "video:https://example.com/v.mp4",
++                "log:ready",
++            ),
++            ui.calls,
++        )
++
++        ui.calls.clear()
++        val clickResult = engine.invokeNamedFunction(
++            script(source),
++            uiEnvironment,
++            "onExtractClick",
++            mapOf("video_url" to "data://x"),
++        )
++        assertTrue(clickResult is ScriptResult.Success)
++        val json = (clickResult as ScriptResult.Success).value
++        assertTrue("expected found=true, got=$json", json.contains("\"found\":true"))
++        assertEquals(listOf("log:got:data://x"), ui.calls)
++    }
++
++    @Test
++    fun `rocatui handles a void button handler without undefined output`() = runBlocking {
++        val ui = RecordingUiBridge()
++        val uiEnvironment = DefaultScriptEnvironment(
++            fetchImpl = { _, _, _, _ -> FetchResult(200, emptyMap(), "") },
++            ui = ui,
++        )
++        val source = """
++            function onExtractClick(inputs) {
++                RoCatUI.videoPreview("https://example.com/" + inputs.video_url);
++            }
++        """.trimIndent()
++
++        val result = engine.invokeNamedFunction(
++            script(source),
++            uiEnvironment,
++            "onExtractClick",
++            mapOf("video_url" to "clip.mp4"),
++        )
++
++        assertTrue(result is ScriptResult.Success)
++        assertEquals("", (result as ScriptResult.Success).value)
++        assertEquals(listOf("video:https://example.com/clip.mp4"), ui.calls)
++    }
+ }
+
+[0m
+[0m$ [0m./gradlew :scripting:rhino:test 2>&1 | tail -30
+1: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task ':scripting:rhino:compileDebugUnitTestKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+==============================================================================
+
+2: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task ':scripting:rhino:compileReleaseUnitTestKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+==============================================================================
+
+BUILD FAILED in 2s
+66 actionable tasks: 2 executed, 64 up-to-date
+[0m
+[0m✗ [0m./gradlew :scripting:rhino:compileDebugUnitTestKotlin --console=plain 2>&1 | grep -A4 -B2 "error" | head -40 failed
+[91m[1mError: [0mNotFound: FileSystem.access (/home/runner/work/mihon_ROCCKKY/mihon_ROCCKY/rocat-app)
+[0m
+[0m$ [0m./gradlew :scripting:rhino:compileDebugUnitTestKotlin 2>&1 | grep -B2 -A6 "error:" | head -50
+(no output)
+[0m
+[0m✗ [0m./gradlew :scripting:rhino:compileDebugUnitTestKotlin 2>&1 | tail -40 failed
+[91m[1mError: [0mNotFound: FileSystem.access (/home/runner/work/mihon_ROCCKKY/mihon_ROCCKY/rocat-app)
+[0m
+[0m$ [0m./gradlew :scripting:rhino:compileDebugUnitTestKotlin 2>&1 | tail -40
+> Task :scripting:api:javaPreCompileDebug UP-TO-DATE
+> Task :core:common:generateDebugRFile UP-TO-DATE
+> Task :scripting:api:generateDebugRFile UP-TO-DATE
+> Task :scripting:rhino:generateDebugRFile UP-TO-DATE
+> Task :scripting:rhino:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :core:common:compileDebugKotlin UP-TO-DATE
+> Task :core:common:javaPreCompileDebug UP-TO-DATE
+> Task :core:common:compileDebugJavaWithJavac NO-SOURCE
+> Task :core:common:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :scripting:api:compileDebugKotlin UP-TO-DATE
+> Task :scripting:api:compileDebugJavaWithJavac NO-SOURCE
+> Task :scripting:api:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :scripting:rhino:compileDebugKotlin UP-TO-DATE
+> Task :scripting:rhino:compileDebugJavaWithJavac NO-SOURCE
+> Task :scripting:rhino:bundleLibCompileToJarDebug UP-TO-DATE
+
+> Task :scripting:rhino:compileDebugUnitTestKotlin FAILED
+e: file:///home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt:282:22 Return type of 'addInput' is not a subtype of the return type of the overridden member 'fun addInput(id: String, hint: String): Unit' defined in 'app/rocat/scripting/api/ScriptUiBridge'.
+e: file:///home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt:283:22 Return type of 'addButton' is not a subtype of the return type of the overridden member 'fun addButton(label: String, functionName: String): Unit' defined in 'app/rocat/scripting/api/ScriptUiBridge'.
+e: file:///home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt:284:22 Return type of 'thumbnailPreview' is not a subtype of the return type of the overridden member 'fun thumbnailPreview(url: String): Unit' defined in 'app/rocat/scripting/api/ScriptUiBridge'.
+e: file:///home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt:285:22 Return type of 'videoPreview' is not a subtype of the return type of the overridden member 'fun videoPreview(url: String): Unit' defined in 'app/rocat/scripting/api/ScriptUiBridge'.
+e: file:///home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt:286:22 Return type of 'clear' is not a subtype of the return type of the overridden member 'fun clear(): Unit' defined in 'app/rocat/scripting/api/ScriptUiBridge'.
+e: file:///home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt:287:22 Return type of 'log' is not a subtype of the return type of the overridden member 'fun log(text: String): Unit' defined in 'app/rocat/scripting/api/ScriptUiBridge'.
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1786227811561.json
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':scripting:rhino:compileDebugUnitTestKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 1s
+26 actionable tasks: 1 executed, 25 up-to-date
+[0m
+[0m← [0mEdit rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt
+@@ -278,14 +278,14 @@
+ // --- Tahap 12: Script-Driven UI (RoCatUI bridge) ---
+ 
+ private class RecordingUiBridge : ScriptUiBridge {
+     val calls = mutableListOf<String>()
+-    override fun addInput(id: String, hint: String) = calls.add("input:$id:$hint")
+-    override fun addButton(label: String, functionName: String) = calls.add("button:$label:$functionName")
+-    override fun thumbnailPreview(url: String) = calls.add("thumbnail:$url")
+-    override fun videoPreview(url: String) = calls.add("video:$url")
+-    override fun clear() = calls.add("clear")
+-    override fun log(text: String) = calls.add("log:$text")
++    override fun addInput(id: String, hint: String) { calls.add("input:$id:$hint") }
++    override fun addButton(label: String, functionName: String) { calls.add("button:$label:$functionName") }
++    override fun thumbnailPreview(url: String) { calls.add("thumbnail:$url") }
++    override fun videoPreview(url: String) { calls.add("video:$url") }
++    override fun clear() { calls.add("clear") }
++    override fun log(text: String) { calls.add("log:$text") }
+ }
+ 
+ @Test
+ fun `rocatui builds a script-driven ui through the bridge`() = runBlocking {
+
+[0m
+[0m$ [0m./gradlew :scripting:rhino:test 2>&1 | tail -20
+> Task :scripting:rhino:generateReleaseRFile UP-TO-DATE
+> Task :scripting:rhino:compileReleaseKotlin UP-TO-DATE
+> Task :scripting:rhino:compileReleaseJavaWithJavac NO-SOURCE
+> Task :scripting:rhino:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :scripting:rhino:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :scripting:rhino:generateReleaseUnitTestStubRFile UP-TO-DATE
+> Task :scripting:rhino:processReleaseJavaRes UP-TO-DATE
+> Task :scripting:rhino:compileDebugUnitTestKotlin
+> Task :scripting:rhino:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :scripting:rhino:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :scripting:rhino:compileReleaseUnitTestKotlin
+> Task :scripting:rhino:testDebugUnitTest
+> Task :scripting:rhino:compileReleaseUnitTestJavaWithJavac NO-SOURCE
+> Task :scripting:rhino:processReleaseUnitTestJavaRes UP-TO-DATE
+> Task :scripting:rhino:testReleaseUnitTest
+> Task :scripting:rhino:test
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1786227817192.json
+
+BUILD SUCCESSFUL in 4s
+70 actionable tasks: 4 executed, 66 up-to-date
+[0m
+[0m✗ [0m./gradlew :app:assembleDebug test 2>&1 | tail -15 failed
+[91m[1mError: [0mNotFound: FileSystem.access (/home/runner/work/mihon_ROCCKKY/mihon_ROCCKY/rocat-app)
+All green. Final full build verification and run complete
+[0m
+[0m$ [0m./gradlew :app:assembleDebug test 2>&1 | tail -15
+> Task :app:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :app:bundleReleaseClassesToRuntimeJar UP-TO-DATE
+> Task :app:bundleReleaseClassesToCompileJar UP-TO-DATE
+> Task :app:compileReleaseUnitTestKotlin NO-SOURCE
+> Task :app:preReleaseUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileReleaseUnitTest UP-TO-DATE
+> Task :app:compileReleaseUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processReleaseJavaRes UP-TO-DATE
+> Task :app:processReleaseUnitTestJavaRes NO-SOURCE
+> Task :app:testReleaseUnitTest NO-SOURCE
+> Task :app:test UP-TO-DATE
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1786227826014.json
+
+BUILD SUCCESSFUL in 2s
+302 actionable tasks: 302 up-to-date
+[0m
 [0m$ [0mdate +"%Y%m%d_%H%M"
-20260808_1620
+20260808_2223
 [0m
-Regex correctly excludes `_getResolution` while detecting public functions. Now updating memory files (Tahap 12.4):
-[0m← [0mWrite ai_memory/task_20260808_1620_tahap12_media_renderer_and_smart_inputs.md
+Now let me update the memory files as required by the protocol
+[0m← [0mWrite ai_memory/task_20260808_2223_tahap12_script_driven_ui.md
 Wrote file successfully.
+[0m
+[0m→ [0mRead ai_memory/task_20260808_2223_tahap12_script_driven_ui.md
+[0m
+[0m$ [0msed -i 's/direoman-bangkitan/direformasi/g; s/berapa kali pun/environment dengan isi yang sama: hanya saat/g; s/di-susuri/dijaga/g; s/dengn/dengan/g' ai_memory/task_20260808_2223_tahap12_script_driven_ui.md
+(no output)
+[0m
+[0m→ [0mRead ai_memory/task_20260808_2223_tahap12_script_driven_ui.md
+[0m✗ [0mEdit /home/runner/work/mihon_ROCCKKY/mihon_ROCCKY/ai_memory/task_20260808_2223_tahap12_script_driven_ui.md failed
+[91m[1mError: [0mFile /home/runner/work/mihon_ROCCKKY/mihon_ROCCKY/ai_memory/task_20260808_2223_tahap12_script_driven_ui.md not found
+[0m
+[0m← [0mEdit ai_memory/task_20260808_2223_tahap12_script_driven_ui.md
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/task_20260808_2223_tahap12_script_driven_ui.md
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/task_20260808_2223_tahap12_script_driven_ui.md
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/task_20260808_2223_tahap12_script_driven_ui.md
+@@ -3,9 +3,9 @@
+ **Status:** Selesai
+ 
+ **Ringkasan Perubahan:**
+ - `scripting/api` — `ScriptUiBridge` interface baru (addInput/addButton/thumbnailPreview/videoPreview/clear/log); `ScriptEnvironment.ui` (nullable, default null); `ScriptEngine.invokeNamedFunction()` baru (panggil fungsi JS dengan 1 argumen objek berisi `Map<id,value>`, return `undefined` → string kosong).
+-- `scripting/rhino` — global `RoCatUI` di dalam scope (environment dengan isi yang sama: hanya saat environment.ui non-null); `RoCatUiBridge` (ScriptableObject ber-fungsi, semua call dijaga `runSafe` supaya galat bridge tidak membunuh skrip); `invokeNamedFunction` diimplementasi.
++- `scripting/rhino` — global `RoCatUI` dipasang di scope hanya saat `environment.ui` non-null; `RoCatUiBridge` (ScriptableObject ber-fungsi, semua call dijaga `runSafe` supaya galat bridge tidak membunuh skrip); `invokeNamedFunction` diimplementasi.
+ - `data` — `ScriptManager.createEnvironment(ui)` untuk membangun environment ber-RoCatUI dengan client yang sama.
+ - `domain` — `ExecuteScript.invoke(..., inputs: Map)` memilih `invokeFunction`/`invokeNamedFunction`.
+ - `app` — `ScriptUIComponent` (sealed: Input/Button/Thumbnail/Video/LogText); `PlaygroundViewModel` direformasi: `SnapshotStateList<ScriptUIComponent>` (di-marshal via main thread + session token untuk buang render lama), `buildUI()` dipanggil otomatis saat load/switch script, tombol mengumpulkan semua input → Map → ke JS; `PlaygroundScreen` = LazyColumn script-driven (AsyncImage Coil, OutlinedTextField, tombol Play `Intent.ACTION_VIEW`, log area, console output copyable JSON). Logika Function Selector + Arg statis Tahap 11 DIHAPUS.
+ - Test: `RhinoScriptEngineTest` +2 (RoCatUI bridge build + void button handler), hijau.
+
+[0m
+[0m← [0mEdit ai_memory/00_INDEX.md
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
+@@ -2,9 +2,10 @@
+ 
+ Proyek: `rocat-app` — Android app modular ala Mihon untuk mengelola & menjalankan custom userscript (Rhino engine). Workspace: `rocat-app/` di root repo ini.
+ 
+ ## Status Proyek Terkini
+-- **Tahap 12 SELESAI** (2026-08-08): Media Renderer & Smart Playground Inputs. Argumen Playground jadi value-only (`testArgs: List<String>`, default 1 baris kosong, "Key" dihapus); Regex `extractFunctionNames` pakai negative lookahead `function\s+(?!_)([a-zA-Z$][\w$]*)\s*\(` → fungsi `_underscore` = Private, tidak muncul di dropdown; `runFunction()` kirim nilai berurutan ke `ExecuteScript.invoke()`. `MediaPreviewRenderer` (Coil 3 `AsyncImage`, `ContentScale.Fit`, max 300dp) merender output `{"media_type":"image","media_url":...}` di atas log JSON; output `"video"` → tombol "Play Video" (`Intent.ACTION_VIEW` MIME `video/*`, fallback Toast). Coil 3.0.4 ditambah (coil-compose + coil-network-okhttp). Build `./gradlew :app:assembleDebug` + `./gradlew test` SUCCESS.
++- **Tahap 12 SELESAI** (2026-08-08): Script-Driven UI & Media Previews (Mihon-Style). `PlaygroundScreen` kini sepenuhnya dikendalikan skrip JS lewat native bridge global `RoCatUI` (`ScriptUiBridge`): `addInput(id,hint)`, `addButton(label,fn)`, `thumbnailPreview(url)` (Coil AsyncImage), `videoPreview(url)` (Intent.ACTION_VIEW video/*), `log(text)`, `clear()`. `buildUI()` dipanggil otomatis saat script di-load/switch; tombol mengumpulkan semua nilai Input → `Map<id,value>` → jadi 1 objek JS argumen via `ScriptEngine.invokeNamedFunction()` (return `undefined` → string kosong). `PlaygroundViewModel` pegang `SnapshotStateList<ScriptUIComponent>` (Input/Button/Thumbnail/Video/LogText), update di-marshal main thread + session token anti-stale-render; UI = LazyColumn script-driven. Logika Function Selector + Input Arg statis Tahap 11 DIHAPUS; Function Selector di Table Result diganti "Console" copyable. `ScriptManager.createEnvironment(ui)` + `ExecuteScript.invoke(..., inputs:)`. Build `./gradlew :app:assembleDebug` SUCCESS; test rhino 24 hijau (termasuk 2 RoCatUI baru).
++- Sebelumnya (Tahap 12, media renderer & smart inputs, 2026-08-08): `MediaPreviewRenderer` (Coil 3 `AsyncImage`, `Intent.ACTION_VIEW` `video/*`), argumen value-only + regex fungsi public/private, Coil 3.0.4. — Digantikan/terdefinisi ulang oleh tahap script-driven di atas. Build `./gradlew :app:assembleDebug` + `./gradlew test` SUCCESS.
+ - **Tahap 11 SELESAI** (2026-08-08): UI Polish & Playground Dinamis. `PlaygroundViewModel` ganti param statis menjadi `testArgs: List<TestArg>` dinamis (tambah/hapus baris Key+Value) + `testFunction` (Function Selector editable, suggestions `search/detail/main`, nama kustom bebas) → `runFunction()` invoke fungsi target dengan arg dinamis; Playground screen pakai `ElevatedCard`, monospace, dan `CopyableResultCard` dengan tombol "Copy JSON" (pretty-print via kotlinx-serialization + `LocalClipboardManager` + Toast) dan "Copy Text"; `ResultFormatter` helper baru. Polishing: `StatusChip` Active/Inactive di `ScriptsScreen` & `ScriptDetailScreen`, `AlertDialog` konfirmasi hapus script, `ImportScriptScreen` padding konsisten + source monospace. Build `./gradlew :app:assembleDebug` + `./gradlew test` SUCCESS.
+ - **Tahap 10 SELESAI** (2026-08-08): Stealth Browser networking & cookie management. `AndroidCookieJar` (OkHttp `CookieJar` berbasis `WebView CookieManager`) → OkHttp + WebView berbagi cookie persisten identik (sync + `flush()`); `CloudflareInterceptor` (ala Mihon) mendeteksi 403/503 + `Server: cloudflare` + title `Just a moment...` lalu headless WebView menyelesaikan JS Turnstile di main thread (latch 30s, `ChallengeState` `@Volatile`), mengambil `cf_clearance` baru, retry request, dan selalu `destroy()` WebView (anti-leak); `StealthHeadersInterceptor` menambah `Accept-Language`, `Sec-CH-UA*`, `Sec-Fetch-*` default; `NetworkHelper` kini terima `Context`, pasang cookie jar + interceptor, `newScriptClient()` mewarisi stack penuh. Build `./gradlew :app:assembleDebug` SUCCESS, unit test rhino + domain hijau, script `fetch` API tak berubah.
+ - **Tahap 9 SELESAI** (2026-08-08): Fix bug fatal Rhino "can't load this type of class file". `ScriptContextFactory.makeContext()` diset `optimizationLevel = -1` → Rhino murni mode interpretasi (Android classloader tak bisa muat `.class` Java dinamis); blok try-catch engine & ViewModel diperlebar (termasuk `Throwable`) agar tidak force-close; Playground tak lagi mencetak teks merah melayang — error/exception masuk ke area Result / log JSON (monospace abu-abu); helper `valueToString()` menormalkan `42.0`→`42` (efek mode interpretasi). Build `./gradlew :app:assembleDebug` SUCCESS, rhino 13/13 + domain test hijau.
+ - Sebelumnya (Tahap 8, 2026-08-08): Script Execution API + Native DOM Bridge + Testing UI. `JsoupBridge` (baru) diekspos ke Rhino sbg global `RoCatDOM` (parse/select/selectText/selectAttr/selectHtml/has + elemen wrapper text/html/attrs/find/textOf/attrOf/nextElement dll) → skrip tanpa cheerio; `ScriptEngine.invokeFunction()` (+ `ExecuteScript.invoke`) untuk panggil fungsi spesifik (`search`/`detail`) dan stringify hasilnya ke JSON via `NativeJSON`; Playground punya section "Test Execution" (param + tombol Run Search/Run Detail + log area); contoh MangaUpdates ditulis ulang murni sync (fetch sync + RoCatDOM) utk "Load example". Fix bug `BridgeFetch`: `as? String` gagal utk `ConsString` → pakai `Context.toString`. Build `./gradlew :app:assembleDebug` SUCCESS, 22 unit test hijau.
+
+[0m
+Now update the `00_INDEX.md` — status line, history row, and technical
+[0m← [0mEdit ai_memory/00_INDEX.md
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
+@@ -30,8 +30,9 @@
+ | 8 | 2026-08-08 | `task_20260808_1404_tahap10_stealth_browser_and_cloudflare.md` | Tahap 10: AndroidCookieJar (WebView CookieManager sync), CloudflareInterceptor (headless WebView bypass Turnstile, cf_clearance), StealthHeadersInterceptor, NetworkHelper(Context) + AppModule; build & test hijau. |
+ | 9 | 2026-08-08 | `task_20260808_1503_tahap11_ui_improvements_and_dynamic_playground.md` | Tahap 11: Playground dinamis (add/remove arg, Function Selector + custom name, Copy JSON/Text via ClipboardManager+Toast), StatusChip, delete confirmation dialog, polish layout Import; build & test hijau. |
+ | 10 | 2026-08-08 | `task_20260808_1549_tahap11_5_hotfix_playground.md` | Tahap 11.5: hapus card "Run main", auto-detect nama fungsi (regex) untuk Function Selector, `testArgs` default kosong (input Key/Value hanya muncul saat perlu), `ResultFormatter.prettyJson` benar-benar pretty-print, hasil dibungkus `SelectionContainer` (selectable/copy-sebagian); build & test hijau. |
+ | 11 | 2026-08-08 | `task_20260808_1620_tahap12_media_renderer_and_smart_inputs.md` | Tahap 12: Media Renderer & Smart Inputs — argumen value-only (`List<String>`, Key dihapus, default 1 baris kosong), regex public/private function (negative lookahead `_`), `MediaPreviewRenderer` (Coil AsyncImage utk image + tombol Play Video `Intent.ACTION_VIEW` utk video) di atas log JSON, Coil 3.0.4 ditambahkan; build & test hijau. |
++| 12 | 2026-08-08 | `task_20260808_2223_tahap12_script_driven_ui.md` | Tahap 12 (revisi): Script-Driven UI & Media Previews — native bridge global `RoCatUI` (`ScriptUiBridge`: addInput/addButton/thumbnailPreview/videoPreview/clear/log) dipasang Rhino engine; `buildUI()` auto-load saat script di-buka; tombol kumpulkan Input → `Map<id,value>` → 1 objek JS via `invokeNamedFunction`; `PlaygroundViewModel` pakai `SnapshotStateList<ScriptUIComponent>` (Input/Button/Thumbnail/Video/LogText) + session token; `PlaygroundScreen` LazyColumn script-driven; Function Selector/Input statis Tahap 11 dihapus; `ScriptManager.createEnvironment(ui)` + test rhino 24 hijau. |
+ 
+ ## Catatan Teknis Penting
+ - Media Renderer & Smart Inputs (Tahap 12): argumen Playground value-only (`testArgs: List<String>`, default `List(1){""}`, tombol "+ Add Input" menambah baris); regex Public vs Private = `function\s+(?!_)([a-zA-Z$][\w$]*)\s*\(` (fungsi berawalan `_` = PRIVATE, tak tampil di dropdown); kontrak media output skrip: `{"media_type":"image"|"video","media_url":"..."}` → image dirender `AsyncImage` (Coil 3, ContentScale.Fit, max 300dp), video → `Intent.ACTION_VIEW` MIME `video/*` (fallback Toast). Coil 3.0.4 (`coil-compose` + `coil-network-okhttp`) di catalog rocat-app.
+ - Playground hotfix (Tahap 11.5): tidak ada lagi card "Run main"/Target URL; `testFunctionSuggestions` diisi otomatis dari `extractFunctionNames(script.source)` (Regex `function\s+([a-zA-Z_$][\w$]*)\s*\(`) saat skrip dipilih/dimuat, `testFunction` default = fungsi pertama; `testArgs` default `emptyList()` → input hanya muncul setelah tombol "+ Add Input"; display & copy di `CopyableResultCard` memakai `ResultFormatter.prettyJson` (JSON pretty-print, non-JSON fallback raw) dan teks dibungkus `SelectionContainer` agar bisa diseleksi. 
+
+[0m
+[0m← [0mEdit ai_memory/00_INDEX.md
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
+@@ -33,9 +33,10 @@
+ | 11 | 2026-08-08 | `task_20260808_1620_tahap12_media_renderer_and_smart_inputs.md` | Tahap 12: Media Renderer & Smart Inputs — argumen value-only (`List<String>`, Key dihapus, default 1 baris kosong), regex public/private function (negative lookahead `_`), `MediaPreviewRenderer` (Coil AsyncImage utk image + tombol Play Video `Intent.ACTION_VIEW` utk video) di atas log JSON, Coil 3.0.4 ditambahkan; build & test hijau. |
+ | 12 | 2026-08-08 | `task_20260808_2223_tahap12_script_driven_ui.md` | Tahap 12 (revisi): Script-Driven UI & Media Previews — native bridge global `RoCatUI` (`ScriptUiBridge`: addInput/addButton/thumbnailPreview/videoPreview/clear/log) dipasang Rhino engine; `buildUI()` auto-load saat script di-buka; tombol kumpulkan Input → `Map<id,value>` → 1 objek JS via `invokeNamedFunction`; `PlaygroundViewModel` pakai `SnapshotStateList<ScriptUIComponent>` (Input/Button/Thumbnail/Video/LogText) + session token; `PlaygroundScreen` LazyColumn script-driven; Function Selector/Input statis Tahap 11 dihapus; `ScriptManager.createEnvironment(ui)` + test rhino 24 hijau. |
+ 
+ ## Catatan Teknis Penting
+-- Media Renderer & Smart Inputs (Tahap 12): argumen Playground value-only (`testArgs: List<String>`, default `List(1){""}`, tombol "+ Add Input" menambah baris); regex Public vs Private = `function\s+(?!_)([a-zA-Z$][\w$]*)\s*\(` (fungsi berawalan `_` = PRIVATE, tak tampil di dropdown); kontrak media output skrip: `{"media_type":"image"|"video","media_url":"..."}` → image dirender `AsyncImage` (Coil 3, ContentScale.Fit, max 300dp), video → `Intent.ACTION_VIEW` MIME `video/*` (fallback Toast). Coil 3.0.4 (`coil-compose` + `coil-network-okhttp`) di catalog rocat-app.
++- Script-Driven UI (Tahap 12 revisi): global `RoCatUI` tersedia di Rhino scope saat `environment.ui != null` (`ScriptUiBridge`: `addInput(id,hint)`, `addButton(label,functionName)`, `thumbnailPreview(url)`, `videoPreview(url)`, `clear()`, `log(text)`); `buildUI()` dipanggil Kotlin otomatis; tombol mengumpulkan semua nilai `ScriptUIComponent.Input` → `Map<id,value>` → `ScriptEngine.invokeNamedFunction()` mengubahnya jadi 1 argumen objek JS (`inputs.video_url`); return `undefined` diflatkan jadi `""`; UI update dimarshal `Dispatchers.Main` + `uiSession` token membuang render lama. Kontrak lama `{"media_type":"image"/"video","media_url":...}` masih dirender di `CopyableResultCard`.
++- Media Renderer & Smart Inputs (Tahap 12 awal): argumen Playgor und value-only (`testArgs: List<String>`, default `List(1){""}`, tombol "+ Add Input" menambah baris); regex Public vs Private = `function\s+(?!_)([a-zA-Z$][\w$]*)\s*\(`; Coil 3.0.4 (`coil-compose` + `coil-network-okhttp`). — Digantikan oleh Playground script-driven (no longer testArgs).
+ - Playground hotfix (Tahap 11.5): tidak ada lagi card "Run main"/Target URL; `testFunctionSuggestions` diisi otomatis dari `extractFunctionNames(script.source)` (Regex `function\s+([a-zA-Z_$][\w$]*)\s*\(`) saat skrip dipilih/dimuat, `testFunction` default = fungsi pertama; `testArgs` default `emptyList()` → input hanya muncul setelah tombol "+ Add Input"; display & copy di `CopyableResultCard` memakai `ResultFormatter.prettyJson` (JSON pretty-print, non-JSON fallback raw) dan teks dibungkus `SelectionContainer` agar bisa diseleksi. 
+ - Playground dinamis (Tahap 11): `testArgs: List<TestArg(label,value)>` (baris input Key+Value bisa ditambah/dihapus, nilai blank dilewati saat pemanggilan); `testFunction` editable + suggestion (`search/detail/main`) → `ExecuteScript.invoke(script, fn, args)`; hasil bisa disalin via `CopyableResultCard` (Copy JSON = pretty-print `Json { prettyPrint=true }` fallback ke teks asli jika bukan JSON; Copy Text = raw) dengan `LocalClipboardManager` + `Toast`.
+ - Stealth network (Tahap 10): `AndroidCookieJar` = OkHttp `CookieJar` ber-basis `WebView CookieManager` → cookie OkHttp & WebView identik (persisten, sync + `flush()`); `CloudflareInterceptor` bypass CF challenge via headless WebView di main thread (`Handler(mainLooper)`, latch 30s, cek cookie `cf_clearance` baru, retry, lalu `destroy()` WebView); `StealthHeadersInterceptor` default header Chromium (`Sec-CH-UA*`, `Sec-Fetch-*`, `Accept-Language`) hanya bila header belum ada; `NetworkHelper(context)` pasang cookie jar + UA + stealth headers + CF interceptor, `newScriptClient()` mewarisi semua.
+ - Network (Tahap 7): `network_security_config.xml` aktif (cleartext + trust system/user); `NetworkHelper.DEFAULT_USER_AGENT` = `Chrome/141.0.0.0`; ConnectionSpec `MODERN_TLS/COMPATIBLE_TLS/CLEARTEXT`; `ScriptSourceFetcher.normalizeUrl()` otomatis inject `https://` & rewrite GitHub blob→raw; `WebViewUtil.setDefaultSettings()` utk engine fallback.
+
+[0m
+[0m✗ [0mEdit ai_memory/00_INDEX.md failed
+[91m[1mError: [0mCould not find oldString in the file. It must match exactly, including whitespace, indentation, and line endings.
+[0m→ [0mRead ai_memory/00_INDEX.md[90m [offset=34, limit=14][0m
+[0m→ [0mRead ai_memory/00_INDEX.md[90m [limit=20, offset=0][0m
+[0m
+[0m← [0mEdit ai_memory/00_INDEX.md
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
+@@ -3,9 +3,9 @@
+ Proyek: `rocat-app` — Android app modular ala Mihon untuk mengelola & menjalankan custom userscript (Rhino engine). Workspace: `rocat-app/` di root repo ini.
+ 
+ ## Status Proyek Terkini
+ - **Tahap 12 SELESAI** (2026-08-08): Script-Driven UI & Media Previews (Mihon-Style). `PlaygroundScreen` kini sepenuhnya dikendalikan skrip JS lewat native bridge global `RoCatUI` (`ScriptUiBridge`): `addInput(id,hint)`, `addButton(label,fn)`, `thumbnailPreview(url)` (Coil AsyncImage), `videoPreview(url)` (Intent.ACTION_VIEW video/*), `log(text)`, `clear()`. `buildUI()` dipanggil otomatis saat script di-load/switch; tombol mengumpulkan semua nilai Input → `Map<id,value>` → jadi 1 objek JS argumen via `ScriptEngine.invokeNamedFunction()` (return `undefined` → string kosong). `PlaygroundViewModel` pegang `SnapshotStateList<ScriptUIComponent>` (Input/Button/Thumbnail/Video/LogText), update di-marshal main thread + session token anti-stale-render; UI = LazyColumn script-driven. Logika Function Selector + Input Arg statis Tahap 11 DIHAPUS; Function Selector di Table Result diganti "Console" copyable. `ScriptManager.createEnvironment(ui)` + `ExecuteScript.invoke(..., inputs:)`. Build `./gradlew :app:assembleDebug` SUCCESS; test rhino 24 hijau (termasuk 2 RoCatUI baru).
+-- Sebelumnya (Tahap 12, media renderer & smart inputs, 2026-08-08): `MediaPreviewRenderer` (Coil 3 `AsyncImage`, `Intent.ACTION_VIEW` `video/*`), argumen value-only + regex fungsi public/private, Coil 3.0.4. — Digantikan/terdefinisi ulang oleh tahap script-driven di atas. Build `./gradlew :app:assembleDebug` + `./gradlew test` SUCCESS.
++- Sebelumnya (Tahap 12, media renderer & smart inputs, 2026-08-08): `MediaPreviewRenderer` (Coil 3 `AsyncImage`, `Intent.ACTION_VIEW` `video/*`), argumen value-only + regex fungsi public/private, Coil 3.0.4. — Digantikan oleh tahap script-driven di atas. Build `./gradlew :app:assembleDebug` + `./gradlew test` SUCCESS.
+ - **Tahap 11 SELESAI** (2026-08-08): UI Polish & Playground Dinamis. `PlaygroundViewModel` ganti param statis menjadi `testArgs: List<TestArg>` dinamis (tambah/hapus baris Key+Value) + `testFunction` (Function Selector editable, suggestions `search/detail/main`, nama kustom bebas) → `runFunction()` invoke fungsi target dengan arg dinamis; Playground screen pakai `ElevatedCard`, monospace, dan `CopyableResultCard` dengan tombol "Copy JSON" (pretty-print via kotlinx-serialization + `LocalClipboardManager` + Toast) dan "Copy Text"; `ResultFormatter` helper baru. Polishing: `StatusChip` Active/Inactive di `ScriptsScreen` & `ScriptDetailScreen`, `AlertDialog` konfirmasi hapus script, `ImportScriptScreen` padding konsisten + source monospace. Build `./gradlew :app:assembleDebug` + `./gradlew test` SUCCESS.
+ - **Tahap 10 SELESAI** (2026-08-08): Stealth Browser networking & cookie management. `AndroidCookieJar` (OkHttp `CookieJar` berbasis `WebView CookieManager`) → OkHttp + WebView berbagi cookie persisten identik (sync + `flush()`); `CloudflareInterceptor` (ala Mihon) mendeteksi 403/503 + `Server: cloudflare` + title `Just a moment...` lalu headless WebView menyelesaikan JS Turnstile di main thread (latch 30s, `ChallengeState` `@Volatile`), mengambil `cf_clearance` baru, retry request, dan selalu `destroy()` WebView (anti-leak); `StealthHeadersInterceptor` menambah `Accept-Language`, `Sec-CH-UA*`, `Sec-Fetch-*` default; `NetworkHelper` kini terima `Context`, pasang cookie jar + interceptor, `newScriptClient()` mewarisi stack penuh. Build `./gradlew :app:assembleDebug` SUCCESS, unit test rhino + domain hijau, script `fetch` API tak berubah.
+ - **Tahap 9 SELESAI** (2026-08-08): Fix bug fatal Rhino "can't load this type of class file". `ScriptContextFactory.makeContext()` diset `optimizationLevel = -1` → Rhino murni mode interpretasi (Android classloader tak bisa muat `.class` Java dinamis); blok try-catch engine & ViewModel diperlebar (termasuk `Throwable`) agar tidak force-close; Playground tak lagi mencetak teks merah melayang — error/exception masuk ke area Result / log JSON (monospace abu-abu); helper `valueToString()` menormalkan `42.0`→`42` (efek mode interpretasi). Build `./gradlew :app:assembleDebug` SUCCESS, rhino 13/13 + domain test hijau.
+ - Sebelumnya (Tahap 8, 2026-08-08): Script Execution API + Native DOM Bridge + Testing UI. `JsoupBridge` (baru) diekspos ke Rhino sbg global `RoCatDOM` (parse/select/selectText/selectAttr/selectHtml/has + elemen wrapper text/html/attrs/find/textOf/attrOf/nextElement dll) → skrip tanpa cheerio; `ScriptEngine.invokeFunction()` (+ `ExecuteScript.invoke`) untuk panggil fungsi spesifik (`search`/`detail`) dan stringify hasilnya ke JSON via `NativeJSON`; Playground punya section "Test Execution" (param + tombol Run Search/Run Detail + log area); contoh MangaUpdates ditulis ulang murni sync (fetch sync + RoCatDOM) utk "Load example". Fix bug `BridgeFetch`: `as? String` gagal utk `ConsString` → pakai `Context.toString`. Build `./gradlew :app:assembleDebug` SUCCESS, 22 unit test hijau.
+
+[0m
+[0m← [0mEdit ai_memory/00_INDEX.md
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
+===================================================================
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
+@@ -34,9 +34,9 @@
+ | 12 | 2026-08-08 | `task_20260808_2223_tahap12_script_driven_ui.md` | Tahap 12 (revisi): Script-Driven UI & Media Previews — native bridge global `RoCatUI` (`ScriptUiBridge`: addInput/addButton/thumbnailPreview/videoPreview/clear/log) dipasang Rhino engine; `buildUI()` auto-load saat script di-buka; tombol kumpulkan Input → `Map<id,value>` → 1 objek JS via `invokeNamedFunction`; `PlaygroundViewModel` pakai `SnapshotStateList<ScriptUIComponent>` (Input/Button/Thumbnail/Video/LogText) + session token; `PlaygroundScreen` LazyColumn script-driven; Function Selector/Input statis Tahap 11 dihapus; `ScriptManager.createEnvironment(ui)` + test rhino 24 hijau. |
+ 
+ ## Catatan Teknis Penting
+ - Script-Driven UI (Tahap 12 revisi): global `RoCatUI` tersedia di Rhino scope saat `environment.ui != null` (`ScriptUiBridge`: `addInput(id,hint)`, `addButton(label,functionName)`, `thumbnailPreview(url)`, `videoPreview(url)`, `clear()`, `log(text)`); `buildUI()` dipanggil Kotlin otomatis; tombol mengumpulkan semua nilai `ScriptUIComponent.Input` → `Map<id,value>` → `ScriptEngine.invokeNamedFunction()` mengubahnya jadi 1 argumen objek JS (`inputs.video_url`); return `undefined` diflatkan jadi `""`; UI update dimarshal `Dispatchers.Main` + `uiSession` token membuang render lama. Kontrak lama `{"media_type":"image"/"video","media_url":...}` masih dirender di `CopyableResultCard`.
+-- Media Renderer & Smart Inputs (Tahap 12 awal): argumen Playgor und value-only (`testArgs: List<String>`, default `List(1){""}`, tombol "+ Add Input" menambah baris); regex Public vs Private = `function\s+(?!_)([a-zA-Z$][\w$]*)\s*\(`; Coil 3.0.4 (`coil-compose` + `coil-network-okhttp`). — Digantikan oleh Playground script-driven (no longer testArgs).
++- Media Renderer & Smart Inputs (Tahap 12 awal): argumen Playground value-only (`testArgs: List<String>`, default `List(1){""}`, tombol "+ Add Input"); regex Public vs Private = `function\s+(?!_)([a-zA-Z$][\w$]*)\s*\(`; Coil 3.0.4 (`coil-compose` + `coil-network-okhttp`). — Digantikan oleh Playground script-driven (testArgs dihapus).
+ - Playground hotfix (Tahap 11.5): tidak ada lagi card "Run main"/Target URL; `testFunctionSuggestions` diisi otomatis dari `extractFunctionNames(script.source)` (Regex `function\s+([a-zA-Z_$][\w$]*)\s*\(`) saat skrip dipilih/dimuat, `testFunction` default = fungsi pertama; `testArgs` default `emptyList()` → input hanya muncul setelah tombol "+ Add Input"; display & copy di `CopyableResultCard` memakai `ResultFormatter.prettyJson` (JSON pretty-print, non-JSON fallback raw) dan teks dibungkus `SelectionContainer` agar bisa diseleksi. 
+ - Playground dinamis (Tahap 11): `testArgs: List<TestArg(label,value)>` (baris input Key+Value bisa ditambah/dihapus, nilai blank dilewati saat pemanggilan); `testFunction` editable + suggestion (`search/detail/main`) → `ExecuteScript.invoke(script, fn, args)`; hasil bisa disalin via `CopyableResultCard` (Copy JSON = pretty-print `Json { prettyPrint=true }` fallback ke teks asli jika bukan JSON; Copy Text = raw) dengan `LocalClipboardManager` + `Toast`.
+ - Stealth network (Tahap 10): `AndroidCookieJar` = OkHttp `CookieJar` ber-basis `WebView CookieManager` → cookie OkHttp & WebView identik (persisten, sync + `flush()`); `CloudflareInterceptor` bypass CF challenge via headless WebView di main thread (`Handler(mainLooper)`, latch 30s, cek cookie `cf_clearance` baru, retry, lalu `destroy()` WebView); `StealthHeadersInterceptor` default header Chromium (`Sec-CH-UA*`, `Sec-Fetch-*`, `Accept-Language`) hanya bila header belum ada; `NetworkHelper(context)` pasang cookie jar + UA + stealth headers + CF interceptor, `newScriptClient()` mewarisi semua.
+ - Network (Tahap 7): `network_security_config.xml` aktif (cleartext + trust system/user); `NetworkHelper.DEFAULT_USER_AGENT` = `Chrome/141.0.0.0`; ConnectionSpec `MODERN_TLS/COMPATIBLE_TLS/CLEARTEXT`; `ScriptSourceFetcher.normalizeUrl()` otomatis inject `https://` & rewrite GitHub blob→raw; `WebViewUtil.setDefaultSettings()` utk engine fallback.
+
 [0m
 [0m← [0mEdit ai_memory/00_INDEX.md
 Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
@@ -1113,62 +1301,78 @@ Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
  Proyek: `rocat-app` — Android app modular ala Mihon untuk mengelola & menjalankan custom userscript (Rhino engine). Workspace: `rocat-app/` di root repo ini.
  
  ## Status Proyek Terkini
--- **Tahap 11.5 SELESAI** (2026-08-08): Hotfix & Refinement UI Playground. Card "Run main"/Target URL dihapus (state `targetUrl/running/result` + `run()`/`onUrlChange()` dibuang); `PlaygroundViewModel.extractFunctionNames(scriptCode)` (Regex `function\s+([a-zA-Z_$][\w$]*)\s*\(`) mendeteksi nama fungsi di dalam skrip → menjadi opsi Function Selector otomatis & `testFunction` default = fungsi pertama; `testArgs` default `emptyList()` (form Key/Value hanya muncul saat user menekan "+ Add Input"); `ResultFormatter.prettyJson()` parse `Json.parseToJsonElement` → re-encode `Json { prettyPrint=true }` (fallback teks asli); teks hasil di `CopyableResultCard` dibungkus `SelectionContainer` agar bisa diseleksi/disalin. Build `./gradlew :app:assembleDebug` + `./gradlew test` SUCCESS.
-+- **Tahap 12 SELESAI** (2026-08-08): Media Renderer & Smart Playground Inputs. Argumen Playground jadi value-only (`testArgs: List<String>`, default 1 baris kosong, "Key" dihapus); Regex `extractFunctionNames` pakai negative lookahead `function\s+(?!_)([a-zA-Z$][\w$]*)\s*\(` → fungsi `_underscore` = Private, tidak muncul di dropdown; `runFunction()` kirim nilai berurutan ke `ExecuteScript.invoke()`. `MediaPreviewRenderer` (Coil 3 `AsyncImage`, `ContentScale.Fit`, max 300dp) merender output `{"media_type":"image","media_url":...}` di atas log JSON; output `"video"` → tombol "Play Video" (`Intent.ACTION_VIEW` MIME `video/*`, fallback Toast). Coil 3.0.4 ditambah (coil-compose + coil-network-okhttp). Build `./gradlew :app:assembleDebug` + `./gradlew test` SUCCESS.
+-- **Tahap 12 SELESAI** (2026-08-08): Script-Driven UI & Media Previews (Mihon-Style). `PlaygroundScreen` kini sepenuhnya dikendalikan skrip JS lewat native bridge global `RoCatUI` (`ScriptUiBridge`): `addInput(id,hint)`, `addButton(label,fn)`, `thumbnailPreview(url)` (Coil AsyncImage), `videoPreview(url)` (Intent.ACTION_VIEW video/*), `log(text)`, `clear()`. `buildUI()` dipanggil otomatis saat script di-load/switch; tombol mengumpulkan semua nilai Input → `Map<id,value>` → jadi 1 objek JS argumen via `ScriptEngine.invokeNamedFunction()` (return `undefined` → string kosong). `PlaygroundViewModel` pegang `SnapshotStateList<ScriptUIComponent>` (Input/Button/Thumbnail/Video/LogText), update di-marshal main thread + session token anti-stale-render; UI = LazyColumn script-driven. Logika Function Selector + Input Arg statis Tahap 11 DIHAPUS; Function Selector di Table Result diganti "Console" copyable. `ScriptManager.createEnvironment(ui)` + `ExecuteScript.invoke(..., inputs:)`. Build `./gradlew :app:assembleDebug` SUCCESS; test rhino 24 hijau (termasuk 2 RoCatUI baru).
++- **Tahap 12 SELESAI** (2026-08-08): Script-Driven UI & Media Previews (Mihon-Style). `PlaygroundScreen` kini sepenuhnya dikendalikan skrip JS lewat native bridge global `RoCatUI` (`ScriptUiBridge`): `addInput(id,hint)`, `addButton(label,fn)`, `thumbnailPreview(url)` (Coil AsyncImage), `videoPreview(url)` (Intent.ACTION_VIEW video/*), `log(text)`, `clear()`. `buildUI()` dipanggil otomatis saat script di-load/switch; tombol mengumpulkan semua nilai Input → `Map<id,value>` → jadi 1 objek JS argumen via `ScriptEngine.invokeNamedFunction()` (return `undefined` → string kosong). `PlaygroundViewModel` pegang `SnapshotStateList<ScriptUIComponent>` (Input/Button/Thumbnail/Video/LogText), update di-marshal main thread + session token anti-stale-render; UI = LazyColumn script-driven. Logika Function Selector + Input Arg statis Tahap 11 DIHAPUS; hasil fungsi ditampilkan di kartu "Console" yang copiable (JSON pretty-print). `ScriptManager.createEnvironment(ui)` + `ExecuteScript.invoke(..., inputs:)`. Build `./gradlew :app:assembleDebug` SUCCESS; test rhino 24 hijau (termasuk 2 RoCatUI baru).
+ - Sebelumnya (Tahap 12, media renderer & smart inputs, 2026-08-08): `MediaPreviewRenderer` (Coil 3 `AsyncImage`, `Intent.ACTION_VIEW` `video/*`), argumen value-only + regex fungsi public/private, Coil 3.0.4. — Digantikan oleh tahap script-driven di atas. Build `./gradlew :app:assembleDebug` + `./gradlew test` SUCCESS.
  - **Tahap 11 SELESAI** (2026-08-08): UI Polish & Playground Dinamis. `PlaygroundViewModel` ganti param statis menjadi `testArgs: List<TestArg>` dinamis (tambah/hapus baris Key+Value) + `testFunction` (Function Selector editable, suggestions `search/detail/main`, nama kustom bebas) → `runFunction()` invoke fungsi target dengan arg dinamis; Playground screen pakai `ElevatedCard`, monospace, dan `CopyableResultCard` dengan tombol "Copy JSON" (pretty-print via kotlinx-serialization + `LocalClipboardManager` + Toast) dan "Copy Text"; `ResultFormatter` helper baru. Polishing: `StatusChip` Active/Inactive di `ScriptsScreen` & `ScriptDetailScreen`, `AlertDialog` konfirmasi hapus script, `ImportScriptScreen` padding konsisten + source monospace. Build `./gradlew :app:assembleDebug` + `./gradlew test` SUCCESS.
  - **Tahap 10 SELESAI** (2026-08-08): Stealth Browser networking & cookie management. `AndroidCookieJar` (OkHttp `CookieJar` berbasis `WebView CookieManager`) → OkHttp + WebView berbagi cookie persisten identik (sync + `flush()`); `CloudflareInterceptor` (ala Mihon) mendeteksi 403/503 + `Server: cloudflare` + title `Just a moment...` lalu headless WebView menyelesaikan JS Turnstile di main thread (latch 30s, `ChallengeState` `@Volatile`), mengambil `cf_clearance` baru, retry request, dan selalu `destroy()` WebView (anti-leak); `StealthHeadersInterceptor` menambah `Accept-Language`, `Sec-CH-UA*`, `Sec-Fetch-*` default; `NetworkHelper` kini terima `Context`, pasang cookie jar + interceptor, `newScriptClient()` mewarisi stack penuh. Build `./gradlew :app:assembleDebug` SUCCESS, unit test rhino + domain hijau, script `fetch` API tak berubah.
  - **Tahap 9 SELESAI** (2026-08-08): Fix bug fatal Rhino "can't load this type of class file". `ScriptContextFactory.makeContext()` diset `optimizationLevel = -1` → Rhino murni mode interpretasi (Android classloader tak bisa muat `.class` Java dinamis); blok try-catch engine & ViewModel diperlebar (termasuk `Throwable`) agar tidak force-close; Playground tak lagi mencetak teks merah melayang — error/exception masuk ke area Result / log JSON (monospace abu-abu); helper `valueToString()` menormalkan `42.0`→`42` (efek mode interpretasi). Build `./gradlew :app:assembleDebug` SUCCESS, rhino 13/13 + domain test hijau.
- - Sebelumnya (Tahap 8, 2026-08-08): Script Execution API + Native DOM Bridge + Testing UI. `JsoupBridge` (baru) diekspos ke Rhino sbg global `RoCatDOM` (parse/select/selectText/selectAttr/selectHtml/has + elemen wrapper text/html/attrs/find/textOf/attrOf/nextElement dll) → skrip tanpa cheerio; `ScriptEngine.invokeFunction()` (+ `ExecuteScript.invoke`) untuk panggil fungsi spesifik (`search`/`detail`) dan stringify hasilnya ke JSON via `NativeJSON`; Playground punya section "Test Execution" (param + tombol Run Search/Run Detail + log area); contoh MangaUpdates ditulis ulang murni sync (fetch sync + RoCatDOM) utk "Load example". Fix bug `BridgeFetch`: `as? String` gagal utk `ConsString` → pakai `Context.toString`. Build `./gradlew :app:assembleDebug` SUCCESS, 22 unit test hijau.
-
-[0m
-Now update `00_INDEX.md`:
-[0m← [0mEdit ai_memory/00_INDEX.md
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
-@@ -28,8 +28,9 @@
- | 7 | 2026-08-08 | `task_20260808_1310_tahap9_fix_rhino_class_loader.md` | Tahap 9: fix Rhino class loader (`optimizationLevel = -1`, mode interpretasi), error handling Playground (error masuk area Result/log, tidak lagi teks merah melayang), try-catch `Throwable` anti force-close, normalisasi double `42.0`→`42`; build & test hijau. |
- | 8 | 2026-08-08 | `task_20260808_1404_tahap10_stealth_browser_and_cloudflare.md` | Tahap 10: AndroidCookieJar (WebView CookieManager sync), CloudflareInterceptor (headless WebView bypass Turnstile, cf_clearance), StealthHeadersInterceptor, NetworkHelper(Context) + AppModule; build & test hijau. |
- | 9 | 2026-08-08 | `task_20260808_1503_tahap11_ui_improvements_and_dynamic_playground.md` | Tahap 11: Playground dinamis (add/remove arg, Function Selector + custom name, Copy JSON/Text via ClipboardManager+Toast), StatusChip, delete confirmation dialog, polish layout Import; build & test hijau. |
- | 10 | 2026-08-08 | `task_20260808_1549_tahap11_5_hotfix_playground.md` | Tahap 11.5: hapus card "Run main", auto-detect nama fungsi (regex) untuk Function Selector, `testArgs` default kosong (input Key/Value hanya muncul saat perlu), `ResultFormatter.prettyJson` benar-benar pretty-print, hasil dibungkus `SelectionContainer` (selectable/copy-sebagian); build & test hijau. |
-+| 11 | 2026-08-08 | `task_20260808_1620_tahap12_media_renderer_and_smart_inputs.md` | Tahap 12: Media Renderer & Smart Inputs — argumen value-only (`List<String>`, Key dihapus, default 1 baris kosong), regex public/private function (negative lookahead `_`), `MediaPreviewRenderer` (Coil AsyncImage utk image + tombol Play Video `Intent.ACTION_VIEW` utk video) di atas log JSON, Coil 3.0.4 ditambahkan; build & test hijau. |
- 
- ## Catatan Teknis Penting
- - Playground hotfix (Tahap 11.5): tidak ada lagi card "Run main"/Target URL; `testFunctionSuggestions` diisi otomatis dari `extractFunctionNames(script.source)` (Regex `function\s+([a-zA-Z_$][\w$]*)\s*\(`) saat skrip dipilih/dimuat, `testFunction` default = fungsi pertama; `testArgs` default `emptyList()` → input hanya muncul setelah tombol "+ Add Input"; display & copy di `CopyableResultCard` memakai `ResultFormatter.prettyJson` (JSON pretty-print, non-JSON fallback raw) dan teks dibungkus `SelectionContainer` agar bisa diseleksi. 
- - Playground dinamis (Tahap 11): `testArgs: List<TestArg(label,value)>` (baris input Key+Value bisa ditambah/dihapus, nilai blank dilewati saat pemanggilan); `testFunction` editable + suggestion (`search/detail/main`) → `ExecuteScript.invoke(script, fn, args)`; hasil bisa disalin via `CopyableResultCard` (Copy JSON = pretty-print `Json { prettyPrint=true }` fallback ke teks asli jika bukan JSON; Copy Text = raw) dengan `LocalClipboardManager` + `Toast`.
-
-[0m
-[0m← [0mEdit ai_memory/00_INDEX.md
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
-@@ -31,8 +31,9 @@
- | 10 | 2026-08-08 | `task_20260808_1549_tahap11_5_hotfix_playground.md` | Tahap 11.5: hapus card "Run main", auto-detect nama fungsi (regex) untuk Function Selector, `testArgs` default kosong (input Key/Value hanya muncul saat perlu), `ResultFormatter.prettyJson` benar-benar pretty-print, hasil dibungkus `SelectionContainer` (selectable/copy-sebagian); build & test hijau. |
- | 11 | 2026-08-08 | `task_20260808_1620_tahap12_media_renderer_and_smart_inputs.md` | Tahap 12: Media Renderer & Smart Inputs — argumen value-only (`List<String>`, Key dihapus, default 1 baris kosong), regex public/private function (negative lookahead `_`), `MediaPreviewRenderer` (Coil AsyncImage utk image + tombol Play Video `Intent.ACTION_VIEW` utk video) di atas log JSON, Coil 3.0.4 ditambahkan; build & test hijau. |
- 
- ## Catatan Teknis Penting
-+- Media Renderer & Smart Inputs (Tahap 12): argumen Playground value-only (`testArgs: List<String>`, default `List(1){""}`, tombol "+ Add Input" menambah baris); regex Public vs Private = `function\s+(?!_)([a-zA-Z$][\w$]*)\s*\(` (fungsi berawalan `_` = PRIVATE, tak tampil di dropdown); kontrak media output skrip: `{"media_type":"image"|"video","media_url":"..."}` → image dirender `AsyncImage` (Coil 3, ContentScale.Fit, max 300dp), video → `Intent.ACTION_VIEW` MIME `video/*` (fallback Toast). Coil 3.0.4 (`coil-compose` + `coil-network-okhttp`) di catalog rocat-app.
- - Playground hotfix (Tahap 11.5): tidak ada lagi card "Run main"/Target URL; `testFunctionSuggestions` diisi otomatis dari `extractFunctionNames(script.source)` (Regex `function\s+([a-zA-Z_$][\w$]*)\s*\(`) saat skrip dipilih/dimuat, `testFunction` default = fungsi pertama; `testArgs` default `emptyList()` → input hanya muncul setelah tombol "+ Add Input"; display & copy di `CopyableResultCard` memakai `ResultFormatter.prettyJson` (JSON pretty-print, non-JSON fallback raw) dan teks dibungkus `SelectionContainer` agar bisa diseleksi. 
- - Playground dinamis (Tahap 11): `testArgs: List<TestArg(label,value)>` (baris input Key+Value bisa ditambah/dihapus, nilai blank dilewati saat pemanggilan); `testFunction` editable + suggestion (`search/detail/main`) → `ExecuteScript.invoke(script, fn, args)`; hasil bisa disalin via `CopyableResultCard` (Copy JSON = pretty-print `Json { prettyPrint=true }` fallback ke teks asli jika bukan JSON; Copy Text = raw) dengan `LocalClipboardManager` + `Toast`.
- - Stealth network (Tahap 10): `AndroidCookieJar` = OkHttp `CookieJar` ber-basis `WebView CookieManager` → cookie OkHttp & WebView identik (persisten, sync + `flush()`); `CloudflareInterceptor` bypass CF challenge via headless WebView di main thread (`Handler(mainLooper)`, latch 30s, cek cookie `cf_clearance` baru, retry, lalu `destroy()` WebView); `StealthHeadersInterceptor` default header Chromium (`Sec-CH-UA*`, `Sec-Fetch-*`, `Accept-Language`) hanya bila header belum ada; `NetworkHelper(context)` pasang cookie jar + UA + stealth headers + CF interceptor, `newScriptClient()` mewarisi semua.
- - Network (Tahap 7): `network_security_config.xml` aktif (cleartext + trust system/user); `NetworkHelper.DEFAULT_USER_AGENT` = `Chrome/141.0.0.0`; ConnectionSpec `MODERN_TLS/COMPATIBLE_TLS/CLEARTEXT`; `ScriptSourceFetcher.normalizeUrl()` otomatis inject `https://` & rewrite GitHub blob→raw; `WebViewUtil.setDefaultSettings()` utk engine fallback.
 
 [0m
 [0m# [0mTodos
-[✓] Update PlaygroundViewModel: args List<String>, regex negative lookahead, default 1 empty input
-[✓] Add Coil dependency to rocat-app catalog + app module
-[✓] Update PlaygroundScreen input UI (value only, remove Key)
-[✓] Add MediaPreviewRenderer (image AsyncImage + video ACTION_VIEW)
-[✓] Build ./gradlew :app:assembleDebug verification
-[✓] Update ai_memory logs (00_INDEX + task file)
+[✓] Add ScriptUiBridge interface + ui property on ScriptEnvironment + invoke function for named inputs in scripting/api
+[✓] Expose RoCatUI global in RhinoScriptEngine + implement invokeNamedFunction
+[✓] Add ScriptManager.createEnvironment(ui) helper in data module
+[✓] Add ScriptUIComponent sealed class in app
+[✓] Rework PlaygroundViewModel (SnapshotStateList, buildUI auto-load, button click input collection)
+[✓] Rework PlaygroundScreen.kt to a script-driven LazyColumn renderer
+[✓] Build verification ./gradlew :app:assembleDebug
+[✓] Update ai_memory/00_INDEX.md + create task log file
 [0m
-**Tahap 12 SELESAI.**
+Let me review the final diff summary
+[0m$ [0mgit -C /home/runner/work/mihon_ROCCKY/mihon_ROCCKY status --short && echo "---DIFFSTAT---" && git -C /home/runner/work/mihon_ROCCKY/mihon_ROCCKY diff --stat -- . ':!ai_memory' && echo "---UNTRACKED APP FILES---" && git -C /home/runner/work/mihon_ROCCKY/mihon_rioCCKY/mihon_ROCCKY ls-files --others --exclude-standard | grep -v ai_memory || echo none
+M ai-response-recap.txt
+ M ai_memory/00_INDEX.md
+ M rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
+ M rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
+ M rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
+ M rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/ExecuteScript.kt
+ M rocat-app/gradlew
+ M rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/ScriptEngine.kt
+ M rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/model/DefaultScriptEnvironment.kt
+ M rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+ M rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt
+?? ai_memory/task_20260808_2223_tahap12_script_driven_ui.md
+?? rocat-app/app/src/main/java/app/rocat/ui/playground/ScriptUIComponent.kt
+?? rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/ScriptUiBridge.kt
+---DIFFSTAT---
+ ai-response-recap.txt                              | 2130 +++++++++++---------
+ .../app/rocat/ui/playground/PlaygroundScreen.kt    |  424 ++--
+ .../app/rocat/ui/playground/PlaygroundViewModel.kt |  231 ++-
+ .../app/rocat/data/script/ScriptRepositoryImpl.kt  |   14 +
+ .../domain/script/interactor/ExecuteScript.kt      |   10 +-
+ rocat-app/gradlew                                  |    0
+ .../java/app/rocat/scripting/api/ScriptEngine.kt   |   26 +
+ .../api/model/DefaultScriptEnvironment.kt          |    2 +
+ .../app/rocat/scripting/rhino/RhinoScriptEngine.kt |  100 +-
+ .../rocat/scripting/rhino/RhinoScriptEngineTest.kt |   88 +
+ 10 files changed, 1747 insertions(+), 1278 deletions(-)
+---UNTRACKED APP FILES---
+none
+fatal: cannot change to '/home/runner/work/mihon_ROCCKY/mihon_rioCCKY/mihon_ROCCKY': No such file or directory
+[0m
+Tahap 12 selesai. Ringkasan:
 
-**Perubahan:**
-- `PlaygroundViewModel.kt` — `TestArg(label,value)` diganti `testArgs: List<String>` (value-only, default 1 baris kosong); regex `function\s+(?!_)([a-zA-Z$][\w$]*)\s*\(` (negative lookahead) mengecualikan fungsi `_private` dari dropdown; `runFunction()` mengirim nilai berurutan ke `ExecuteScript.invoke()`.
-- `PlaygroundScreen.kt` — kolom "Key" dihapus, tiap input = `OutlinedTextField` full-width "Argument Value (e.g. URL)" + tombol hapus; `MediaPreviewRenderer` baru: output `image` dirender Coil `AsyncImage` (Fit, max 300dp) di atas log JSON, output `video` → tombol "Play Video" via `Intent.ACTION_VIEW` MIME `video/*`.
-- Coil 3.0.4 (`coil-compose`, `coil-network-okhttp`) ditambahkan ke catalog + app module.
+**Bridge `RoCatUI` (Native → Rhino)**
+- `scripting/api/ScriptUiBridge.kt` — interface `ScriptUiBridge`: `addInput/addButton/thumbnailPreview/videoPreview/clear/log`.
+- `ScriptEngine.kt` — `ScriptEnvironment.ui` (nullable, default null) + metode baru `invokeNamedFunction(script, env, fn, inputs: Map<String,String>)` yang meneruskan input sebagai **satu objek JS** (`inputs.video_url`).
+- `rhino/RhinoScriptEngine.kt:113` — implementasi `invokeNamedFunction` (return `undefined` → string kosong); global `RoCatUI` dipasang saat `environment.ui != null`; kelas `RoCatUiBridge` membungkus semua call dengan `runSafe` agar galat bridge tak membunuh skrip.
 
-**Verifikasi:** `./gradlew :app:assembleDebug` SUCCESS, `./gradlew test` SUCCESS; regex teruji benar pada skrip contoh (hanya `getImage`/`getVideo` terdeteksi, `_getResolution` tersaring). Memori diperbarui di `00_INDEX.md` + `ai_memory/task_20260808_1620_tahap12_media_renderer_and_smart_inputs.md`.
+**Domain/Data**
+- `ScriptManager.createEnvironment(ui)` untuk environment ber-`RoCatUI` dengan stack `scriptClient` yang sama.
+- `ExecuteScript.invoke(...)` kini beralih ke `invokeNamedFunction` ketikan `inputs` non-empty.
+
+**Playground (Script-Driven, Mihon-Style)**
+- `ScriptUIComponent` (sealed: `Input/Button/Thumbnail/Video/LogText`).
+- `PlaygroundViewModel` — `SnapshotStateList<ScriptUIComponent>`, update di-marshal ke main thread + `uiSession` token (render lama dibuang), `buildUI()` di-load otomatis saat script dipilih, tombol mengumpulkan semua `Input.value` → `Map<id,value>` → diinvoke. Function Selector + Input Arg statis Tahap 11 dihapus.
+- `PlaygroundScreen.kt` — `LazyColumn` merender komponen (Coil `AsyncImage` untuk thumbnail, `OutlinedTextField`, tombol Play `Intent.ACTION_VIEW video/*`, area log, console output copyable JSON).
+
+**Verifikasi**
+- `./gradlew :app:assembleDebug` SUCCESS
+- `./gradlew test` SUCCESS, rhino 24/24 hijau (termasuk 2 test baru: canvas bridge build + void button handler).
+
+**Memori**: `ai_memory/task_20260808_2223_tahap12_script_driven_ui.md` dibuat, `ai_memory/00_INDEX.md` diupdate → **Tahap 12 SELESAI**.
+
+Untuk uji manual, impor skrip `Script-Driven UI Tester` di soal (ganti placeholder URL dengan `https://via.placeholder.com/300`); `buildUI()` akan menggambar thumbnail + input + tombol, dan `onExtractClick` menampilkan preview video + log.
+
+Satu poin: `./gradlew` ditandai executable (`chmod +x`) karena awalnya tidak bisa dijalankan di runner ini.

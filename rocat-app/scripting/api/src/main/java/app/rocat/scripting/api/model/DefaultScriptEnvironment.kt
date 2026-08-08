@@ -2,6 +2,7 @@ package app.rocat.scripting.api.model
 
 import app.rocat.scripting.api.FetchResult
 import app.rocat.scripting.api.ScriptEnvironment
+import app.rocat.scripting.api.ScriptUiBridge
 
 /**
  * Default [ScriptEnvironment] provided to the engine, containing the app's current
@@ -10,6 +11,7 @@ import app.rocat.scripting.api.ScriptEnvironment
 class DefaultScriptEnvironment(
     private val fetchImpl: suspend (String, String, Map<String, String>, String?) -> FetchResult,
     override val document: Any? = null,
+    override val ui: ScriptUiBridge? = null,
 ) : ScriptEnvironment {
 
     override suspend fun fetch(

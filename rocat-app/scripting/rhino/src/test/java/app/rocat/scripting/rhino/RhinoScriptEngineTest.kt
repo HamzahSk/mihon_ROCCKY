@@ -2,6 +2,7 @@ package app.rocat.scripting.rhino
 
 import app.rocat.scripting.api.FetchResult
 import app.rocat.scripting.api.ScriptResult
+import app.rocat.scripting.api.ScriptUiBridge
 import app.rocat.scripting.api.model.DefaultScriptEnvironment
 import app.rocat.scripting.api.model.Script
 import kotlinx.coroutines.runBlocking
@@ -272,5 +273,92 @@ class RhinoScriptEngineTest {
         assertTrue(result is ScriptResult.Failure)
         val error = (result as ScriptResult.Failure).error
         assertTrue("error=$error", error.contains("search"))
+    }
+
+    // --- Tahap 12: Script-Driven UI (RoCatUI bridge) ---
+
+    private class RecordingUiBridge : ScriptUiBridge {
+        val calls = mutableListOf<String>()
+        override fun addInput(id: String, hint: String) { calls.add("input:$id:$hint") }
+        override fun addButton(label: String, functionName: String) { calls.add("button:$label:$functionName") }
+        override fun thumbnailPreview(url: String) { calls.add("thumbnail:$url") }
+        override fun videoPreview(url: String) { calls.add("video:$url") }
+        override fun clear() { calls.add("clear") }
+        override fun log(text: String) { calls.add("log:$text") }
+    }
+
+    @Test
+    fun `rocatui builds a script-driven ui through the bridge`() = runBlocking {
+        val ui = RecordingUiBridge()
+        val uiEnvironment = DefaultScriptEnvironment(
+            fetchImpl = { _, _, _, _ -> FetchResult(200, emptyMap(), "") },
+            ui = ui,
+        )
+        val source = """
+            function buildUI() {
+                RoCatUI.clear();
+                RoCatUI.addInput("video_url", "Masukkan URL Video / Halaman");
+                RoCatUI.addButton("Extract Video", "onExtractClick");
+                RoCatUI.thumbnailPreview("https://example.com/thumb.jpg");
+                RoCatUI.videoPreview("https://example.com/v.mp4");
+                RoCatUI.log("ready");
+            }
+            function onExtractClick(inputs) {
+                RoCatUI.log("got:" + inputs.video_url);
+                return { found: inputs.video_url === "data://x", url: inputs.video_url };
+            }
+        """.trimIndent()
+
+        val buildResult = engine.invokeNamedFunction(script(source), uiEnvironment, "buildUI", emptyMap())
+        assertTrue(buildResult is ScriptResult.Success)
+
+        assertEquals(
+            listOf(
+                "clear",
+                "input:video_url:Masukkan URL Video / Halaman",
+                "button:Extract Video:onExtractClick",
+                "thumbnail:https://example.com/thumb.jpg",
+                "video:https://example.com/v.mp4",
+                "log:ready",
+            ),
+            ui.calls,
+        )
+
+        ui.calls.clear()
+        val clickResult = engine.invokeNamedFunction(
+            script(source),
+            uiEnvironment,
+            "onExtractClick",
+            mapOf("video_url" to "data://x"),
+        )
+        assertTrue(clickResult is ScriptResult.Success)
+        val json = (clickResult as ScriptResult.Success).value
+        assertTrue("expected found=true, got=$json", json.contains("\"found\":true"))
+        assertEquals(listOf("log:got:data://x"), ui.calls)
+    }
+
+    @Test
+    fun `rocatui handles a void button handler without undefined output`() = runBlocking {
+        val ui = RecordingUiBridge()
+        val uiEnvironment = DefaultScriptEnvironment(
+            fetchImpl = { _, _, _, _ -> FetchResult(200, emptyMap(), "") },
+            ui = ui,
+        )
+        val source = """
+            function onExtractClick(inputs) {
+                RoCatUI.videoPreview("https://example.com/" + inputs.video_url);
+            }
+        """.trimIndent()
+
+        val result = engine.invokeNamedFunction(
+            script(source),
+            uiEnvironment,
+            "onExtractClick",
+            mapOf("video_url" to "clip.mp4"),
+        )
+
+        assertTrue(result is ScriptResult.Success)
+        assertEquals("", (result as ScriptResult.Success).value)
+        assertEquals(listOf("video:https://example.com/clip.mp4"), ui.calls)
     }
 }

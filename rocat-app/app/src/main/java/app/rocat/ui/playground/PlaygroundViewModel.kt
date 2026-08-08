@@ -1,51 +1,85 @@
 package app.rocat.ui.playground
 
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.viewModelScope
 import app.rocat.core.common.injekt.Injekt
 import app.rocat.core.viewmodel.StateViewModel
+import app.rocat.data.script.ScriptManager
 import app.rocat.domain.script.ExecuteScript
 import app.rocat.domain.script.GetScripts
 import app.rocat.scripting.api.ScriptResult
+import app.rocat.scripting.api.ScriptUiBridge
 import app.rocat.scripting.api.model.Script
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /**
- * Test runner for installed scripts. The "Test Function" section can invoke any named
- * function inside the script (`main`, `search`, `detail`, ...) with a dynamic,
- * user-controlled list of plain values. Functions are detected automatically from the
- * script source; only public (non-underscore-prefixed) functions are offered as
- * suggestions. The default argument state is a single empty value row, and the user
- * adds more rows with "+ Add Input" when the function needs more arguments.
+ * Script-driven playground, mihon-styleTab. Instead of a fixed input/function picker,
+ * the selected script builds its own UI by calling `RoCatUI.*` through a native bridge:
  *
- * Every execution failure (engine error, validation, or a stray Throwable) is written
- * INTO the log area instead of being rendered as floating red text, and is caught so a
- * runtime error from JS never force-closes the app.
+ *  - `RoCatUI.addInput(id, hint)` / `addButton(label, fn)` / `thumbnailPreview(url)` /
+ *    `videoPreview(url)` / `log(text)` / `clear()` manipulate [uiComponents].
+ *  - On first load (and on every script switch / "Build UI") the script's `buildUI()`
+ *    function is invoked to render the initial state.
+ *  - Pressing a script button gathers every non-blank input into a `Map<id, value>` and
+ *    invokes the button's JS function with that object as a single argument.
+ *
+ * All bridge callbacks are marshalled to the main thread and guarded by a session token
+ * so a stale `buildUI()` from an older script can never wipe a newer render.
  */
 class PlaygroundViewModel(
     private val getScripts: GetScripts = Injekt.get(),
-    private val executeScript: ExecuteScript = Injekt.get(),
+    private val scriptManager: ScriptManager = Injekt.get(),
 ) : StateViewModel<PlaygroundViewModel.State>(State()) {
-
-    companion object {
-        private val FUNCTION_NAME_REGEX = Regex("function\\s+(?!_)([a-zA-Z$][\\w$]*)\\s*\\(")
-        private const val DEFAULT_ARGS_COUNT = 1
-    }
 
     data class State(
         val scripts: List<Script> = emptyList(),
         val selectedId: String? = null,
-        val testFunction: String = "",
-        val testFunctionSuggestions: List<String> = emptyList(),
-        val testArgs: List<String> = List(DEFAULT_ARGS_COUNT) { "" },
         val executing: Boolean = false,
         val log: String = "",
     ) {
         val selectedScript: Script? get() = scripts.firstOrNull { it.id == selectedId }
     }
+
+    /** The ordered, script-driven list of components rendered by the playground. */
+    val uiComponents: SnapshotStateList<ScriptUIComponent> = mutableStateListOf()
+
+    /**
+     * Monotonic session id. Incremented whenever a fresh `buildUI()` render starts so
+     * queued bridge updates from an earlier render are discarded on the main thread.
+     */
+    @Volatile
+    private var uiSession: Long = 0
+
+    private val uiBridge = object : ScriptUiBridge {
+        override fun addInput(id: String, hint: String) = postUi(uiSession) { addOrReplaceInput(id, hint) }
+        override fun addButton(label: String, functionName: String) = postUi(uiSession) {
+            uiComponents.add(ScriptUIComponent.Button(label, functionName))
+        }
+        override fun thumbnailPreview(url: String) = postUi(uiSession) {
+            uiComponents.add(ScriptUIComponent.Thumbnail(url))
+        }
+        override fun videoPreview(url: String) = postUi(uiSession) {
+            uiComponents.add(ScriptUIComponent.Video(url))
+        }
+        override fun clear() = postUi(uiSession) { uiComponents.clear() }
+        override fun log(text: String) = postUi(uiSession) {
+            uiComponents.add(ScriptUIComponent.LogText(text))
+        }
+    }
+
+    /**
+     * The engine/environment pair used for every script-driven invocation. It shares the
+     * app's script client (fetch/stealth/cloudflare stack) and exposes [uiBridge] to the
+     * script as the global `RoCatUI`.
+     */
+    private val uiExecuteScript = ExecuteScript(
+        engine = scriptManager.engine,
+        environment = scriptManager.createEnvironment(uiBridge),
+    )
 
     init {
         viewModelScope.launch {
@@ -57,93 +91,116 @@ class PlaygroundViewModel(
                     } else {
                         enabled.firstOrNull()?.id
                     }
-                    val script = enabled.firstOrNull { it.id == selection }
-                    val functions = script?.let { extractFunctionNames(it.source) }.orEmpty()
-                    val selectionChanged = selection != current.selectedId
-                    current.copy(
-                        scripts = enabled,
-                        selectedId = selection,
-                        testFunctionSuggestions = functions,
-                        testFunction = if (selectionChanged) (functions.firstOrNull() ?: "") else current.testFunction,
-                        testArgs = if (selectionChanged) List(DEFAULT_ARGS_COUNT) { "" } else current.testArgs,
-                    )
+                    current.copy(scripts = enabled, selectedId = selection)
+                }
+                state.value.selectedScript?.let { loadUi(it) }
+            }
+        }
+    }
+
+    fun select(id: String) {
+        val script = mutableState.value.scripts.firstOrNull { it.id == id }
+        mutableState.update { it.copy(selectedId = id, log = "") }
+        script?.let { loadUi(it) }
+    }
+
+    /** Re-runs the selected script's `buildUI()` to re-render the component list. */
+    fun rebuildUi() {
+        state.value.selectedScript?.let { loadUi(it) }
+    }
+
+    /**
+     * Starts a fresh UI render: clears the previous components and invokes the script's
+     * `buildUI()` function (when present) which repopulates the list via `RoCatUI.*`.
+     */
+    private fun loadUi(script: Script) {
+        uiSession++
+        val session = uiSession
+        postUi(session) { uiComponents.clear() }
+
+        viewModelScope.launch {
+            val result = try {
+                uiExecuteScript.invoke(script, BUILD_UI_FUNCTION)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                ScriptResult.Failure(e.message ?: e.javaClass.simpleName)
+            }
+            if (result is ScriptResult.Failure) {
+                val error = result.error
+                // A missing buildUI() is fine: the script is not script-driven.
+                if (session == uiSession && error?.contains("no function") != true) {
+                    mutableState.update { it.copy(log = "buildUI error: $error") }
                 }
             }
         }
     }
 
     /**
-     * Scans a script's source code and returns the names of every PUBLIC function
-     * declared with the classic `function name(...)` syntax. Private functions whose
-     * name starts with an underscore (`_helper`) are excluded.
+     * Pressing a `RoUI.Button`: collects every non-blank input configured through
+     * `RoCatUI.addInput`, forwards them as `Map<id, value>` to the named JS function,
+     * and renders its return value (or error) in the console area.
      */
-    fun extractFunctionNames(scriptCode: String): List<String> =
-        FUNCTION_NAME_REGEX.findAll(scriptCode).map { it.groupValues[1] }.toList()
+    fun onScriptButton(functionName: String) {
+        val script = state.value.selectedScript ?: return
+        val inputs = uiComponents
+            .filterIsInstance<ScriptUIComponent.Input>()
+            .filter { it.value.isNotBlank() }
+            .associate { it.id to it.value.trim() }
 
-    fun select(id: String) = mutableState.update { current ->
-        val script = current.scripts.firstOrNull { it.id == id }
-        val functions = script?.let { extractFunctionNames(it.source) }.orEmpty()
-        current.copy(
-            selectedId = id,
-            testFunctionSuggestions = functions,
-            testFunction = functions.firstOrNull() ?: "",
-            testArgs = List(DEFAULT_ARGS_COUNT) { "" },
-            log = "",
-        )
-    }
-
-    fun onTestFunctionChange(value: String) = mutableState.update { it.copy(testFunction = value) }
-
-    fun addArg() = mutableState.update { it.copy(testArgs = it.testArgs + "") }
-
-    fun removeArg(index: Int) = mutableState.update {
-        if (index < 0 || index >= it.testArgs.size) it
-        else it.copy(testArgs = it.testArgs.filterIndexed { i, _ -> i != index })
-    }
-
-    fun updateArgValue(index: Int, value: String) = mutableState.update {
-        if (index < 0 || index >= it.testArgs.size) it
-        else it.copy(testArgs = it.testArgs.mapIndexed { i, arg -> if (i == index) value else arg })
-    }
-
-    /**
-     * Invokes the currently selected function name inside the script, forwarding the
-     * (non-blank) values of every dynamic argument row. Shows the JSON result in the log.
-     */
-    fun runFunction() {
-        val current = state.value
-        val script = current.selectedScript
-        if (script == null) {
-            mutableState.update { it.copy(log = "Select an enabled script first") }
-            return
-        }
-        val functionName = current.testFunction.trim()
-        if (functionName.isEmpty()) {
-            mutableState.update { it.copy(log = "Enter a function name first") }
-            return
-        }
-        val args = current.testArgs
-            .map { it.trim() }
-            .filter { it.isNotEmpty() }
-        viewModelScope.launch(Dispatchers.IO) {
+        mutableState.update { it.copy(executing = true, log = "") }
+        viewModelScope.launch {
             try {
-                mutableState.update { it.copy(executing = true, log = "") }
-                val res = executeScript.invoke(script, functionName, args)
-                withContext(Dispatchers.Main) {
-                    when (res) {
-                        is ScriptResult.Success -> mutableState.update { it.copy(executing = false, log = res.value) }
-                        is ScriptResult.Failure -> mutableState.update {
-                            it.copy(executing = false, log = "Error: ${res.error}")
-                        }
-                    }
+                val result = uiExecuteScript.invoke(script, functionName, inputs = inputs)
+                val message = when (result) {
+                    is ScriptResult.Success -> result.value
+                    is ScriptResult.Failure -> "Error: ${result.error}"
+                }
+                mutableState.update {
+                    it.copy(
+                        executing = false,
+                        log = message.ifEmpty { "`$functionName` returned nothing" },
+                    )
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {
-                withContext(Dispatchers.Main) {
-                    mutableState.update { it.copy(executing = false, log = "Error: ${e.message ?: e.javaClass.simpleName}") }
+                mutableState.update {
+                    it.copy(executing = false, log = "Error: ${e.message ?: e.javaClass.simpleName}")
                 }
             }
         }
+    }
+
+    /** Updates a single input's value as the user types, keeping the item keyed by id. */
+    fun updateInputValue(id: String, value: String) {
+        val index = uiComponents.indexOfFirst { (it as? ScriptUIComponent.Input)?.id == id }
+        if (index < 0) return
+        val input = uiComponents[index] as ScriptUIComponent.Input
+        if (input.value == value) return
+        uiComponents[index] = input.copy(value = value)
+    }
+
+    /** Adds a new input, or refreshes its hint when a script re-declares the same id. */
+    private fun addOrReplaceInput(id: String, hint: String) {
+        val index = uiComponents.indexOfFirst { it is ScriptUIComponent.Input && (it as ScriptUIComponent.Input).id == id }
+        if (index >= 0) {
+            val current = uiComponents[index] as ScriptUIComponent.Input
+            if (current.hint != hint) uiComponents[index] = current.copy(hint = hint)
+        } else {
+            uiComponents.add(ScriptUIComponent.Input(id, hint))
+        }
+    }
+
+    /** Marshals a UI mutation to the main thread and drops it if it belongs to a stale render. */
+    private fun postUi(session: Long, block: () -> Unit) {
+        viewModelScope.launch {
+            if (session != uiSession) return@launch
+            block()
+        }
+    }
+
+    private companion object {
+        const val BUILD_UI_FUNCTION = "buildUI"
     }
 }

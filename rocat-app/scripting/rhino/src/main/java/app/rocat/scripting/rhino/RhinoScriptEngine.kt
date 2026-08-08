@@ -4,6 +4,7 @@ import app.rocat.scripting.api.FetchResult
 import app.rocat.scripting.api.ScriptEngine
 import app.rocat.scripting.api.ScriptEnvironment
 import app.rocat.scripting.api.ScriptResult
+import app.rocat.scripting.api.ScriptUiBridge
 import app.rocat.scripting.api.model.Script
 import app.rocat.scripting.api.network.scriptFetch
 import kotlinx.coroutines.CancellationException
@@ -103,6 +104,62 @@ class RhinoScriptEngine(
         }
     }
 
+    /**
+     * Script-driven entry point used by the playground's `RoCatUI` buttons. Evaluates
+     * the script and invokes [functionName] passing the collected inputs as a single JS
+     * object (keys = input ids). Undefined return values are mapped to an empty string
+     * so a void handler renders as "returned nothing" instead of "null"/"undefined".
+     */
+    override suspend fun invokeNamedFunction(
+        script: Script,
+        environment: ScriptEnvironment,
+        functionName: String,
+        inputs: Map<String, String>,
+    ): ScriptResult = withContext(Dispatchers.IO) {
+        try {
+            val cx = contextFactory.enterContext()
+            try {
+                cx.setLanguageVersion(Context.VERSION_ES6)
+                val scope = createScope(cx, environment)
+                cx.evaluateString(scope, script.source, script.name, 1, null)
+
+                val fn = scope.get(functionName, scope)
+                if (fn !is Function) {
+                    ScriptResult.Failure("Script has no function named '$functionName'")
+                } else {
+                    val jsArgs = if (inputs.isEmpty()) {
+                        emptyArray()
+                    } else {
+                        val objectArg = cx.newObject(scope)
+                        inputs.forEach { (name, value) ->
+                            ScriptableObject.putProperty(objectArg, name, Context.javaToJS(value, scope))
+                        }
+                        arrayOf<Any?>(objectArg)
+                    }
+                    val result = fn.call(cx, scope, scope, jsArgs)
+                    val value = if (result === Undefined.instance) {
+                        ""
+                    } else {
+                        NativeJSON.stringify(cx, scope, result, null, null)?.toString() ?: ""
+                    }
+                    ScriptResult.Success(value)
+                }
+            } finally {
+                Context.exit()
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: EvaluatorException) {
+            ScriptResult.Failure("JS error: ${e.message}")
+        } catch (e: StackOverflowError) {
+            ScriptResult.Failure("Script caused a stack overflow (possible infinite recursion)")
+        } catch (e: Exception) {
+            ScriptResult.Failure(e.message ?: e.javaClass.simpleName)
+        } catch (e: Throwable) {
+            ScriptResult.Failure(e.message ?: e.javaClass.simpleName)
+        }
+    }
+
     private fun evaluate(script: Script, environment: ScriptEnvironment, args: List<String>): String {
         val cx = contextFactory.enterContext()
         return try {
@@ -121,11 +178,6 @@ class RhinoScriptEngine(
             Context.exit()
         }
     }
-
-    /**
-     * Builds the standard execution scope shared by [evaluate] and [invokeFunction]:
-     * standard objects + `fetch` + the [RoCatDOM] DOM bridge (+ optional `document`).
-     */
     private fun createScope(cx: Context, environment: ScriptEnvironment): Scriptable {
         val scope = cx.initStandardObjects()
 
@@ -137,6 +189,12 @@ class RhinoScriptEngine(
 
         // Expose the Jsoup-backed DOM bridge as the global `RoCatDOM` object.
         ScriptableObject.putProperty(scope, "RoCatDOM", RoCatDomBridge(cx, scope))
+
+        // Expose the script-driven Compose UI bridge as the global `RoCatUI` object.
+        val uiBridge = environment.ui
+        if (uiBridge != null) {
+            ScriptableObject.putProperty(scope, "RoCatUI", RoCatUiBridge(cx, scope, uiBridge))
+        }
 
         if (environment.document != null) {
             val docWrapper = Context.javaToJS(environment.document, scope)
@@ -305,6 +363,38 @@ private class RoCatDomBridge(
     }
 
     override fun getClassName(): String = "RoCatDomBridge"
+}
+
+/**
+ * The `RoCatUI` global: the script-driven Compose UI bridge exposed to user scripts.
+ * Every function forwards its (string) arguments to the [ScriptUiBridge] implementation
+ * supplied by the host app, which is responsible for hopping back to the main thread
+ * before updating the rendered UI. Failures inside the bridge never crash the script.
+ */
+private class RoCatUiBridge(
+    private val cx: Context,
+    private val scope: Scriptable,
+    private val ui: ScriptUiBridge,
+) : ScriptableObject() {
+
+    init {
+        put("addInput", this, Fn { args -> runSafe { ui.addInput(argString(args, 0), argString(args, 1)) } })
+        put("addButton", this, Fn { args -> runSafe { ui.addButton(argString(args, 0), argString(args, 1)) } })
+        put("thumbnailPreview", this, Fn { args -> runSafe { ui.thumbnailPreview(argString(args, 0)) } })
+        put("videoPreview", this, Fn { args -> runSafe { ui.videoPreview(argString(args, 0)) } })
+        put("clear", this, Fn { runSafe { ui.clear() } })
+        put("log", this, Fn { args -> runSafe { ui.log(argString(args, 0)) } })
+    }
+
+    override fun getClassName(): String = "RoCatUiBridge"
+
+    private fun runSafe(block: () -> Unit) {
+        try {
+            block()
+        } catch (_: Throwable) {
+            // A UI bridge failure must never crash the script evaluation.
+        }
+    }
 }
 
 /** Converts a [JsoupElement] into a plain JS object with a Cheerio-like API. */

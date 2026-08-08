@@ -20,6 +20,14 @@ interface ScriptEnvironment {
 
     /** Optional DOM-ish object a script can manipulate; `null` when unavailable. */
     val document: Any?
+
+    /**
+     * Optional bridge exposed to the script as the global `RoCatUI`. When non-null the
+     * engine installs the `RoCatUI.*` functions so scripts can drive a dynamic Compose
+     * UI (inputs, buttons, image/video previews, logs). `null` for plain executions.
+     */
+    val ui: ScriptUiBridge?
+        get() = null
 }
 
 /**
@@ -77,6 +85,24 @@ interface ScriptEngine {
         environment: ScriptEnvironment,
         functionName: String,
         args: List<String> = emptyList(),
+    ): ScriptResult
+
+    /**
+     * Evaluates [script] to register its functions, then invokes the function named
+     * [functionName] passing the collected inputs as a single JS object argument. This
+     * is the entry point used by script-driven buttons: the UI gathers every input
+     * value into [inputs] (`id -> value`) and the target function receives them keyed by
+     * id (e.g. `function onExtractClick(inputs) { inputs.video_url }`).
+     *
+     * @return the function's return value serialized to JSON (empty for a `void`
+     *   function), or a [ScriptResult.Failure] if the script does not compile, the
+     *   function is missing, or it throws.
+     */
+    suspend fun invokeNamedFunction(
+        script: Script,
+        environment: ScriptEnvironment,
+        functionName: String,
+        inputs: Map<String, String>,
     ): ScriptResult
 }
 

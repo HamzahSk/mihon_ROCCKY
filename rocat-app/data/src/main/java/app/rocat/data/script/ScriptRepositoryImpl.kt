@@ -6,6 +6,7 @@ import app.rocat.domain.script.ScriptRepository
 import app.rocat.scripting.api.FetchResult
 import app.rocat.scripting.api.ScriptEngine
 import app.rocat.scripting.api.ScriptEnvironment
+import app.rocat.scripting.api.ScriptUiBridge
 import app.rocat.scripting.api.model.DefaultScriptEnvironment
 import app.rocat.scripting.api.model.Script
 import app.rocat.scripting.api.network.scriptFetch
@@ -118,4 +119,17 @@ class ScriptManager(
             scriptClient.scriptFetch(url, method, headers, body)
         },
     )
+
+    /**
+     * Builds a fresh environment wired to the same network stack but exposing [ui] as
+     * the script's global `RoCatUI` object, letting a script drive a dynamic Compose
+     * UI (used by the playground).
+     */
+    fun createEnvironment(ui: ScriptUiBridge? = null): ScriptEnvironment =
+        DefaultScriptEnvironment(
+            fetchImpl = { url: String, method: String, headers: Map<String, String>, body: String? ->
+                scriptClient.scriptFetch(url, method, headers, body)
+            },
+            ui = ui,
+        )
 }
