@@ -15,22 +15,26 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -40,8 +44,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import android.widget.Toast
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.rocat.di.AppViewModelFactory
 import app.rocat.scripting.api.model.Script
@@ -88,31 +97,54 @@ fun PlaygroundScreen(
                 selectedId = state.selectedId,
                 onSelect = viewModel::select,
             )
-            OutlinedTextField(
-                value = state.targetUrl,
-                onValueChange = viewModel::onUrlChange,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                label = { Text("Target URL") },
-                singleLine = true,
-            )
-            Button(
-                onClick = viewModel::run,
-                enabled = !state.running,
-                modifier = Modifier.padding(16.dp),
-            ) {
-                if (state.running) {
-                    CircularProgressIndicator(modifier = Modifier.width(18.dp).height(18.dp))
-                    Spacer(Modifier.width(8.dp))
+
+            ElevatedCard(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Run main",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        text = "Executes the script's `main(...)` entry point.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = state.targetUrl,
+                        onValueChange = viewModel::onUrlChange,
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Target URL") },
+                        singleLine = true,
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Button(
+                        onClick = viewModel::run,
+                        enabled = !state.running,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        if (state.running) {
+                            CircularProgressIndicator(modifier = Modifier.width(18.dp).height(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                        }
+                        Text(if (state.running) "Running…" else "Run")
+                    }
                 }
-                Text(if (state.running) "Running…" else "Run")
             }
 
-            ResultCard(state.result)
-            TestExecutionSection(
-                param = state.testParam,
-                onParamChange = viewModel::onTestParamChange,
-                onSearch = viewModel::runSearch,
-                onDetail = viewModel::runDetail,
+            ResultCard(result = state.result)
+
+            TestFunctionSection(
+                function = state.testFunction,
+                suggestions = state.testFunctionSuggestions,
+                onFunctionChange = viewModel::onTestFunctionChange,
+                args = state.testArgs,
+                onAddArg = viewModel::addArg,
+                onRemoveArg = viewModel::removeArg,
+                onLabelChange = viewModel::updateArgLabel,
+                onValueChange = viewModel::updateArgValue,
+                onRun = viewModel::runFunction,
                 executing = state.executing,
                 log = state.log,
             )
@@ -160,21 +192,88 @@ private fun ScriptPicker(
 
 @Composable
 private fun ResultCard(result: String) {
-    Card(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+    CopyableResultCard(
+        title = "Result",
+        emptyHint = "No output yet. Run the script to see its return value here.",
+        content = result,
+        maxHeight = 480.dp,
+        modifier = Modifier.fillMaxWidth().padding(16.dp),
+    )
+}
+
+/**
+ * Card that renders [content] in a scrollable monospace text area and offers a small
+ * action bar to copy the output to the clipboard either as pretty-printed JSON or as
+ * the raw text/HTML.
+ */
+@Composable
+private fun CopyableResultCard(
+    title: String,
+    emptyHint: String,
+    content: String,
+    maxHeight: androidx.compose.ui.unit.Dp,
+    modifier: Modifier = Modifier,
+) {
+    val clipboard = LocalClipboardManager.current
+    val context = LocalContext.current
+
+    ElevatedCard(modifier = modifier) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Result", style = MaterialTheme.typography.titleSmall)
-            Spacer(Modifier.height(8.dp))
-            if (result.isEmpty()) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "No output yet. Run the script to see its return value here.",
+                    title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+
+            if (content.isEmpty()) {
+                Text(
+                    text = emptyHint,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             } else {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = "JSON",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(end = 8.dp),
+                    )
+                    TextButton(
+                        onClick = {
+                            val text = ResultFormatter.prettyJson(content)
+                            clipboard.setText(AnnotatedString(text))
+                            Toast.makeText(context, "JSON copied to clipboard", Toast.LENGTH_SHORT).show()
+                        },
+                    ) {
+                        Icon(Icons.Filled.ContentCopy, contentDescription = null, modifier = Modifier.width(16.dp).height(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Copy JSON")
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            clipboard.setText(AnnotatedString(content))
+                            Toast.makeText(context, "Text copied to clipboard", Toast.LENGTH_SHORT).show()
+                        },
+                    ) {
+                        Icon(Icons.Filled.ContentCopy, contentDescription = null, modifier = Modifier.width(16.dp).height(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Copy Text")
+                    }
+                }
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 Text(
-                    text = result,
+                    text = content,
                     style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                    modifier = Modifier.fillMaxWidth().heightIn(max = 480.dp).verticalScroll(rememberScrollState()),
+                    modifier = Modifier.fillMaxWidth().heightIn(max = maxHeight).verticalScroll(rememberScrollState()),
                 )
             }
         }
@@ -182,48 +281,133 @@ private fun ResultCard(result: String) {
 }
 
 /**
- * "Test Execution" section: runs a specific function in the selected script
- * (`search(query)` or `detail(url)`) with a dynamic parameter typed in the UI,
- * then shows the JSON return value in a scrollable log area.
+ * "Test Execution" section: pick any function inside the selected script and feed it
+ * a dynamic, user-editable list of arguments. Returns the JSON output in a
+ * scrollable, copyable log area.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TestExecutionSection(
-    param: String,
-    onParamChange: (String) -> Unit,
-    onSearch: () -> Unit,
-    onDetail: () -> Unit,
+private fun TestFunctionSection(
+    function: String,
+    suggestions: List<String>,
+    onFunctionChange: (String) -> Unit,
+    args: List<TestArg>,
+    onAddArg: () -> Unit,
+    onRemoveArg: (Int) -> Unit,
+    onLabelChange: (Int, String) -> Unit,
+    onValueChange: (Int, String) -> Unit,
+    onRun: () -> Unit,
     executing: Boolean,
     log: String,
 ) {
-    Card(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ElevatedCard(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Test Execution", style = MaterialTheme.typography.titleSmall)
             Text(
-                text = "Call a specific function inside the script and see its JSON output.",
+                "Test Function",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = "Invoke any named function inside the script. Add as many inputs as it needs.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(12.dp))
-            OutlinedTextField(
-                value = param,
-                onValueChange = onParamChange,
+
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = it },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Parameter (query or URL)") },
-                singleLine = true,
-            )
-            Spacer(Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onSearch, enabled = !executing) {
-                    if (executing) {
-                        CircularProgressIndicator(modifier = Modifier.width(16.dp).height(16.dp))
-                        Spacer(Modifier.width(8.dp))
+            ) {
+                OutlinedTextField(
+                    value = function,
+                    onValueChange = { onFunctionChange(it); expanded = false },
+                    readOnly = false,
+                    label = { Text("Function name") },
+                    placeholder = { Text("e.g. search, detail, main") },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
+                    modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                )
+                ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    suggestions.forEach { suggestion ->
+                        DropdownMenuItem(
+                            text = { Text(suggestion, style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace)) },
+                            onClick = {
+                                onFunctionChange(suggestion)
+                                expanded = false
+                            },
+                        )
                     }
-                    Text("Run Search")
-                }
-                OutlinedButton(onClick = onDetail, enabled = !executing) {
-                    Text("Run Detail")
                 }
             }
+
+            Spacer(Modifier.height(12.dp))
+
+            Text(
+                "Inputs",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(4.dp))
+
+            args.forEachIndexed { index, arg ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    OutlinedTextField(
+                        value = arg.label,
+                        onValueChange = { onLabelChange(index, it) },
+                        modifier = Modifier.width(100.dp),
+                        label = { Text("Key") },
+                        singleLine = true,
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    OutlinedTextField(
+                        value = arg.value,
+                        onValueChange = { onValueChange(index, it) },
+                        modifier = Modifier.weight(1f),
+                        label = { Text("Value") },
+                        singleLine = true,
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    IconButton(
+                        onClick = { onRemoveArg(index) },
+                        enabled = args.size > 1,
+                    ) {
+                        Icon(
+                            Icons.Filled.Delete,
+                            contentDescription = "Remove input",
+                            tint = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                }
+            }
+
+            TextButton(onClick = onAddArg, modifier = Modifier.padding(top = 4.dp)) {
+                Icon(Icons.Filled.Add, contentDescription = null)
+                Spacer(Modifier.width(4.dp))
+                Text("Add Input")
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            Button(
+                onClick = onRun,
+                enabled = !executing,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                if (executing) {
+                    CircularProgressIndicator(modifier = Modifier.width(16.dp).height(16.dp))
+                    Spacer(Modifier.width(8.dp))
+                }
+                Text(if (executing) "Running…" else "Run Function")
+            }
+
             Spacer(Modifier.height(12.dp))
             HorizontalDivider()
 
@@ -235,13 +419,13 @@ private fun TestExecutionSection(
                     modifier = Modifier.padding(top = 8.dp),
                 )
             } else {
-                Text(
-                    text = log,
-                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                    modifier = Modifier.fillMaxWidth()
-                        .heightIn(max = 320.dp)
-                        .padding(top = 8.dp)
-                        .verticalScroll(rememberScrollState()),
+                Spacer(Modifier.height(8.dp))
+                CopyableResultCard(
+                    title = "Log",
+                    emptyHint = "",
+                    content = log,
+                    maxHeight = 320.dp,
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }

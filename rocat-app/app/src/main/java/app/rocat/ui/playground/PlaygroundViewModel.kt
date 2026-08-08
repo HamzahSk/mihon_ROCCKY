@@ -14,8 +14,19 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
+ * One editable argument row in the playground: an optional label/name plus the
+ * value that gets forwarded to the invoked script function.
+ */
+data class TestArg(
+    val label: String = "",
+    val value: String = "",
+)
+
+/**
  * Test runner for installed scripts. Only enabled scripts are runnable; the chosen
  * script's `main(targetUrl)` is executed and its return value shown in the UI.
+ * A separate "Test Execution" section can invoke any named function inside the
+ * script (`search`, `detail`, ...) with a dynamic, user-controlled list of args.
  *
  * Every execution failure (engine error, validation, or a stray Throwable) is written
  * INTO the Result / log area instead of being rendered as floating red text, and is
@@ -32,7 +43,9 @@ class PlaygroundViewModel(
         val targetUrl: String = "https://example.com/",
         val running: Boolean = false,
         val result: String = "",
-        val testParam: String = "",
+        val testFunction: String = "search",
+        val testFunctionSuggestions: List<String> = listOf("search", "detail", "main"),
+        val testArgs: List<TestArg> = listOf(TestArg()),
         val executing: Boolean = false,
         val log: String = "",
     ) {
@@ -61,7 +74,24 @@ class PlaygroundViewModel(
 
     fun onUrlChange(value: String) = mutableState.update { it.copy(targetUrl = value) }
 
-    fun onTestParamChange(value: String) = mutableState.update { it.copy(testParam = value) }
+    fun onTestFunctionChange(value: String) = mutableState.update { it.copy(testFunction = value) }
+
+    fun addArg() = mutableState.update { it.copy(testArgs = it.testArgs + TestArg()) }
+
+    fun removeArg(index: Int) = mutableState.update {
+        if (index < 0 || index >= it.testArgs.size) it
+        else it.copy(testArgs = it.testArgs.filterIndexed { i, _ -> i != index })
+    }
+
+    fun updateArgLabel(index: Int, label: String) = mutableState.update {
+        if (index < 0 || index >= it.testArgs.size) it
+        else it.copy(testArgs = it.testArgs.mapIndexed { i, arg -> if (i == index) arg.copy(label = label) else arg })
+    }
+
+    fun updateArgValue(index: Int, value: String) = mutableState.update {
+        if (index < 0 || index >= it.testArgs.size) it
+        else it.copy(testArgs = it.testArgs.mapIndexed { i, arg -> if (i == index) arg.copy(value = value) else arg })
+    }
 
     fun run() {
         val current = state.value
@@ -94,27 +124,29 @@ class PlaygroundViewModel(
         }
     }
 
-    /** Calls `search(query)` in the selected script and shows its JSON result. */
-    fun runSearch() = runFunction("search")
-
-    /** Calls `detail(url)` in the selected script and shows its JSON result. */
-    fun runDetail() = runFunction("detail")
-
-    private fun runFunction(functionName: String) {
+    /**
+     * Invokes the currently selected function name inside the script, forwarding the
+     * (non-blank) values of every dynamic argument row. Shows the JSON result in the log.
+     */
+    fun runFunction() {
         val current = state.value
         val script = current.selectedScript
         if (script == null) {
             mutableState.update { it.copy(log = "Select an enabled script first") }
             return
         }
-        if (current.testParam.isBlank()) {
-            mutableState.update { it.copy(log = "Enter a parameter (query or URL) first") }
+        val functionName = current.testFunction.trim()
+        if (functionName.isEmpty()) {
+            mutableState.update { it.copy(log = "Enter a function name first") }
             return
         }
+        val args = current.testArgs
+            .map { it.value.trim() }
+            .filter { it.isNotEmpty() }
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 mutableState.update { it.copy(executing = true, log = "") }
-                val res = executeScript.invoke(script, functionName, listOf(current.testParam.trim()))
+                val res = executeScript.invoke(script, functionName, args)
                 withContext(Dispatchers.Main) {
                     when (res) {
                         is ScriptResult.Success -> mutableState.update { it.copy(executing = false, log = res.value) }

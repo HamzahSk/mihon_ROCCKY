@@ -31,6 +31,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.rocat.di.AppViewModelFactory
@@ -80,6 +82,7 @@ fun ImportScriptScreen(
             Text(
                 text = "Import from URL",
                 style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(start = 16.dp, top = 16.dp),
             )
             Text(
@@ -98,7 +101,7 @@ fun ImportScriptScreen(
             Button(
                 onClick = { viewModel.importFromUrl { onBack() } },
                 enabled = !state.busy,
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
             ) {
                 if (state.busy) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp))
@@ -113,7 +116,12 @@ fun ImportScriptScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             ) {
-                Text("Paste source", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                Text(
+                    "Paste source",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.weight(1f),
+                )
                 OutlinedButton(onClick = viewModel::loadExample) {
                     Text("Load example")
                 }
@@ -123,12 +131,12 @@ fun ImportScriptScreen(
                 onValueChange = viewModel::onSourceChange,
                 modifier = Modifier.fillMaxWidth().padding(16.dp).heightIn(min = 220.dp),
                 label = { Text("Script source") },
-                textStyle = MaterialTheme.typography.bodySmall,
+                textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
             )
             Button(
                 onClick = { viewModel.importFromSource { onBack() } },
                 enabled = !state.busy,
-                modifier = Modifier.padding(horizontal = 16.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             ) {
                 Text("Import source")
             }
