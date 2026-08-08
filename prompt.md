@@ -1,101 +1,46 @@
-
 # Role and Objective
-Kamu adalah AI Software Engineer dan Android Developer handal. Kita masuk ke **Tahap 13: Full Script-Driven Canvas & Grid System (Mihon-like App Experience)**.
-Tujuan tahap ini adalah menyempurnakan UI agar skrip berjalan di layar khusus (*blank canvas*) layaknya membuka ekstensi di Mihon. Skrip tidak lagi dieksekusi di "Playground" yang kaku, melainkan di layar kanvas kosong di mana skrip JS memegang kendali penuh untuk menggambar input, tombol, gambar, grid 3x3, dan me- *redraw* UI untuk berpindah halaman (misal: dari Search ke Detail).
+Kamu adalah AI Software Engineer dan Android Developer handal. Kita sekarang masuk ke **Tahap 14: Production Readiness (Build, Sign, Splits, & Firebase)**.
+Fokus tahap ini adalah pada konfigurasi Gradle untuk mempersiapkan rilis aplikasi `rocat-app`. Kita perlu mengatur *Signing Config*, memecah APK berdasarkan arsitektur CPU (*ABI Splits*), menyiapkan berbagai *Build Types*, serta menyiapkan infrastruktur dasar untuk Firebase (opsional).
 
 # Memory and Constraints (CRITICAL)
 1. **BACA ATURAN MEMORI:**
-   - Buka dan baca file `memory_prompt.md`.
-   - Wajib memperbarui log di `ai_memory/00_INDEX.md` dan membuat catatan di `ai_memory/task_YYYYMMDD_HHMM_tahap13_full_script_canvas_and_grid.md` setelah tahap ini selesai.
-2. **Build Verification:**
-   - Pastikan setiap perubahan dikonfirmasi dengan `./gradlew assembleDebug` tanpa *error* kompilasi.
-
----
-
-# Feature Requirements Analysis
-1. **App Cover & Metadata:**
-   - Di `ScriptsScreen` (daftar skrip), gunakan metadata `@icon` atau `@iconURL` dari skrip untuk memuat gambar *cover* (gunakan Coil `AsyncImage`). Jika tidak ada, gunakan ikon *default*.
-2. **`ScriptCanvasScreen` (Pengganti Playground):**
-   - Saat skrip diklik, jangan buka *PlaygroundScreen* yang lama. Buka `ScriptCanvasScreen` baru.
-   - Layar ini benar-benar kosong. Hanya ada `TopAppBar` di bagian atas berisi **Tombol Back** dan **Judul (metadata `@name` skrip)**.
-   - Saat layar ini dibuka, otomatis panggil fungsi JS `onLaunch()` untuk menggambar UI awal.
-3. **Ekspansi `RoCatUI` (Grid & Navigation):**
-   - Tambahkan fungsi `RoCatUI.addGrid(columns, itemsJson, onClickFunctionName)` ke *native bridge*.
-     - `columns`: Jumlah kolom (misal: 3 untuk grid 3x3).
-     - `itemsJson`: *String* JSON berisi *array of objects* (harus memiliki setidaknya properti `image` dan `title`, serta data *custom* lainnya).
-     - `onClickFunctionName`: Nama fungsi JS yang akan dipanggil saat salah satu item di grid diklik, dengan me- *passing* data item tersebut (sebagai JSON string/object).
-   - Fungsi `RoCatUI.clear()` akan bertindak sebagai mekanisme "pindah halaman" (menghapus UI saat ini lalu fungsi JS menggambar UI detail).
+   - Wajib memperbarui log di `rocat-app/ai_memory/00_INDEX.md` dan membuat catatan di `rocat-app/ai_memory/task_YYYYMMDD_HHMM_tahap14_production_readiness.md` setelah tahap ini selesai.
+2. **Context Path (SANGAT PENTING):**
+   - Proyek ini berada di dalam *sub-directory* `rocat-app/`. *Root directory* adalah milik aplikasi lain (Mihon).
+   - **SEMUA** modifikasi file (`build.gradle.kts`, `libs.versions.toml`, dll) **WAJIB** dilakukan di dalam folder `rocat-app/`, bukan di *root*.
+3. **Safe Build Protocol:**
+   - Jangan membuat *build* gagal (*crash*) jika `keystore.properties`, `keystore.jks`, atau `google-services.json` tidak ditemukan. Gunakan blok `try-catch` atau pengecekan `file.exists()` di dalam skrip Kotlin Gradle.
+   - Verifikasi akhir wajib menggunakan `cd rocat-app && ./gradlew :app:assembleDebug` dan pastikan sukses.
 
 ---
 
 # Execution Plan (Kerjakan Secara Bertahap)
 
-### Tahap 13.1: Persiapan Metadata & List UI
-- Update `ScriptsScreen` untuk menampilkan `@icon` / `@iconURL` (jika tersedia di `ScriptMetadata`) di sebelah kiri setiap item list skrip menggunakan Coil.
-- Tambahkan rute navigasi baru `ScriptCanvasScreen` di NavGraph, dan arahkan item klik dari `ScriptsScreen` ke layar baru ini.
+### Tahap 14.1: Konfigurasi Signing & Keystore
+- Buka file `rocat-app/app/build.gradle.kts`.
+- Tambahkan logika Kotlin untuk membaca file `keystore.properties` dari folder `rocat-app/` (jika filenya ada). File ini akan mencari properti `storeFile`, `storePassword`, `keyAlias`, `keyPassword`.
+- Buat blok `signingConfigs` di dalam blok `android { ... }`.
+- Konfigurasikan `release` signing. Jika file properti atau keystore tidak ada, pasang *fallback* menggunakan konfigurasi *debug* (atau biarkan kosong/jangan *throw error*) agar kompilasi di CI/CD atau mesin lokal yang belum di- *setup* tidak putus.
 
-### Tahap 13.2: Ekspansi `RoCatUI` Bridge & UI State
-- Update `ScriptUIComponent` (*sealed class* dari Tahap 12) dengan penambahan:
-  ```kotlin
-  data class Grid(val columns: Int, val items: List<GridItem>, val onClickFunction: String) : ScriptUIComponent()
+### Tahap 14.2: Konfigurasi ABI Splits (Universal & Spesifik)
+- Di dalam blok `android { ... }` pada `rocat-app/app/build.gradle.kts`, tambahkan konfigurasi `splits` untuk memecah APK (ABI).
+- Atur `isEnable = true`.
+- Masukkan daftar arsitektur standar: `"armeabi-v7a", "arm64-v8a", "x86", "x86_64"`.
+- Atur `isUniversalApk = true` agar Gradle tetap menghasilkan satu APK gabungan selain APK per-arsitektur.
 
-```
-*(Buat data class GridItem yang berisi properti dasar seperti title, imageUrl, dan rawJsonPayload untuk diteruskan kembali ke JS).*
- * Di UiBridge (RoCatUI), tambahkan fungsi addGrid(columns: Int, itemsJsonString: String, onClickFunction: String). Parse JSON *string* menggunakan org.json.JSONArray atau *kotlinx.serialization* lalu masukkan ke *state*.
-### Tahap 13.3: Implementasi ScriptCanvasScreen (Jetpack Compose)
- * Buat Scaffold dengan TopAppBar (tampilkan nama skrip).
- * Bagian konten adalah LazyColumn yang me- *render* ScriptUIComponent.
- * Untuk komponen Grid, gunakan LazyVerticalGrid (dengan perhitungan *height* statis/terukur agar bisa masuk di dalam LazyColumn, atau ubah keseluruhan *layout* menggunakan struktur yang mendukung grid dan list kombinasi).
- * Saat item Grid diklik, panggil ExecuteScript.invoke(..., onClickFunction, listOf(item.rawJsonPayload)).
-### Tahap 13.4: Verifikasi dengan Script "Search to Detail"
- * Gunakan skrip JS berikut untuk menguji transisi Search -> Grid -> Detail:
-```javascript
-// ==UserScript==
-// @name        Manga Scraper Mock
-// @version     1.0.0
-// @icon        [https://via.placeholder.com/150](https://via.placeholder.com/150)
-// ==/UserScript==
+### Tahap 14.3: Pengaturan Build Types
+- Rombak blok `buildTypes` di `rocat-app/app/build.gradle.kts`.
+- **debug**: Konfigurasi standar untuk pengembangan (atur `applicationIdSuffix = ".debug"` agar bisa diinstal berdampingan dengan versi rilis).
+- **release**: Aktifkan `isMinifyEnabled = true`, `isShrinkResources = true`, gunakan `signingConfig = signingConfigs.getByName("release")`, dan definisikan Proguard *rules* (misal: `getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"`).
+- **preview**: Buat *build type* baru bernama `preview` menggunakan `initWith(getByName("release"))`. Tambahkan `applicationIdSuffix = ".preview"`. Ini berguna untuk menguji versi rilis tanpa menimpa aplikasi *production*.
 
-function onLaunch() {
-    RoCatUI.clear();
-    RoCatUI.addInput("query", "Cari Manga...");
-    RoCatUI.addButton("Search", "doSearch");
-}
+### Tahap 14.4: Persiapan Integrasi Firebase (Opsional & Aman)
+- Buka `rocat-app/gradle/libs.versions.toml`.
+- Tambahkan versi dan *library* untuk Firebase BOM (`com.google.firebase:firebase-bom`), Analytics, dan Crashlytics.
+- Tambahkan *declaration* plugin Google Services (`com.google.gms.google-services`) dan Crashlytics di bagian `[plugins]`.
+- Di `rocat-app/app/build.gradle.kts`, buat logika *conditional plugin application*. Terapkan plugin `com.google.gms.google-services` **hanya** jika file `rocat-app/app/google-services.json` terdeteksi menggunakan `file("google-services.json").exists()`. Jika tidak ada, jangan *apply* pluginnya agar Gradle tidak *error*.
 
-function doSearch(inputs) {
-    var q = inputs.query;
-    if (!q) { RoCatUI.log("Masukkan kata kunci!"); return; }
-    
-    RoCatUI.clear();
-    RoCatUI.addButton("Back", "onLaunch");
-    RoCatUI.log("Hasil pencarian untuk: " + q);
-    
-    // Mock Data Grid
-    var results = [
-        { id: "1", title: "Manga A", image: "[https://via.placeholder.com/300/FF0000](https://via.placeholder.com/300/FF0000)" },
-        { id: "2", title: "Manga B", image: "[https://via.placeholder.com/300/00FF00](https://via.placeholder.com/300/00FF00)" },
-        { id: "3", title: "Manga C", image: "[https://via.placeholder.com/300/0000FF](https://via.placeholder.com/300/0000FF)" },
-        { id: "4", title: "Manga D", image: "[https://via.placeholder.com/300/FFFF00](https://via.placeholder.com/300/FFFF00)" }
-    ];
-    
-    // Tampilkan Grid 3 Kolom
-    RoCatUI.addGrid(3, JSON.stringify(results), "openDetail");
-}
-
-function openDetail(itemJsonString) {
-    var item = JSON.parse(itemJsonString);
-    RoCatUI.clear();
-    RoCatUI.addButton("Back to Search", "onLaunch"); // Tombol kembali
-    RoCatUI.thumbnailPreview(item.image);
-    RoCatUI.log("Judul: " + item.title);
-    RoCatUI.log("ID Manga: " + item.id);
-    RoCatUI.addButton("Baca Chapter 1", "readChapter");
-}
-
-function readChapter() {
-    RoCatUI.log("Membuka chapter...");
-}
-
-```
- * Jalankan ./gradlew :app:assembleDebug.
- * Perbarui status di ai_memory/00_INDEX.md menjadi **Tahap 13 SELESAI** dan catat perubahan arsitektur kanvas ini.
+### Tahap 14.5: Verifikasi & Pembaruan Memori
+- Jalankan sinkronisasi Gradle pada `rocat-app`.
+- Jalankan perintah CLI: `cd rocat-app && ./gradlew :app:assembleDebug` untuk memastikan konfigurasi `build.gradle.kts` yang baru tidak merusak proyek.
+- Perbarui status di `rocat-app/ai_memory/00_INDEX.md` menjadi **Tahap 14 SELESAI** dan catat perubahan yang baru saja dilakukan.
