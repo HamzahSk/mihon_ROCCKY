@@ -1,65 +1,77 @@
+
 # Role and Objective
-Kamu adalah AI Software Engineer dan Android Developer handal. Tahap 10 (Stealth Browser, Cookie Manager, dan Cloudflare Interceptor) telah selesai diimplementasikan.
-
-Tugasmu di **Tahap 11** adalah melakukan **Peningkatan UI (UI Polish) & Pembuatan Playground Dinamis**. Halaman Playground harus disesuaikan agar antarmuka eksekusi skrip (*testing UI*) jauh lebih fleksibel: input parameter tidak lagi kaku/statis, melainkan bisa ditambah/disesuaikan dinamis sesuai kebutuhan fungsi skrip, serta dilengkapi tombol untuk menyalin (*copy*) hasil output dalam format JSON maupun Teks/HTML.
-
-# Memory and Constraints (CRITICAL)
-1. **BACA ATURAN MEMORI:**
-   - Buka dan baca file `memory_prompt.md`.
-   - Wajib memperbarui log di `ai_memory/00_INDEX.md` dan membuat catatan tugas terperinci di `ai_memory/task_YYYYMMDD_HHMM_tahap11_ui_improvements_and_dynamic_playground.md` setelah tahap ini selesai.
-2. **Build Verification:**
-   - Pastikan setiap perubahan dikonfirmasi dengan `./gradlew assembleDebug` tanpa *error* kompilasi.
-
----
+Kamu adalah AI Software Engineer dan Android Developer handal. Kita perlu melakukan **Hotfix & Refinement UI Playground (Tahap 11.5)** karena implementasi Tahap 11 sebelumnya memiliki beberapa bug UX dan logika yang kurang optimal.
 
 # Bug & UI Requirements Analysis
-1. **Playground Input & Button Flexibility:**
-   - Saat ini input parameter dan tombol eksekusi (`Run Search`, `Run Detail`) di Playground masih bersifat statis.
-   - Dibutuhkan mekanisme di mana pengguna dapat menambah/menghapus baris input parameter (*arguments*) secara dinamis sesuai kebutuhan skrip yang dipanggil.
-   - Sediakan pemilih fungsi (*Function Selector* / Dropdown atau Chip) atau tombol dinamis untuk menentukan fungsi mana yang ingin dijalankan di dalam skrip.
-2. **Copy Result Functionality:**
-   - Pengguna perlu mengambil hasil *parsing* atau *scraping* dengan mudah.
-   - Tambahkan tombol **"Copy JSON"** dan **"Copy Raw/HTML Text"** pada *Log/Result Card* menggunakan `ClipboardManager` Android disertai *Toast notification*.
-3. **Peningkatan Kualitas UI (Material 3 Refinement):**
-   - Rapikan tata letak (*layout*), *padding*, *card elevation*, dan *loading state/progress indicator* di seluruh layar utama (`ScriptsScreen`, `ScriptDetailScreen`, `ImportScriptScreen`, dan `PlaygroundScreen`).
+Berdasarkan pengujian manual dan *screenshot*, terdapat masalah berikut di `PlaygroundScreen`:
+1. **Bagian "Run main" Redundan:** Ada *card* "Run main" (Target URL) di bagian atas yang sudah tidak diperlukan karena kita sudah punya "Test Function" di bawahnya. Ini harus dihapus.
+2. **Auto-Detect Function Names:** *Dropdown/Function Selector* saat ini tidak mendeteksi fungsi yang ada di dalam skrip. Seharusnya ViewModel memindai kode skrip (misal menggunakan Regex `function\s+([a-zA-Z_$][\w$]*)\s*\(`) dan menampilkan daftar fungsi tersebut secara otomatis di *dropdown*.
+3. **Input Fleksibel & Cerdas:** Baris input "Key" dan "Value" default tidak boleh muncul jika skrip tidak membutuhkannya. Secara *default*, state *arguments* harus kosong (`emptyList()`). Jika *user* butuh argumen, barulah mereka menekan tombol "+ Add Input". Contoh: skrip yang hanya memiliki `function main()` tanpa parameter harus bisa langsung di-run tanpa terganggu oleh *form* input kosong.
+4. **Log/Result JSON Pretty Print & Selectable:** - Hasil *output* JSON saat ini hanya berupa *raw string* (minified). Perbaiki `ResultFormatter.kt` agar benar-benar melakukan *pretty-print* (Parse *raw string* ke `JsonElement` lalu *encode* ulang dengan `Json { prettyPrint = true }`).
+   - Teks *output* di dalam *Log Card* wajib dibungkus dengan `SelectionContainer { ... }` (Jetpack Compose) agar pengguna bisa menyeleksi (*highlight*) dan menyalin sebagian teks secara manual.
 
----
+# Execution Plan (Tahap 11.5)
 
-# Execution Plan (Kerjakan Secara Bertahap)
+### 1. Update `PlaygroundViewModel.kt`
+- Hapus *state* atau fungsi yang berkaitan dengan *card* "Run main" lama jika masih ada.
+- Tambahkan fungsi `extractFunctionNames(scriptCode: String): List<String>` menggunakan Regex untuk mencari nama-nama fungsi di dalam skrip.
+- Saat skrip dimuat, panggil fungsi tersebut dan jadikan hasilnya sebagai opsi di *Function Selector* UI. Set fungsi pertama (jika ada) sebagai *default selected function*.
+- Ubah inisialisasi `testArgs` menjadi *list* kosong secara *default*.
 
-### Tahap 11.1: Pembuatan Fleksibilitas Input & Dynamic Buttons di Playground
-1. **Dynamic Parameter Inputs State (`PlaygroundViewModel` & `PlaygroundScreen`):**
-   - Ubah state parameter tunggal menjadi daftar input dinamis: `List<String>` atau `List<Pair<String, String>>` (Label/Key & Value).
-   - Di UI Compose, tampilkan tombol **"+ Add Input/Arg"** dan tombol hapus (**IconButton Delete**) di setiap baris input agar pengguna bisa memasukkan beberapa parameter jika skrip membutuhkannya.
-   - Jika skrip tidak membutuhkan input, input field bisa disembunyikan atau dikosongkan.
-2. **Dynamic Function Execution:**
-   - Buat komponen *Dropdown Menu* atau *Chip Selector* untuk memilih fungsi target di skrip (misal: `search`, `detail`, atau nama fungsi kustom lain yang diketik pengguna).
-   - Tambahkan tombol utama eksekusi **"Run Function"** yang secara otomatis meneruskan parameter-parameter tersebut ke `invokeFunction(script, env, functionName, args)`.
+### 2. Update `PlaygroundScreen.kt`
+- **HAPUS** *Card* "Run main" yang berada di atas. Sisakan bagian *Test Function* dan *Log/Result* saja.
+- Tampilkan daftar input *Key/Value* **hanya** jika `testArgs` tidak kosong. 
+- Hubungkan *Dropdown Menu* dengan *list* fungsi hasil deteksi dari ViewModel.
+- Bungkus komponen `Text` yang menampilkan hasil eksekusi (di dalam `CopyableResultCard` atau *Log area*) dengan `SelectionContainer` dari Jetpack Compose.
 
-### Tahap 11.2: Fitur Copy Output (JSON & Text/HTML)
-1. **Action Bar pada Result/Log Card:**
-   - Di bagian atas area teks hasil/log (*Result Card*), buat *Action Bar* kecil yang berisi indikator format dan dua tombol aksi:
-     - **Tombol "Copy JSON"**: Menyalin hasil keluaran yang telah diformat sebagai JSON (pretty-printed jika memungkinkan).
-     - **Tombol "Copy Text/HTML"**: Menyalin teks mentah (*raw string*) atau HTML hasil *fetch/scraping*.
-2. **Integrasi ClipboardManager:**
-   - Gunakan `LocalClipboardManager.current` di Jetpack Compose untuk menyalin teks ke *clipboard* Android.
-   - Tampilkan *Toast* informatif (misal: *"JSON copied to clipboard"*) saat tombol ditekan.
+### 3. Update `ResultFormatter.kt`
+- Perbaiki logika `prettyJson()`. Jika hasil dari Rhino adalah *raw JSON string*, parse terlebih dahulu:
+  ```kotlin
+  try {
+      val jsonElement = Json.parseToJsonElement(rawString)
+      val format = Json { prettyPrint = true }
+      return format.encodeToString(JsonElement.serializer(), jsonElement)
+  } catch (e: Exception) {
+      return rawString // Fallback jika bukan JSON valid
+  }
 
-### Tahap 11.3: Polishing UI Seluruh Aplikasi
-1. **Peningkatan Komponen UI:**
-   - **PlaygroundScreen**: Gunakan `Card` berbatas halus (*OutlinedCard* / *ElevatedCard*), *monospace font* yang nyaman dibaca untuk log result, serta *HorizontalScroll* / *VerticalScroll* yang responsif.
-   - **ScriptsScreen & ScriptDetailScreen**: Perbaiki *spacing*, bentuk *chip* status (Active/Inactive), dan konfirmasi saat menghapus skrip.
-   - Tampilkan *CircularProgressIndicator* yang rapi saat skrip sedang mengeksekusi proses jaringan.
+```
+### 4. Build & Verifikasi
+ * Uji eksekusi menggunakan contoh skrip ini (di mana main tidak memiliki argumen, jadi bisa langsung di-run):
+```javascript
+// ==UserScript==
+// @name        MythToons HTML Tester
+// @version     1.0.0
+// @description Fetch & test HTML from MythToons (sync fetch + RoCatDOM).
+// @author      Tester
+// @match       [https://mythtoons.org/](https://mythtoons.org/)*
+// @grant       none
+// ==/UserScript==
 
-### Tahap 11.4: Verifikasi & Pembaruan Memori
-1. **Build & Test:**
-   - Jalankan `./gradlew :app:assembleDebug`.
-   - Jalankan unit test (`./gradlew test`) untuk memastikan tidak ada regresi pada logika eksekusi skrip.
-2. **Pembaruan Memori:**
-   - Catat detail perbaikan UI dan arsitektur Playground dinamis ke `ai_memory/task_YYYYMMDD_HHMM_tahap11_ui_improvements_and_dynamic_playground.md`.
-   - Perbarui status di `ai_memory/00_INDEX.md` menjadi **Tahap 11 SELESAI**.
+function main() {
+    return testHtml();
+}
 
----
+function testHtml() {
+    var url = "[https://mythtoons.org/](https://mythtoons.org/)";
+    var res = fetch(url, "GET", {}, null);
+    if (!res.ok) { return { error: "HTTP " + res.status, message: res.body }; }
+    var html = res.text();
+    return parseTest(html, url);
+}
 
-**Instruksi Eksekusi:**
-Konfirmasi bahwa kamu membaca `memory_prompt.md`. Mulai dari **Tahap 11.1** untuk membuat input & button dinamis di `PlaygroundScreen`, lanjutkan ke **Tahap 11.2** untuk fitur Copy JSON/Text, lakukan uji kompilasi `./gradlew assembleDebug`, dan perbarui riwayat memori setelah selesai.
+function parseTest(html, url) {
+    var root = RoCatDOM.parse(html);
+    var titleEl = root.find("title");
+    return {
+        test_url: url,
+        page_title: titleEl.length > 0 ? titleEl[0].text : "Title tidak ditemukan",
+        html_length: html.length,
+        html_preview: html.substring(0, 500) 
+    };
+}
+
+```
+ * Pastikan ./gradlew assembleDebug berhasil.
+ * Perbarui log memori di ai_memory/00_INDEX.md dengan status **Tahap 11.5 SELESAI** dan catat perubahan ini.
+Tolong kerjakan sekarang dan berikan laporan jika sudah selesai!
