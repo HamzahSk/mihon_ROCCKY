@@ -6,6 +6,7 @@ import app.rocat.scripting.api.ScriptEnvironment
 import app.rocat.scripting.api.ScriptResult
 import app.rocat.scripting.api.model.Script
 import app.rocat.scripting.api.network.scriptFetch
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -49,12 +50,17 @@ class RhinoScriptEngine(
     ): ScriptResult = withContext(Dispatchers.IO) {
         try {
             ScriptResult.Success(evaluate(script, environment, args))
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: EvaluatorException) {
             // Syntax/compile errors are reported back to the UI, never rethrown.
             ScriptResult.Failure("JS error: ${e.message}")
         } catch (e: StackOverflowError) {
             ScriptResult.Failure("Script caused a stack overflow (possible infinite recursion)")
         } catch (e: Exception) {
+            ScriptResult.Failure(e.message ?: e.javaClass.simpleName)
+        } catch (e: Throwable) {
+            // Last-resort guard so a runtime error from JS never force-closes the app.
             ScriptResult.Failure(e.message ?: e.javaClass.simpleName)
         }
     }
@@ -84,11 +90,15 @@ class RhinoScriptEngine(
             } finally {
                 Context.exit()
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: EvaluatorException) {
             ScriptResult.Failure("JS error: ${e.message}")
         } catch (e: StackOverflowError) {
             ScriptResult.Failure("Script caused a stack overflow (possible infinite recursion)")
         } catch (e: Exception) {
+            ScriptResult.Failure(e.message ?: e.javaClass.simpleName)
+        } catch (e: Throwable) {
             ScriptResult.Failure(e.message ?: e.javaClass.simpleName)
         }
     }
@@ -104,9 +114,9 @@ class RhinoScriptEngine(
             if (mainFn is Function) {
                 val jsArgs = args.map { Context.javaToJS(it, scope) }.toTypedArray()
                 val result = mainFn.call(cx, scope, scope, jsArgs)
-                return result?.toString() ?: ""
+                return valueToString(result)
             }
-            evaluated?.toString() ?: ""
+            valueToString(evaluated)
         } finally {
             Context.exit()
         }
@@ -174,6 +184,10 @@ private class ScriptContextFactory(private val instructionBudget: Long) : Contex
                 }
             }
         }.apply {
+            // Android's classloader cannot load standard JVM .class files produced by
+            // Rhino's bytecode compiler, so force pure interpreter mode. Without this,
+            // executing a script on Android throws "can't load this type of class file".
+            optimizationLevel = -1
             setInstructionObserverThreshold(10_000)
         }
     }
@@ -343,6 +357,18 @@ private fun argStringOrNull(args: Array<out Any?>, index: Int): String? {
     val value = args.getOrNull(index) ?: return null
     if (value === Undefined.instance) return null
     return Context.toString(value)
+}
+
+/**
+ * Converts a Rhino-evaluated value to its display string. The interpreter represents
+ * whole-number arithmetic as [Double] (e.g. `1 + 41` -> 42.0), so integral doubles
+ * are normalized to their plain integer form to avoid a spurious `.0` in results.
+ */
+private fun valueToString(value: Any?): String = when (value) {
+    null -> ""
+    is Double -> if (value.isFinite() && value == Math.floor(value)) value.toLong().toString() else value.toString()
+    is Float -> if (value.isFinite() && value == Math.floor(value.toDouble())) value.toLong().toString() else value.toString()
+    else -> value.toString()
 }
 
 /** A Rhino function that receives its raw JS arguments for a Kotlin lambda. */

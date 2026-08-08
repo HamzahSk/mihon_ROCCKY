@@ -7,6 +7,7 @@ import app.rocat.domain.script.ExecuteScript
 import app.rocat.domain.script.GetScripts
 import app.rocat.scripting.api.ScriptResult
 import app.rocat.scripting.api.model.Script
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -15,6 +16,10 @@ import kotlinx.coroutines.withContext
 /**
  * Test runner for installed scripts. Only enabled scripts are runnable; the chosen
  * script's `main(targetUrl)` is executed and its return value shown in the UI.
+ *
+ * Every execution failure (engine error, validation, or a stray Throwable) is written
+ * INTO the Result / log area instead of being rendered as floating red text, and is
+ * caught so a runtime error from JS never force-closes the app.
  */
 class PlaygroundViewModel(
     private val getScripts: GetScripts = Injekt.get(),
@@ -27,11 +32,9 @@ class PlaygroundViewModel(
         val targetUrl: String = "https://example.com/",
         val running: Boolean = false,
         val result: String = "",
-        val error: String? = null,
         val testParam: String = "",
         val executing: Boolean = false,
         val log: String = "",
-        val logError: String? = null,
     ) {
         val selectedScript: Script? get() = scripts.firstOrNull { it.id == selectedId }
     }
@@ -53,7 +56,7 @@ class PlaygroundViewModel(
     }
 
     fun select(id: String) = mutableState.update {
-        it.copy(selectedId = id, result = "", error = null, log = "", logError = null)
+        it.copy(selectedId = id, result = "", log = "")
     }
 
     fun onUrlChange(value: String) = mutableState.update { it.copy(targetUrl = value) }
@@ -64,18 +67,29 @@ class PlaygroundViewModel(
         val current = state.value
         val script = current.selectedScript
         if (script == null) {
-            mutableState.update { it.copy(error = "Select an enabled script first") }
+            mutableState.update { it.copy(result = "Select an enabled script first") }
             return
         }
         if (current.targetUrl.isBlank()) {
-            mutableState.update { it.copy(error = "Enter a target URL") }
+            mutableState.update { it.copy(result = "Enter a target URL") }
             return
         }
-        viewModelScope.launch {
-            mutableState.update { it.copy(running = true, result = "", error = null) }
-            when (val res = executeScript.await(script, listOf(current.targetUrl))) {
-                is ScriptResult.Success -> mutableState.update { it.copy(running = false, result = res.value) }
-                is ScriptResult.Failure -> mutableState.update { it.copy(running = false, error = res.error) }
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                mutableState.update { it.copy(running = true, result = "") }
+                val res = executeScript.await(script, listOf(current.targetUrl))
+                withContext(Dispatchers.Main) {
+                    when (res) {
+                        is ScriptResult.Success -> mutableState.update { it.copy(running = false, result = res.value) }
+                        is ScriptResult.Failure -> mutableState.update { it.copy(running = false, result = "Error: ${res.error}") }
+                    }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                withContext(Dispatchers.Main) {
+                    mutableState.update { it.copy(running = false, result = "Error: ${e.message ?: e.javaClass.simpleName}") }
+                }
             }
         }
     }
@@ -90,24 +104,30 @@ class PlaygroundViewModel(
         val current = state.value
         val script = current.selectedScript
         if (script == null) {
-            mutableState.update { it.copy(logError = "Select an enabled script first") }
+            mutableState.update { it.copy(log = "Select an enabled script first") }
             return
         }
         if (current.testParam.isBlank()) {
-            mutableState.update { it.copy(logError = "Enter a parameter (query or URL) first") }
+            mutableState.update { it.copy(log = "Enter a parameter (query or URL) first") }
             return
         }
         viewModelScope.launch(Dispatchers.IO) {
-            mutableState.update { it.copy(executing = true, log = "", logError = null) }
-            val res = executeScript.invoke(script, functionName, listOf(current.testParam.trim()))
-            withContext(Dispatchers.Main) {
-                when (res) {
-                    is ScriptResult.Success -> mutableState.update {
-                        it.copy(executing = false, log = res.value)
+            try {
+                mutableState.update { it.copy(executing = true, log = "") }
+                val res = executeScript.invoke(script, functionName, listOf(current.testParam.trim()))
+                withContext(Dispatchers.Main) {
+                    when (res) {
+                        is ScriptResult.Success -> mutableState.update { it.copy(executing = false, log = res.value) }
+                        is ScriptResult.Failure -> mutableState.update {
+                            it.copy(executing = false, log = "Error: ${res.error}")
+                        }
                     }
-                    is ScriptResult.Failure -> mutableState.update {
-                        it.copy(executing = false, logError = res.error)
-                    }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                withContext(Dispatchers.Main) {
+                    mutableState.update { it.copy(executing = false, log = "Error: ${e.message ?: e.javaClass.simpleName}") }
                 }
             }
         }

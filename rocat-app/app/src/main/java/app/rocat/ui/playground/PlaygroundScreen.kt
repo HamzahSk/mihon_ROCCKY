@@ -107,16 +107,6 @@ fun PlaygroundScreen(
                 Text(if (state.running) "Running…" else "Run")
             }
 
-            val error = state.error
-            if (error != null) {
-                Text(
-                    text = error,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                )
-            }
-
             ResultCard(state.result)
             TestExecutionSection(
                 param = state.testParam,
@@ -125,7 +115,6 @@ fun PlaygroundScreen(
                 onDetail = viewModel::runDetail,
                 executing = state.executing,
                 log = state.log,
-                logError = state.logError,
             )
             Spacer(Modifier.height(24.dp))
         }
@@ -205,7 +194,6 @@ private fun TestExecutionSection(
     onDetail: () -> Unit,
     executing: Boolean,
     log: String,
-    logError: String?,
 ) {
     Card(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -239,15 +227,6 @@ private fun TestExecutionSection(
             Spacer(Modifier.height(12.dp))
             HorizontalDivider()
 
-            val error = logError
-            if (error != null) {
-                Text(
-                    text = error,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 8.dp),
-                )
-            }
             if (log.isEmpty()) {
                 Text(
                     text = "Function output will appear here as JSON.",
