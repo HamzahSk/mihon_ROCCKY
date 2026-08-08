@@ -64,6 +64,9 @@ dependencies {
     implementation(libs.bundles.serialization)
     implementation(libs.logcat)
 
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+
     debugImplementation(libs.compose.ui.tooling)
 
     testImplementation(libs.junit)

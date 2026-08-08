@@ -1,5 +1,8 @@
 package app.rocat.ui.playground
 
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +22,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
@@ -45,16 +49,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import android.widget.Toast
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.rocat.di.AppViewModelFactory
 import app.rocat.scripting.api.model.Script
+import coil3.compose.AsyncImage
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -106,7 +114,6 @@ fun PlaygroundScreen(
                 args = state.testArgs,
                 onAddArg = viewModel::addArg,
                 onRemoveArg = viewModel::removeArg,
-                onLabelChange = viewModel::updateArgLabel,
                 onValueChange = viewModel::updateArgValue,
                 onRun = viewModel::runFunction,
                 executing = state.executing,
@@ -155,9 +162,94 @@ private fun ScriptPicker(
 }
 
 /**
+ * A parsed media payload returned by a script function, following the contract
+ * `{ "media_type": "image" | "video", "media_url": "..." }`.
+ */
+private sealed interface MediaPreview {
+    data class Image(val url: String) : MediaPreview
+    data class Video(val url: String) : MediaPreview
+}
+
+/**
+ * Extracts a [MediaPreview] from the script's JSON output when it follows the media
+ * contract; returns null for anything else (plain JSON, arrays, invalid text).
+ */
+private fun parseMediaPreview(raw: String): MediaPreview? {
+    val element = try {
+        Json.parseToJsonElement(raw)
+    } catch (e: Exception) {
+        return null
+    }
+    val obj = element as? JsonObject ?: return null
+    val mediaType = (obj["media_type"] as? JsonPrimitive)?.content ?: return null
+    val url = (obj["media_url"] as? JsonPrimitive)?.content ?: return null
+    return when (mediaType) {
+        "image" -> MediaPreview.Image(url)
+        "video" -> MediaPreview.Video(url)
+        else -> null
+    }
+}
+
+/**
+ * Renders a [MediaPreview] above the JSON log: images are loaded with Coil's
+ * [AsyncImage], videos show a "Play Video" button that opens the system video player.
+ */
+@Composable
+private fun MediaPreviewRenderer(preview: MediaPreview, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    when (preview) {
+        is MediaPreview.Image -> {
+            ElevatedCard(modifier = modifier.fillMaxWidth()) {
+                AsyncImage(
+                    model = preview.url,
+                    contentDescription = "Script media preview",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 300.dp)
+                        .padding(8.dp),
+                )
+            }
+        }
+
+        is MediaPreview.Video -> {
+            ElevatedCard(modifier = modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(
+                        "Media output (video)",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedButton(
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW).apply {
+                                setDataAndType(Uri.parse(preview.url), "video/*")
+                            }
+                            runCatching { context.startActivity(intent) }
+                                .onFailure {
+                                    Toast.makeText(context, "No video player available", Toast.LENGTH_SHORT).show()
+                                }
+                        },
+                    ) {
+                        Icon(Icons.Filled.PlayArrow, contentDescription = null)
+                        Spacer(Modifier.width(6.dp))
+                        Text("Play Video")
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
  * Card that renders [content] in a scrollable monospace text area and offers a small
  * action bar to copy the output to the clipboard either as pretty-printed JSON or as
- * the raw text/HTML.
+ * the raw text/HTML. When the output follows the media contract, a preview of the
+ * image/video is rendered above the text.
  */
 @Composable
 private fun CopyableResultCard(
@@ -170,6 +262,7 @@ private fun CopyableResultCard(
     val clipboard = LocalClipboardManager.current
     val context = LocalContext.current
     val displayText = ResultFormatter.prettyJson(content)
+    val mediaPreview = remember(content) { parseMediaPreview(content) }
 
     ElevatedCard(modifier = modifier) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -190,6 +283,10 @@ private fun CopyableResultCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             } else {
+                if (mediaPreview != null) {
+                    MediaPreviewRenderer(preview = mediaPreview)
+                    Spacer(Modifier.height(12.dp))
+                }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.End,
@@ -246,10 +343,9 @@ private fun TestFunctionSection(
     function: String,
     suggestions: List<String>,
     onFunctionChange: (String) -> Unit,
-    args: List<TestArg>,
+    args: List<String>,
     onAddArg: () -> Unit,
     onRemoveArg: (Int) -> Unit,
-    onLabelChange: (Int, String) -> Unit,
     onValueChange: (Int, String) -> Unit,
     onRun: () -> Unit,
     executing: Boolean,
@@ -265,7 +361,7 @@ private fun TestFunctionSection(
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
-                text = "Invoke any named function inside the script. Add as many inputs as it needs.",
+                text = "Invoke any public function inside the script. Add as many value inputs as it needs.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -302,44 +398,34 @@ private fun TestFunctionSection(
 
             Spacer(Modifier.height(12.dp))
 
-            if (args.isNotEmpty()) {
-                Text(
-                    "Inputs",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(Modifier.height(4.dp))
+            Text(
+                "Inputs",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(4.dp))
 
-                args.forEachIndexed { index, arg ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
+            args.forEachIndexed { index, value ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    OutlinedTextField(
+                        value = value,
+                        onValueChange = { onValueChange(index, it) },
+                        modifier = Modifier.weight(1f),
+                        label = { Text("Argument Value (e.g. URL)") },
+                        singleLine = true,
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    IconButton(
+                        onClick = { onRemoveArg(index) },
                     ) {
-                        OutlinedTextField(
-                            value = arg.label,
-                            onValueChange = { onLabelChange(index, it) },
-                            modifier = Modifier.width(100.dp),
-                            label = { Text("Key") },
-                            singleLine = true,
+                        Icon(
+                            Icons.Filled.Delete,
+                            contentDescription = "Remove input",
+                            tint = MaterialTheme.colorScheme.error,
                         )
-                        Spacer(Modifier.width(8.dp))
-                        OutlinedTextField(
-                            value = arg.value,
-                            onValueChange = { onValueChange(index, it) },
-                            modifier = Modifier.weight(1f),
-                            label = { Text("Value") },
-                            singleLine = true,
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        IconButton(
-                            onClick = { onRemoveArg(index) },
-                        ) {
-                            Icon(
-                                Icons.Filled.Delete,
-                                contentDescription = "Remove input",
-                                tint = MaterialTheme.colorScheme.error,
-                            )
-                        }
                     }
                 }
             }

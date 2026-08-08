@@ -15,6 +15,7 @@ junit = "4.13.2"
 androidx-junit = "1.2.1"
 espresso = "3.6.1"
 logcat = "0.4"
+coil = "3.0.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -49,6 +50,9 @@ injekt-api = { group = "uy.kohesive.injekt", name = "injekt-api", version = "1.1
 logcat = { group = "com.squareup.logcat", name = "logcat", version.ref = "logcat" }
 
 rhino = { group = "org.mozilla", name = "rhino", version = "1.7.15" }
+
+coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
+coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
 
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-junit" }

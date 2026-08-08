@@ -14,20 +14,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * One editable argument row in the playground: an optional label/name plus the
- * value that gets forwarded to the invoked script function.
- */
-data class TestArg(
-    val label: String = "",
-    val value: String = "",
-)
-
-/**
  * Test runner for installed scripts. The "Test Function" section can invoke any named
  * function inside the script (`main`, `search`, `detail`, ...) with a dynamic,
- * user-controlled list of args. Function names are detected automatically from the
- * script source, so no manual entry is required; the default argument state is empty
- * unless the user explicitly adds inputs.
+ * user-controlled list of plain values. Functions are detected automatically from the
+ * script source; only public (non-underscore-prefixed) functions are offered as
+ * suggestions. The default argument state is a single empty value row, and the user
+ * adds more rows with "+ Add Input" when the function needs more arguments.
  *
  * Every execution failure (engine error, validation, or a stray Throwable) is written
  * INTO the log area instead of being rendered as floating red text, and is caught so a
@@ -39,7 +31,8 @@ class PlaygroundViewModel(
 ) : StateViewModel<PlaygroundViewModel.State>(State()) {
 
     companion object {
-        private val FUNCTION_NAME_REGEX = Regex("function\\s+([a-zA-Z_$][\\w$]*)\\s*\\(")
+        private val FUNCTION_NAME_REGEX = Regex("function\\s+(?!_)([a-zA-Z$][\\w$]*)\\s*\\(")
+        private const val DEFAULT_ARGS_COUNT = 1
     }
 
     data class State(
@@ -47,7 +40,7 @@ class PlaygroundViewModel(
         val selectedId: String? = null,
         val testFunction: String = "",
         val testFunctionSuggestions: List<String> = emptyList(),
-        val testArgs: List<TestArg> = emptyList(),
+        val testArgs: List<String> = List(DEFAULT_ARGS_COUNT) { "" },
         val executing: Boolean = false,
         val log: String = "",
     ) {
@@ -72,7 +65,7 @@ class PlaygroundViewModel(
                         selectedId = selection,
                         testFunctionSuggestions = functions,
                         testFunction = if (selectionChanged) (functions.firstOrNull() ?: "") else current.testFunction,
-                        testArgs = if (selectionChanged) emptyList() else current.testArgs,
+                        testArgs = if (selectionChanged) List(DEFAULT_ARGS_COUNT) { "" } else current.testArgs,
                     )
                 }
             }
@@ -80,8 +73,9 @@ class PlaygroundViewModel(
     }
 
     /**
-     * Scans a script's source code and returns the names of every function declared
-     * with the classic `function name(...)` syntax.
+     * Scans a script's source code and returns the names of every PUBLIC function
+     * declared with the classic `function name(...)` syntax. Private functions whose
+     * name starts with an underscore (`_helper`) are excluded.
      */
     fun extractFunctionNames(scriptCode: String): List<String> =
         FUNCTION_NAME_REGEX.findAll(scriptCode).map { it.groupValues[1] }.toList()
@@ -93,28 +87,23 @@ class PlaygroundViewModel(
             selectedId = id,
             testFunctionSuggestions = functions,
             testFunction = functions.firstOrNull() ?: "",
-            testArgs = emptyList(),
+            testArgs = List(DEFAULT_ARGS_COUNT) { "" },
             log = "",
         )
     }
 
     fun onTestFunctionChange(value: String) = mutableState.update { it.copy(testFunction = value) }
 
-    fun addArg() = mutableState.update { it.copy(testArgs = it.testArgs + TestArg()) }
+    fun addArg() = mutableState.update { it.copy(testArgs = it.testArgs + "") }
 
     fun removeArg(index: Int) = mutableState.update {
         if (index < 0 || index >= it.testArgs.size) it
         else it.copy(testArgs = it.testArgs.filterIndexed { i, _ -> i != index })
     }
 
-    fun updateArgLabel(index: Int, label: String) = mutableState.update {
-        if (index < 0 || index >= it.testArgs.size) it
-        else it.copy(testArgs = it.testArgs.mapIndexed { i, arg -> if (i == index) arg.copy(label = label) else arg })
-    }
-
     fun updateArgValue(index: Int, value: String) = mutableState.update {
         if (index < 0 || index >= it.testArgs.size) it
-        else it.copy(testArgs = it.testArgs.mapIndexed { i, arg -> if (i == index) arg.copy(value = value) else arg })
+        else it.copy(testArgs = it.testArgs.mapIndexed { i, arg -> if (i == index) value else arg })
     }
 
     /**
@@ -134,7 +123,7 @@ class PlaygroundViewModel(
             return
         }
         val args = current.testArgs
-            .map { it.value.trim() }
+            .map { it.trim() }
             .filter { it.isNotEmpty() }
         viewModelScope.launch(Dispatchers.IO) {
             try {
