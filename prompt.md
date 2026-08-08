@@ -1,68 +1,51 @@
 # Role and Objective
-Kamu adalah AI Software Engineer dan Android Developer handal. Tahap 7 (Perbaikan Network, SSL, dan Injeksi WebView) telah selesai diimplementasikan.
+Kamu adalah AI Software Engineer dan Android Developer handal. Tahap 8 (Script Execution API & UI) telah berhasil diselesaikan, namun ditemukan *bug* fatal saat skrip dijalankan di *device*/emulator Android.
 
-Tugasmu di **Tahap 8** adalah membangun **Script Execution API, Native DOM Bridge (Jsoup), dan Testing UI**. Aplikasi harus bisa mengeksekusi fungsi spesifik di dalam skrip (seperti `search` atau `detail`) dengan menerima input dinamis langsung dari tombol dan *text field* di UI. Selain itu, kamu harus menyediakan fungsi *parsing* HTML bawaan agar skrip tidak bergantung pada *library* Node.js eksternal seperti `cheerio`.
+Tugasmu di **Tahap 9** adalah memperbaiki *bug* Rhino engine terkait kompilasi *bytecode* di Android, serta merapikan penanganan tampilan *error* di antarmuka `PlaygroundScreen`.
 
 # Memory and Constraints (CRITICAL)
 1. **BACA ATURAN MEMORI:**
    - Buka dan baca file `memory_prompt.md`.
-   - Wajib memperbarui log di `ai_memory/00_INDEX.md` dan membuat catatan tugas terperinci di `ai_memory/task_YYYYMMDD_HHMM_tahap8_script_api_and_ui_execution.md` setelah tahap ini selesai.
-2. **Keterbatasan Rhino Engine (Sangat Penting):**
-   - Berdasarkan `00_INDEX.md`, Rhino 1.7.15 **TIDAK MENDUKUNG `async/await`**. Oleh karena itu, skrip contoh yang menggunakan `async/await` dan `import` harus diubah menjadi **synchronous JavaScript**.
-   - Fungsi `fetch` di aplikasi ini sudah dikonfigurasi untuk berjalan secara *synchronous* mengembalikan objek *Response*.
-3. **Build Verification:**
+   - Wajib memperbarui log di `ai_memory/00_INDEX.md` dan membuat catatan tugas terperinci di `ai_memory/task_YYYYMMDD_HHMM_tahap9_fix_rhino_class_loader.md` setelah tahap ini selesai.
+2. **Build Verification:**
    - Pastikan kode dapat dikompilasi sukses dengan `./gradlew assembleDebug`.
+
+---
+
+# Bug Analysis & Root Cause
+1. **Error Log di UI Playground:** Muncul pesan merah bertuliskan `can't load this type of class file` saat tombol **Run** atau **Run Search** ditekan.
+2. **Penyebab (Rhino on Android Issue):** - Rhino secara otomatis mencoba mengompilasi JavaScript ke Java Bytecode standar (`.class`) untuk mempercepat eksekusi (Optimization Level > 0).
+   - Android menggunakan Dalvik/ART (DEX bytecode) dan *classloader*-nya tidak bisa memuat file `.class` Java standar secara *on-the-fly* (dinamis), sehingga pelemparan `IllegalArgumentException` atau `UnsupportedOperationException` terjadi.
+3. **Solusi Mutlak:** - Rhino harus dipaksa berjalan pada **Interpretation Mode** (Mode Interpretasi murni) dengan menyetel `optimizationLevel = -1` pada `Context` miliknya.
 
 ---
 
 # Execution Plan (Kerjakan Secara Bertahap)
 
-### Tahap 8.1: Implementasi Native DOM Bridge (Pengganti Cheerio)
-1. **Integrasi Jsoup:**
-   - Tambahkan implementasi `org.jsoup:jsoup` di `build.gradle` (jika belum ada).
-2. **Buat `JsoupBridge`:**
-   - Buat class/objek Kotlin bernama `JsoupBridge` yang mengekspos fungsi-fungsi dasar parsing HTML untuk JavaScript.
-   - Contoh fungsi yang bisa dipanggil dari JS:
-     - `parse(html: String)`: Mengembalikan representasi *Document* Jsoup.
-     - `selectText(html: String, selector: String)`: Mengembalikan teks dari elemen yang dipilih.
-     - `selectAttr(html: String, selector: String, attr: String)`: Mengembalikan atribut tertentu.
-3. **Injeksi ke JS Engine:**
-   - Daftarkan `JsoupBridge` ke dalam `ScriptContext` Rhino dengan nama global (misal: `RoCatDOM`), sehingga skrip bisa langsung memanggil `RoCatDOM.selectText(html, ".title")`.
+### Tahap 9.1: Perbaikan Konteks Rhino (Core Fix)
+1. **Modifikasi `ScriptContextFactory` atau Inisialisasi Rhino:**
+   - Temukan lokasi di mana `Context` Rhino dikonfigurasi (biasanya di `core/scripting/rhino/ScriptContextFactory.kt` atau di dalam `RhinoScriptEngine`).
+   - Pastikan metode inisialisasi konteks (seperti `makeContext` atau `onContextCreated`) memuat baris berikut:
+     ```kotlin
+     context.optimizationLevel = -1
+     ```
+   - Pastikan ini diterapkan untuk **semua** eksekusi skrip (baik `execute` biasa maupun `invokeFunction`).
 
-### Tahap 8.2: Penambahan UI (Input & Tombol Eksekusi)
-1. **Modifikasi `PlaygroundScreen` atau `ScriptDetailScreen`:**
-   - Tambahkan *Section* khusus bernama **"Test Execution"**.
-   - Tambahkan satu `OutlinedTextField` untuk **Input Parameter** (bisa berupa teks *query* pencarian atau URL detail).
-   - Tambahkan **Dua Buah Tombol (Button)**:
-     - **Tombol "Run Search"**: Saat diklik, akan memanggil fungsi `search(query)` di dalam skrip.
-     - **Tombol "Run Detail"**: Saat diklik, akan memanggil fungsi `detail(url)` di dalam skrip.
-   - Tambahkan satu komponen *Text/Log Area* yang *scrollable* untuk menampilkan hasil JSON balikan dari skrip tersebut.
+### Tahap 9.2: Peningkatan Error Handling di Playground UI
+1. **Perbaikan Penangkapan Error (ViewModel & UI):**
+   - Saat ini *error* merusak UI dengan teks merah yang tiba-tiba muncul di luar kotak *Result*.
+   - Ubah logika di `PlaygroundViewModel` atau penangkapan state di UI. Jika terjadi *exception* saat `Run` atau `Run Search/Detail`, masukkan pesan *error* tersebut **ke dalam** area teks "Result" atau area log JSON yang berlatar abu-abu, bukan mencetaknya sebagai teks melayang.
+   - Tangkap exception yang lebih luas (termasuk `Exception` atau `Throwable` murni) selama eksekusi di blok `try-catch`, agar aplikasi tidak *force close* jika ada runtime error dari JS.
 
-### Tahap 8.3: Integrasi Eksekusi di ViewModel
-1. **Gunakan `Invocable` Rhino:**
-   - Di dalam *ViewModel* terkait (saat tombol diklik), eksekusi *source code* skrip terlebih dahulu untuk mendaftarkan fungsi-fungsinya ke konteks.
-   - Gunakan `(engine as Invocable).invokeFunction("search", queryInput)` atau `invokeFunction("detail", urlInput)` untuk memicu spesifik fungsi di JS.
-   - Tangkap balikan objek dari JS, konversi ke *String* (menggunakan `JSON.stringify` atau konverter bawaan), dan tampilkan ke *Log Area* UI di *main thread*.
-   - **Ingat:** Pastikan eksekusi pemanggilan fungsi ini dibungkus dalam `viewModelScope.launch(Dispatchers.IO)` karena ada proses *network* di dalamnya.
-
-### Tahap 8.4: Pembuatan Script Template Synchronous
-1. **Konversi Script Contoh (MangaUpdates):**
-   - Tulis ulang logika `mangaupdate.js` menjadi versi *synchronous* yang murni kompatibel dengan Rhino di Android.
-   - Hilangkan `import * as cheerio`.
-   - Ubah `async function search()` menjadi `function search(query)`.
-   - Ubah `await fetch(...)` menjadi pemanggilan sinkron: `var res = fetch(...); var html = res.text();`
-   - Ganti implementasi parser dari Cheerio menjadi pemanggilan `RoCatDOM`.
-   - Letakkan kode ini di fitur "Load example" pada UI "Add Script".
-
-### Tahap 8.5: Verifikasi & Pembaruan Memori
-1. **Testing:**
+### Tahap 9.3: Verifikasi & Pembaruan Memori
+1. **Build & Test:**
    - Jalankan `./gradlew :app:assembleDebug`.
-   - Buka aplikasi, masukkan *script* hasil konversi ke *Playground*. Ketik nama komik di kolom input, lalu klik tombol **"Run Search"**. Pastikan hasilnya muncul di *Log Area* UI.
+   - Pastikan unit test domain dan rhino (seperti `RhinoScriptEngineTest`) masih lulus tanpa *error*.
 2. **Pembaruan Memori:**
-   - Catat detail arsitektur *Jsoup bridge*, modifikasi tombol UI, dan format skrip standar ke `ai_memory/task_YYYYMMDD_HHMM_tahap8_script_api_and_ui_execution.md`.
-   - Perbarui status di `ai_memory/00_INDEX.md` menjadi **Tahap 8 SELESAI**.
+   - Catat detail perbaikan optimasi `-1` Rhino ke `ai_memory/task_YYYYMMDD_HHMM_tahap9_fix_rhino_class_loader.md`.
+   - Perbarui status di `ai_memory/00_INDEX.md` menjadi **Tahap 9 SELESAI**.
 
 ---
 
 **Instruksi Eksekusi:**
-Konfirmasi bahwa kamu membaca `memory_prompt.md`. Mulai dari **Tahap 8.1** untuk membuat `JsoupBridge`, lalu lanjutkan ke **Tahap 8.2** untuk menambah *Text Field* dan Tombol eksekusi di UI. Konfirmasi kembali di setiap langkah sebelum melakukan tes build `./gradlew assembleDebug`.
+Konfirmasi bahwa kamu membaca `memory_prompt.md`. Mulai dari **Tahap 9.1** dengan mencari letak pembuatan `Context` Rhino dan set `optimizationLevel = -1`. Lanjutkan merapikan *state error* di UI Playground pada **Tahap 9.2**, lakukan kompilasi, dan catat hasilnya ke memori.
