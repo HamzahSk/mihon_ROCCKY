@@ -1,974 +1,200 @@
 [0m
 > build · deepseek-v4-flash-free
 [0m
-[0m$ [0mls -la && ls ai_memory 2>/dev/null
+[0m$ [0mls -la
 total 272
-drwxr-xr-x 21 runner runner  4096 Aug  8 03:03 .
-drwxr-xr-x  3 runner runner  4096 Aug  8 03:03 ..
--rw-r--r--  1 runner runner   971 Aug  8 03:03 .editorconfig
-drwxr-xr-x  7 runner runner  4096 Aug  8 03:03 .git
--rw-r--r--  1 runner runner   304 Aug  8 03:03 .gitattributes
-drwxr-xr-x  5 runner runner  4096 Aug  8 03:03 .github
--rw-r--r--  1 runner runner   183 Aug  8 03:03 .gitignore
-drwxr-xr-x  2 runner runner  4096 Aug  8 03:03 .idea
--rw-r--r--  1 runner runner     0 Aug  8 03:03 .nomedia
--rw-r--r--  1 runner runner 73171 Aug  8 03:03 CHANGELOG.md
--rw-r--r--  1 runner runner  5296 Aug  8 03:03 CODE_OF_CONDUCT.md
--rw-r--r--  1 runner runner  2008 Aug  8 03:03 CONTRIBUTING.md
--rw-r--r--  1 runner runner 22940 Aug  8 03:03 DOCS_MLKIT.md
--rw-r--r--  1 runner runner 10173 Aug  8 03:03 LICENSE
--rw-r--r--  1 runner runner  4265 Aug  8 03:03 README.md
--rw-r--r--  1 runner runner    44 Aug  8 03:04 ai-response-recap.txt
-drwxr-xr-x  2 runner runner  4096 Aug  8 03:03 ai_memory
-drwxr-xr-x  3 runner runner  4096 Aug  8 03:03 app
-drwxr-xr-x  3 runner runner  4096 Aug  8 03:03 baseline-profile
--rw-r--r--  1 runner runner  1015 Aug  8 03:03 build.gradle.kts
-drwxr-xr-x  5 runner runner  4096 Aug  8 03:03 core
-drwxr-xr-x  3 runner runner  4096 Aug  8 03:03 core-metadata
-drwxr-xr-x  3 runner runner  4096 Aug  8 03:03 data
-drwxr-xr-x  3 runner runner  4096 Aug  8 03:03 domain
-drwxr-xr-x  3 runner runner  4096 Aug  8 03:03 fastlane
-drwxr-xr-x  4 runner runner  4096 Aug  8 03:03 gradle
--rw-r--r--  1 runner runner   272 Aug  8 03:03 gradle.properties
--rwxr-xr-x  1 runner runner  8656 Aug  8 03:03 gradlew
--rw-r--r--  1 runner runner  2766 Aug  8 03:03 gradlew.bat
-drwxr-xr-x  3 runner runner  4096 Aug  8 03:03 i18n
--rw-r--r--  1 runner runner  5592 Aug  8 03:03 mangaupdate.js
--rw-r--r--  1 runner runner  2017 Aug  8 03:03 memory_prompt.md
-drwxr-xr-x  3 runner runner  4096 Aug  8 03:03 presentation-core
-drwxr-xr-x  3 runner runner  4096 Aug  8 03:03 presentation-widget
--rw-r--r--  1 runner runner  2622 Aug  8 03:03 prompt.md
-drwxr-xr-x  8 runner runner  4096 Aug  8 03:03 rocat-app
--rw-r--r--  1 runner runner  1015 Aug  8 03:03 settings.gradle.kts
-drwxr-xr-x  3 runner runner  4096 Aug  8 03:03 source-api
-drwxr-xr-x  3 runner runner  4096 Aug  8 03:03 source-local
-drwxr-xr-x  3 runner runner  4096 Aug  8 03:03 telemetry
-00_INDEX.md
-task_20260807_0440_tahap2_3_script_infrastruktur_dan_ui.md
+drwxr-xr-x 21 runner runner  4096 Aug  8 04:29 .
+drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 ..
+-rw-r--r--  1 runner runner   971 Aug  8 04:29 .editorconfig
+drwxr-xr-x  7 runner runner  4096 Aug  8 04:29 .git
+-rw-r--r--  1 runner runner   304 Aug  8 04:29 .gitattributes
+drwxr-xr-x  5 runner runner  4096 Aug  8 04:29 .github
+-rw-r--r--  1 runner runner   183 Aug  8 04:29 .gitignore
+drwxr-xr-x  2 runner runner  4096 Aug  8 04:29 .idea
+-rw-r--r--  1 runner runner     0 Aug  8 04:29 .nomedia
+-rw-r--r--  1 runner runner 73171 Aug  8 04:29 CHANGELOG.md
+-rw-r--r--  1 runner runner  5296 Aug  8 04:29 CODE_OF_CONDUCT.md
+-rw-r--r--  1 runner runner  2008 Aug  8 04:29 CONTRIBUTING.md
+-rw-r--r--  1 runner runner 22940 Aug  8 04:29 DOCS_MLKIT.md
+-rw-r--r--  1 runner runner 10173 Aug  8 04:29 LICENSE
+-rw-r--r--  1 runner runner  4265 Aug  8 04:29 README.md
+-rw-r--r--  1 runner runner    44 Aug  8 04:29 ai-response-recap.txt
+drwxr-xr-x  2 runner runner  4096 Aug  8 04:29 ai_memory
+drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 app
+drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 baseline-profile
+-rw-r--r--  1 runner runner  1015 Aug  8 04:29 build.gradle.kts
+drwxr-xr-x  5 runner runner  4096 Aug  8 04:29 core
+drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 core-metadata
+drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 data
+drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 domain
+drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 fastlane
+drwxr-xr-x  4 runner runner  4096 Aug  8 04:29 gradle
+-rw-r--r--  1 runner runner   272 Aug  8 04:29 gradle.properties
+-rwxr-xr-x  1 runner runner  8656 Aug  8 04:29 gradlew
+-rw-r--r--  1 runner runner  2766 Aug  8 04:29 gradlew.bat
+drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 i18n
+-rw-r--r--  1 runner runner  5592 Aug  8 04:29 mangaupdate.js
+-rw-r--r--  1 runner runner  2017 Aug  8 04:29 memory_prompt.md
+drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 presentation-core
+drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 presentation-widget
+-rw-r--r--  1 runner runner  3198 Aug  8 04:29 prompt.md
+drwxr-xr-x  8 runner runner  4096 Aug  8 04:29 rocat-app
+-rw-r--r--  1 runner runner  1015 Aug  8 04:29 settings.gradle.kts
+drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 source-api
+drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 source-local
+drwxr-xr-x  3 runner runner  4096 Aug  8 04:29 telemetry
 [0m
 [0m✱ [0mGlob "**/memory_prompt.md"[90m 1 match[0m
 [0m→ [0mRead memory_prompt.md
 [0m→ [0mRead ai_memory/00_INDEX.md
 [0m→ [0mRead prompt.md
-[0m
-[0m$ [0mfind rocat-app -type f \( -name "*.kt" -o -name "*.kts" \) | head -80
-rocat-app/domain/build.gradle.kts
-rocat-app/domain/src/test/java/app/rocat/domain/script/ScriptMetadataParserTest.kt
-rocat-app/domain/src/main/java/app/rocat/domain/script/ScriptMetadataParser.kt
-rocat-app/domain/src/main/java/app/rocat/domain/script/ScriptRepository.kt
-rocat-app/domain/src/main/java/app/rocat/domain/script/ScriptMetadata.kt
-rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/SetScriptEnabled.kt
-rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/ExecuteScript.kt
-rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/ImportScript.kt
-rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/GetScripts.kt
-rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/UpsertScript.kt
-rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/DeleteScript.kt
-rocat-app/scripting/rhino/build.gradle.kts
-rocat-app/scripting/rhino/src/test/java/app/rocat/scripting/rhino/RhinoScriptEngineTest.kt
-rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
-rocat-app/scripting/api/build.gradle.kts
-rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/network/ScriptFetch.kt
-rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/ScriptEngine.kt
-rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/model/ScriptSerializers.kt
-rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/model/Script.kt
-rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/model/DefaultScriptEnvironment.kt
-rocat-app/build.gradle.kts
-rocat-app/settings.gradle.kts
-rocat-app/app/build.gradle.kts
-rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailViewModel.kt
-rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailScreen.kt
-rocat-app/app/src/main/java/app/rocat/ui/navigation/RoCatNav.kt
-rocat-app/app/src/main/java/app/rocat/ui/scripts/ScriptsViewModel.kt
-rocat-app/app/src/main/java/app/rocat/ui/scripts/ScriptsScreen.kt
-rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
-rocat-app/app/src/main/java/app/rocat/ui/main/MainActivity.kt
-rocat-app/app/src/main/java/app/rocat/ui/main/MainViewModel.kt
-rocat-app/app/src/main/java/app/rocat/ui/import/ImportScriptScreen.kt
-rocat-app/app/src/main/java/app/rocat/ui/import/ImportScriptViewModel.kt
-rocat-app/app/src/main/java/app/rocat/RoApp.kt
-rocat-app/app/src/main/java/app/rocat/di/AppModule.kt
-rocat-app/core/common/build.gradle.kts
-rocat-app/core/common/src/main/java/app/rocat/core/common/injekt/Injekt.kt
-rocat-app/core/common/src/main/java/app/rocat/core/common/network/HttpException.kt
-rocat-app/core/common/src/main/java/app/rocat/core/common/network/OkHttpExtensions.kt
-rocat-app/core/common/src/main/java/app/rocat/core/common/network/NetworkHelper.kt
-rocat-app/core/common/src/main/java/app/rocat/core/common/network/Requests.kt
-rocat-app/core/common/src/main/java/app/rocat/core/common/util/Json.kt
-rocat-app/core/viewmodel/build.gradle.kts
-rocat-app/core/viewmodel/src/main/java/app/rocat/core/viewmodel/StateViewModel.kt
-rocat-app/data/build.gradle.kts
-rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
-rocat-app/data/src/main/java/app/rocat/data/script/ScriptSourceFetcher.kt
-[0m
-Saya telah membaca `memory_prompt.md`. Sekarang mulai eksekusi Tahap 4.1. Mari eksplorasi struktur kode `rocat-app`.
-[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/di/AppModule.kt
-[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/main/MainActivity.kt
-[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/navigation/RoCatNav.kt
+[0m→ [0mRead ai_memory
+[0m→ [0mRead rocat-app
+[0m✱ [0mGlob "rocat-app/**/*.kt"[90m 40 matches[0m
 [0m→ [0mRead rocat-app/app/src/main/java/app/rocat/RoApp.kt
-[0m→ [0mRead rocat-app/core/common/src/main/java/app/rocat/core/common/injekt/Injekt.kt
-[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/scripts/ScriptsViewModel.kt
-[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailViewModel.kt
-[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/import/ImportScriptViewModel.kt
-[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundViewModel.kt
-[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/scripts/ScriptsScreen.kt
-[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailScreen.kt
-[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/import/ImportScriptScreen.kt
-[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-[0m→ [0mRead rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
-[0m→ [0mRead rocat-app/data/src/main/java/app/rocat/data/script/ScriptSourceFetcher.kt
+[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/main/MainActivity.kt
+[0m✱ [0mGlob "rocat-app/app/src/main/**/*.xml"[90m 6 matches[0m
+[0m→ [0mRead rocat-app/app/src/main/AndroidManifest.xml
 [0m→ [0mRead rocat-app/app/build.gradle.kts
-Sekarang saya baca lapisan data (repository, fetcher, manager) dan build files untuk menemukan akar masalah.
-[0m→ [0mRead rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
-[0m→ [0mRead rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/ExecuteScript.kt
-[0m→ [0mRead rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/GetScripts.kt
-[0m→ [0mRead rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/ScriptEngine.kt
-[0m→ [0mRead rocat-app/core/viewmodel/src/main/java/app/rocat/core/viewmodel/StateViewModel.kt
-[0m→ [0mRead rocat-app/core/common/src/main/java/app/rocat/core/common/network/OkHttpExtensions.kt
-[0m→ [0mRead rocat-app/core/common/src/main/java/app/rocat/core/common/network/Requests.kt
+[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/navigation/RoCatNav.kt
+[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/di/AppViewModelFactory.kt
+[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/di/AppModule.kt
+[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/import/ImportScriptScreen.kt
+[0m→ [0mRead rocat-app/app/src/main/res/values/strings.xml
 [0m→ [0mRead rocat-app/gradle/libs.versions.toml
-[0m→ [0mRead rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/ImportScript.kt
-[0m→ [0mRead rocat-app/scripting/api/src/main/java/app/rocat/scripting/api/model/Script.kt
-[0m→ [0mRead rocat-app/core/common/src/main/java/app/rocat/core/common/network/NetworkHelper.kt
-Konfirmasi: saya sudah membaca `memory_prompt.md`. Sekarang saya periksa file pendukung lain dan coba build awal untuk memastikan environment berfungsi.
-[0m
-[0m$ [0mjava -version 2>&1; ls ~/.gradle 2>/dev/null; ls rocat-app
-openjdk version "21.0.11" 2026-04-21 LTS
-OpenJDK Runtime Environment Temurin-21.0.11+10 (build 21.0.11+10-LTS)
-OpenJDK 64-Bit Server VM Temurin-21.0.11+10 (build 21.0.11+10-LTS, mixed mode, sharing)
-caches
-init.d
-notifications
-wrapper
-app
-build.gradle.kts
-core
-data
-domain
-gradle
-gradle.properties
-gradlew
-gradlew.bat
-scripting
-settings.gradle.kts
-[0m
-[0m→ [0mRead rocat-app/settings.gradle.kts
-[0m
-[0m$ [0m./gradlew :app:assembleDebug --console=plain -q 2>&1 | tail -30
-/bin/bash: line 1: ./gradlew: Permission denied
-[0m
-Baseline build dulu untuk konfirmasi environment (memanaskan Gradle juga):
-[0m$ [0mls -la gradlew; chmod +x gradlew && ./gradlew :app:assembleDebug --console=plain -q 2>&1 | tail -30
--rw-r--r-- 1 runner runner 8656 Aug  8 03:03 gradlew
-[0m
-[0m$ [0m./gradlew :app:assembleDebug --console=plain 2>&1 | tail -20; echo "EXIT: $?"
-> Task :app:mergeDebugGlobalSynthetics UP-TO-DATE
-> Task :app:processDebugJavaRes UP-TO-DATE
-> Task :app:mergeDebugJavaResource UP-TO-DATE
-> Task :app:checkDebugDuplicateClasses UP-TO-DATE
-> Task :app:mergeExtDexDebug UP-TO-DATE
-> Task :app:mergeLibDexDebug UP-TO-DATE
-> Task :app:mergeProjectDexDebug UP-TO-DATE
-> Task :app:mergeDebugJniLibFolders UP-TO-DATE
-> Task :app:mergeDebugNativeLibs UP-TO-DATE
-> Task :app:stripDebugDebugSymbols UP-TO-DATE
-> Task :app:validateSigningDebug UP-TO-DATE
-> Task :app:writeDebugAppMetadata UP-TO-DATE
-> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
-> Task :app:packageDebug UP-TO-DATE
-> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
-> Task :app:assembleDebug UP-TO-DATE
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1786158560192.json
-
-BUILD SUCCESSFUL in 2s
-151 actionable tasks: 151 up-to-date
-EXIT: 0
-[0m
-[0m→ [0mRead rocat-app/data/build.gradle.kts
-[0m→ [0mRead rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/UpsertScript.kt
-[0m→ [0mRead rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/SetScriptEnabled.kt
-[0m→ [0mRead rocat-app/domain/src/main/java/app/rocat/domain/script/interactor/DeleteScript.kt
+[0m→ [0mRead rocat-app/app/src/main/res/values/themes.xml
 [0m
 [0m# [0mTodos
-[•] Buat AppViewModelFactory + registrasi ViewModel di AppModule (Injekt)
-[ ] Perbaiki 4 screen Compose agar memakai ViewModel factory eksplisit
-[ ] Pindahkan I/O ScriptRepositoryImpl ke Dispatchers.IO
-[ ] Tahap 4.2: validasi import URL di ScriptSourceFetcher (plain text/JS)
-[ ] Tahap 4.2: verifikasi Playground meneruskan URL & render error JS
-[ ] Build verifikasi ./gradlew assembleDebug
-[ ] Tulis log memori (file task + update 00_INDEX.md)
+[•] 5.1: Create CrashLogStore utility + CrashHandler, wire into RoApp.kt
+[ ] 5.2: Create CrashActivity with Compose UI (scrollable trace, copy, path info)
+[ ] 5.3: Register CrashActivity in AndroidManifest.xml + build check
+[ ] Update ai_memory/00_INDEX.md + create task log file
 [0m
-Baseline build hijau. Saya sudah menemukan akar masalah. Mari catat rencana kerja:
-[0m← [0mWrite rocat-app/app/src/main/java/app/rocat/di/AppViewModelFactory.kt
+I've read `memory_prompt.md`, `ai_memory/00_INDEX.md`, and the Tahap 4 log. Now let me plan the work.
+[0m← [0mWrite rocat-app/app/src/main/java/app/rocat/crash/CrashLogStore.kt
 Wrote file successfully.
 [0m
-**Akar masalah force close** (terkonfirmasi dari kode):
-- `ScriptsScreen.kt:44`, `ImportScriptScreen.kt:41`, `PlaygroundScreen.kt:48` memanggil `viewModel()` tanpa factory. Constructor ViewModel tsb memiliki parameter ber-default → Kotlin **tidak** meng-generate public no-arg constructor. Default `ViewModelProvider` gagal dengan `NoSuchMethodException` → `RuntimeException: Cannot create an instance of class ...ScriptsViewModel`. Karena `ScriptsScreen` adalah screen pertama saat app dibuka, app langsung force close.
-
-Mulai perbaikan. Buat `AppViewModelFactory`:
-[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/di/AppModule.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/di/AppModule.kt
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/di/AppModule.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/di/AppModule.kt
-@@ -14,8 +14,11 @@
- import app.rocat.domain.script.ImportScript
- import app.rocat.domain.script.ScriptRepository
- import app.rocat.domain.script.SetScriptEnabled
- import app.rocat.domain.script.UpsertScript
-+import app.rocat.ui.import.ImportScriptViewModel
-+import app.rocat.ui.playground.PlaygroundViewModel
-+import app.rocat.ui.scripts.ScriptsViewModel
- 
- /**
-  * Application-level dependency graph, mirroring mihon's `AppModule`/`PreferenceModule`.
-  * Registered from [RoApp.onCreate].
-
+Tahap 5.1: Creating the crash log store utility.
+[0m← [0mWrite rocat-app/app/src/main/java/app/rocat/crash/CrashHandler.kt
+Wrote file successfully.
 [0m
-Sekarang registrasikan ViewModel di `AppModule.kt`:
-[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/di/AppModule.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/di/AppModule.kt
+Now the global `UncaughtExceptionHandler`:
+[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/RoApp.kt
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/RoApp.kt
 ===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/di/AppModule.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/di/AppModule.kt
-@@ -50,6 +50,14 @@
-                 engine = scriptManager.engine,
-                 environment = scriptManager.environment,
-             )
-         }
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/RoApp.kt
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/RoApp.kt
+@@ -1,8 +1,9 @@
+ package app.rocat
+ 
+ import android.app.Application
+ import app.rocat.core.common.injekt.Injekt
++import app.rocat.crash.CrashHandler
+ import app.rocat.di.AppModule
+ import logcat.LogcatLogger
+ 
+ class RoApp : Application() {
+@@ -12,6 +13,10 @@
+         LogcatLogger.install()
+ 
+         // Mirror mihon's App.onCreate() DI bootstrap.
+         Injekt.importModule(AppModule(this))
 +
-+        // ViewModels. Registered as Injekt factories so the Compose screens can build
-+        // them without the reflection-based default factory (which only supports
-+        // no-arg constructors and crashes for these constructor-injected ViewModels).
-+        registrar.addSingletonFactory { ScriptsViewModel() }
-+        registrar.addSingletonFactory { ImportScriptViewModel() }
-+        registrar.addSingletonFactory { PlaygroundViewModel() }
-+        registrar.addSingleton(AppViewModelFactory)
++        // Global crash handler: persist the stack trace to Android/data/<pkg>/files/
++        // and surface a CrashActivity instead of force-closing silently.
++        Thread.setDefaultUncaughtExceptionHandler(CrashHandler(this))
      }
  }
 \ No newline at end of file
 
 [0m
-[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/ui/scripts/ScriptsScreen.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/scripts/ScriptsScreen.kt
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/scripts/ScriptsScreen.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/scripts/ScriptsScreen.kt
-@@ -33,8 +33,9 @@
- import androidx.compose.ui.text.font.FontWeight
- import androidx.compose.ui.text.style.TextOverflow
- import androidx.compose.ui.unit.dp
- import androidx.lifecycle.viewmodel.compose.viewModel
-+import app.rocat.di.AppViewModelFactory
- import app.rocat.scripting.api.model.Script
- 
- @OptIn(ExperimentalMaterial3Api::class)
- @Composable
-
-[0m
-Sekarang update 3 screen Compose untuk memakai factory eksplisit:
-[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/ui/scripts/ScriptsScreen.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/scripts/ScriptsScreen.kt
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/scripts/ScriptsScreen.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/scripts/ScriptsScreen.kt
-@@ -41,9 +41,9 @@
- @Composable
- fun ScriptsScreen(
-     onOpenScript: (String) -> Unit,
-     onImport: () -> Unit,
--    viewModel: ScriptsViewModel = viewModel(),
-+    viewModel: ScriptsViewModel = viewModel(factory = AppViewModelFactory),
- ) {
-     val state by viewModel.scriptsState.collectAsState()
- 
-     Scaffold(
-
-[0m
-[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/ui/import/ImportScriptScreen.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/import/ImportScriptScreen.kt
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/import/ImportScriptScreen.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/import/ImportScriptScreen.kt
-@@ -32,14 +32,15 @@
- import androidx.compose.ui.Alignment
- import androidx.compose.ui.Modifier
- import androidx.compose.ui.unit.dp
- import androidx.lifecycle.viewmodel.compose.viewModel
-+import app.rocat.di.AppViewModelFactory
- 
- @OptIn(ExperimentalMaterial3Api::class)
- @Composable
- fun ImportScriptScreen(
-     onBack: () -> Unit,
--    viewModel: ImportScriptViewModel = viewModel(),
-+    viewModel: ImportScriptViewModel = viewModel(factory = AppViewModelFactory),
- ) {
-     val state by viewModel.state.collectAsState()
- 
-     Scaffold(
-
-[0m
-[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-@@ -38,8 +38,9 @@
- import androidx.compose.ui.Modifier
- import androidx.compose.ui.text.font.FontFamily
- import androidx.compose.ui.unit.dp
- import androidx.lifecycle.viewmodel.compose.viewModel
-+import app.rocat.di.AppViewModelFactory
- import app.rocat.scripting.api.model.Script
- 
- @OptIn(ExperimentalMaterial3Api::class)
- @Composable
-
-[0m
-[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
-@@ -45,9 +45,9 @@
- @OptIn(ExperimentalMaterial3Api::class)
- @Composable
- fun PlaygroundScreen(
-     onBack: () -> Unit,
--    viewModel: PlaygroundViewModel = viewModel(),
-+    viewModel: PlaygroundViewModel = viewModel(factory = AppViewModelFactory),
- ) {
-     val state by viewModel.state.collectAsState()
- 
-     Scaffold(
-
-[0m
-[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailViewModel.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailViewModel.kt
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailViewModel.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailViewModel.kt
-@@ -1,7 +1,10 @@
- package app.rocat.ui.detail
- 
-+import androidx.lifecycle.ViewModel
-+import androidx.lifecycle.ViewModelProvider
- import androidx.lifecycle.viewModelScope
-+import androidx.lifecycle.viewmodel.CreationExtras
- import app.rocat.core.common.injekt.Injekt
- import app.rocat.core.viewmodel.StateViewModel
- import app.rocat.domain.script.DeleteScript
- import app.rocat.domain.script.GetScripts
-
-[0m
-Sekarang tambahkan `Factory(scriptId)` pada `ScriptDetailViewModel`:
-[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailViewModel.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailViewModel.kt
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailViewModel.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailViewModel.kt
-@@ -55,5 +55,18 @@
-             upsertScript.await(script.id, script.name, newSource, script.description)
-             onSaved()
-         }
-     }
-+
-+    companion object {
-+        /**
-+         * Builds a [ScriptDetailViewModel] for a specific [scriptId]. Because this
-+         * ViewModel takes a constructor argument, it cannot go through the default
-+         * reflection-based factory; the factory closes over the id instead.
-+         */
-+        class Factory(private val scriptId: String) : ViewModelProvider.Factory {
-+            @Suppress("UNCHECKED_CAST")
-+            override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T =
-+                ScriptDetailViewModel(scriptId) as T
-+        }
-+    }
- }
-
-[0m
-[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailScreen.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailScreen.kt
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailScreen.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailScreen.kt
-@@ -47,9 +47,12 @@
- @Composable
- fun ScriptDetailScreen(
-     scriptId: String,
-     onBack: () -> Unit,
--    viewModel: ScriptDetailViewModel = viewModel(key = "detail_$scriptId") { ScriptDetailViewModel(scriptId) },
-+    viewModel: ScriptDetailViewModel = viewModel(
-+        key = "detail_$scriptId",
-+        factory = remember(scriptId) { ScriptDetailViewModel.Factory(scriptId) },
-+    ),
- ) {
-     val state by viewModel.detailState.collectAsState()
-     val script = state.script
- 
-
-[0m
-[0m← [0mEdit rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
-@@ -9,13 +9,18 @@
- import app.rocat.scripting.api.model.DefaultScriptEnvironment
- import app.rocat.scripting.api.model.Script
- import app.rocat.scripting.api.network.scriptFetch
- import app.rocat.scripting.rhino.RhinoScriptEngine
-+import kotlinx.coroutines.CoroutineScope
-+import kotlinx.coroutines.Dispatchers
-+import kotlinx.coroutines.SupervisorJob
- import kotlinx.coroutines.flow.Flow
- import kotlinx.coroutines.flow.MutableStateFlow
- import kotlinx.coroutines.flow.asStateFlow
-+import kotlinx.coroutines.launch
- import kotlinx.coroutines.sync.Mutex
- import kotlinx.coroutines.sync.withLock
-+import kotlinx.coroutines.withContext
- import kotlinx.serialization.decodeFromString
- import kotlinx.serialization.encodeToString
- import okhttp3.OkHttpClient
- import java.io.File
-
-[0m
-Sekarang amankan I/O `ScriptRepositoryImpl` ke `Dispatchers.IO`:
-[0m← [0mEdit rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
-@@ -34,13 +34,23 @@
- ) : ScriptRepository {
- 
-     private val storeFile = File(storageDir, "scripts.json")
- 
--    private val _scripts = MutableStateFlow(load())
-+    // Own scope so initial load never runs on the caller (often the main) thread.
-+    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-+
-+    // Starts empty; populated asynchronously in [init] so construction never blocks.
-+    private val _scripts = MutableStateFlow<List<Script>>(emptyList())
-     override fun getAllScripts(): Flow<List<Script>> = _scripts.asStateFlow()
- 
-     private val mutex = Mutex()
- 
-+    init {
-+        ioScope.launch {
-+            _scripts.value = load()
-+        }
-+    }
-+
-     override suspend fun getScriptById(id: String): Script? =
-         _scripts.value.firstOrNull { it.id == id }
- 
-     override suspend fun upsertScript(script: Script) = mutex.withLock {
-
-[0m
-[0m← [0mEdit rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
-@@ -75,21 +75,26 @@
-     _scripts.value = updated
-     save(updated)
- }
- 
--private fun load(): List<Script> {
--    return try {
--        if (!storeFile.exists()) return emptyList()
--        JsonUtil.json.decodeFromString<List<Script>>(storeFile.readText())
-+private suspend fun load(): List<Script> = withContext(Dispatchers.IO) {
-+    try {
-+        if (!storeFile.exists()) {
-+            emptyList()
-+        } else {
-+            JsonUtil.json.decodeFromString<List<Script>>(storeFile.readText())
-+        }
-     } catch (e: Exception) {
-         emptyList()
-     }
- }
- 
--private fun save(scripts: List<Script>) {
-+private suspend fun save(scripts: List<Script>) {
-     try {
--        storeFile.parentFile?.mkdirs()
--        storeFile.writeText(JsonUtil.json.encodeToString(scripts))
-+        withContext(Dispatchers.IO) {
-+            storeFile.parentFile?.mkdirs()
-+            storeFile.writeText(JsonUtil.json.encodeToString(scripts))
-+        }
-     } catch (e: Exception) {
-         // Best-effort persistence; failures should not crash the app.
-     }
- }
-
-[0m
-[0m← [0mEdit rocat-app/data/src/main/java/app/rocat/data/script/ScriptSourceFetcher.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/data/src/main/java/app/rocat/data/script/ScriptSourceFetcher.kt
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/data/src/main/java/app/rocat/data/script/ScriptSourceFetcher.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/data/src/main/java/app/rocat/data/script/ScriptSourceFetcher.kt
-@@ -1,22 +1,54 @@
- package app.rocat.data.script
- 
- import app.rocat.core.common.network.GET
--import app.rocat.core.common.network.awaitSuccessString
-+import app.rocat.core.common.network.awaitSuccess
- import okhttp3.OkHttpClient
- 
- /**
-  * Downloads a raw `.js` script from a URL. GitHub blob URLs are transparently
-- * rewritten to their `raw.githubusercontent.com` equivalent.
-+ * rewritten to their `raw.githubusercontent.com` equivalent. The response is validated
-+ * to be plain text/JS (rejecting HTML error pages and other non-script payloads)
-+ * before it is handed to the importer for storage.
-  */
- class ScriptSourceFetcher(
-     private val client: OkHttpClient,
- ) {
-     suspend fun fetchSource(url: String): String {
-         val effectiveUrl = rewriteUrl(url)
--        return client.newCall(GET(effectiveUrl, cacheControl = null)).awaitSuccessString()
-+        val response = client.newCall(GET(effectiveUrl, cacheControl = null)).awaitSuccess()
-+        response.use { res ->
-+            val body = res.body?.string() ?: ""
-+            validateContentType(res.header("Content-Type"), effectiveUrl)
-+            validateBody(body, effectiveUrl)
-+            return body
-+        }
-     }
- 
-+    private fun validateContentType(contentType: String?, url: String) {
-+        val mime = contentType?.substringBefore(';')?.trim()?.lowercase().orEmpty()
-+        if (mime.startsWith("text/html") || mime.contains("xml")) {
-+            throw IllegalArgumentException(
-+                "URL returned \"$mime\" instead of a script (expected plain text or JavaScript): $url",
-+            )
-+        }
-+    }
-+
-+    private fun validateBody(body: String, url: String) {
-+        val trimmed = body.trimStart()
-+        if (trimmed.startsWith("<!DOCTYPE", ignoreCase = true) ||
-+            trimmed.startsWith("<html", ignoreCase = true)
-+        ) {
-+            throw IllegalArgumentException(
-+                "URL returned an HTML page instead of a script. " +
-+                    "Use a raw/link-to-file URL (e.g. raw.githubusercontent.com): $url",
-+            )
-+        }
-+        if (trimmed.isEmpty()) {
-+            throw IllegalArgumentException("URL returned an empty response: $url")
-+        }
-+    }
-+
-     private fun rewriteUrl(url: String): String {
-         val githubBlob = Regex("^https?://github\\.com/([^/]+)/([^/]+)/blob/(.+)$")
-         return githubBlob.replace(url) { match ->
-             val (owner, repo, path) = match.destructured
-
-[0m
-Tahap 4.1 selesai untuk kode. Lanjut Tahap 4.2 — validasi import URL di `ScriptSourceFetcher`:
-Tahap 4.2 Playground: alur `PlaygroundViewModel.run()` sudah meneruskan `listOf(targetUrl)` → `engine.execute(script, env, args)` → `main(url)` (RhinoScriptEngine.kt:74-78), dan syntax error JS sudah ditangkap engine sebagai `ScriptResult.Failure` (RhinoScriptEngine.kt:51-53) lalu dirender di UI. Verifikasi build:
-[0m$ [0m./gradlew :app:assembleDebug --console=plain 2>&1 | tail -15; echo "EXIT: ${PIPESTATUS[0]}"
-FAILURE: Build failed with an exception.
-
-* What went wrong:
-Execution failed for task ':app:compileDebugKotlin'.
-> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
-   > Compilation error. See log for more details
-
-* Try:
-> Run with --stacktrace option to get the stack trace.
-> Run with --info or --debug option to get more log output.
-> Run with --scan to get full insights.
-> Get more help at https://help.gradle.org.
-
-BUILD FAILED in 4s
-143 actionable tasks: 6 executed, 137 up-to-date
-EXIT: 1
-[0m
-[0m$ [0m./gradlew :app:compileDebugKotlin --console=plain 2>&1 | grep -E "^e:|error:" | head -30
-e: file:///home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailScreen.kt:53:62 Unresolved reference 'Factory'.
-[0m
-[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailViewModel.kt[90m [offset=1, limit=80][0m
-[0m
-[0m$ [0m./gradlew :app:compileDebugKotlin --console=plain --rerun-tasks 2>&1 | grep -E "^e:" | head -30
-e: file:///home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailScreen.kt:53:62 Unresolved reference 'Factory'.
-[0m
-[0m→ [0mRead rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailScreen.kt[90m [offset=46, limit=14][0m
-[0m
-[0m$ [0m./gradlew :app:compileDebugKotlin --console=plain --rerun-tasks 2>&1 | grep -E "(^e:|^w:|error)" | head -30
-e: file:///home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailScreen.kt:53:62 Unresolved reference 'Factory'.
-   > Compilation error. See log for more details
-[0m
-[0m$ [0mcat > /tmp/opencode/Test.kt <<'EOF'
-class Foo {
-    companion object {
-        class Factory(val id: String)
-    }
-}
-fun main() {
-    val f = Foo.Factory("x")
-    println(f.id)
-}
-EOF
-kotlinc /tmp/opencode/Test.kt -include-runtime -d /tmp/opencode/test.jar 2>&1; echo "EXIT: $?"
-/tmp/opencode/Test.kt:7:17: error: unresolved reference 'Factory'.
-    val f = Foo.Factory("x")
-                ^^^^^^^
-EXIT: 1
-[0m
-[0m$ [0mkotlinc -version 2>&1; cat > /tmp/opencode/Test2.kt <<'EOF'
-class Foo {
-    companion object {
-        class Factory(val id: String)
-    }
-}
-fun main() {
-    val f = Foo.Companion.Factory("x")
-    println(f.id)
-}
-EOF
-kotlinc /tmp/opencode/Test2.kt -include-runtime -d /tmp/opencode/test2.jar 2>&1; echo "EXIT: $?"
-info: kotlinc-jvm 2.4.10 (JRE 21.0.11+10-LTS)
-EXIT: 0
-[0m
-[0m$ [0mcat > /tmp/opencode/Test3.kt <<'EOF'
-class Foo {
-    class Factory(val id: String)
-}
-fun main() {
-    val f = Foo.Factory("x")
-    println(f.id)
-}
-EOF
-kotlinc /tmp/opencode/Test3.kt -include-runtime -d /tmp/opencode/test3.jar 2>&1; echo "EXIT: $?"
-rm -f /tmp/opencode/Test*.kt /tmp/opencode/test*.jar
-EXIT: 0
-[0m
-[0m← [0mEdit rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailViewModel.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailViewModel.kt
-===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailViewModel.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailViewModel.kt
-@@ -56,17 +56,15 @@
-             onSaved()
-         }
-     }
- 
--    companion object {
--        /**
--         * Builds a [ScriptDetailViewModel] for a specific [scriptId]. Because this
--         * ViewModel takes a constructor argument, it cannot go through the default
--         * reflection-based factory; the factory closes over the id instead.
--         */
--        class Factory(private val scriptId: String) : ViewModelProvider.Factory {
--            @Suppress("UNCHECKED_CAST")
--            override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T =
--                ScriptDetailViewModel(scriptId) as T
--        }
-+    /**
-+     * Builds a [ScriptDetailViewModel] for a specific [scriptId]. Because this
-+     * ViewModel takes a constructor argument, it cannot go through the default
-+     * reflection-based factory; the factory closes over the id instead.
-+     */
-+    class Factory(private val scriptId: String) : ViewModelProvider.Factory {
-+        @Suppress("UNCHECKED_CAST")
-+        override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T =
-+            ScriptDetailViewModel(scriptId) as T
-     }
- }
-
-[0m
-`Factory` harus nested langsung di class (bukan di dalam companion). Perbaiki:
-[0m$ [0m./gradlew :app:assembleDebug --console=plain 2>&1 | tail -8; echo "EXIT: ${PIPESTATUS[0]}"
-> Task :app:mergeProjectDexDebug
-> Task :app:packageDebug
-> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
-> Task :app:assembleDebug
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1786158766941.json
-
-BUILD SUCCESSFUL in 4s
-151 actionable tasks: 4 executed, 147 up-to-date
-EXIT: 0
-[0m
-Build hijau. Jalankan unit test untuk memastikan tidak ada regresi:
-[0m$ [0m./gradlew testDebugUnitTest --console=plain 2>&1 | tail -15; echo "EXIT: ${PIPESTATUS[0]}"
-> Task :app:testDebugUnitTest NO-SOURCE
-> Task :domain:javaPreCompileDebugUnitTest FROM-CACHE
-> Task :scripting:rhino:javaPreCompileDebugUnitTest FROM-CACHE
-> Task :domain:compileDebugUnitTestKotlin
-> Task :domain:compileDebugUnitTestJavaWithJavac NO-SOURCE
-> Task :domain:processDebugUnitTestJavaRes
-> Task :scripting:rhino:compileDebugUnitTestKotlin
-> Task :scripting:rhino:compileDebugUnitTestJavaWithJavac NO-SOURCE
-> Task :scripting:rhino:processDebugUnitTestJavaRes
-> Task :domain:testDebugUnitTest
-> Task :scripting:rhino:testDebugUnitTest
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1786158774993.json
-
-BUILD SUCCESSFUL in 4s
-123 actionable tasks: 14 executed, 7 from cache, 102 up-to-date
-EXIT: 0
-[0m
+Now wire the handler into `RoApp.kt`:
 [0m# [0mTodos
-[✓] Buat AppViewModelFactory + registrasi ViewModel di AppModule (Injekt)
-[✓] Perbaiki 4 screen Compose agar memakai ViewModel factory eksplisit
-[✓] Pindahkan I/O ScriptRepositoryImpl ke Dispatchers.IO
-[✓] Tahap 4.2: validasi import URL di ScriptSourceFetcher (plain text/JS)
-[•] Tahap 4.2: verifikasi Playground meneruskan URL & render error JS
-[ ] Build verifikasi ./gradlew assembleDebug
-[ ] Tulis log memori (file task + update 00_INDEX.md)
+[✓] 5.1: Create CrashLogStore utility + CrashHandler, wire into RoApp.kt
+[•] 5.2: Create CrashActivity with Compose UI (scrollable trace, copy, path info)
+[ ] 5.3: Register CrashActivity in AndroidManifest.xml + build check
+[ ] Update ai_memory/00_INDEX.md + create task log file
 [0m
-Update todos, lalu tambah penguatan error handling di `RhinoScriptEngine` (Tahap 4.2):
-[0m← [0mEdit rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
-Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
+Tahap 5.1 done. Now Tahap 5.2: the `CrashActivity` with Compose UI.
+[0m← [0mWrite rocat-app/app/src/main/java/app/rocat/ui/crash/CrashActivity.kt
+Wrote file successfully.
+[0m
+[0m← [0mEdit rocat-app/app/src/main/AndroidManifest.xml
+Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/AndroidManifest.xml
 ===================================================================
---- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
-+++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
-@@ -47,8 +47,13 @@
-     args: List<String>,
- ): ScriptResult = withContext(Dispatchers.IO) {
-     try {
-         ScriptResult.Success(evaluate(script, environment, args))
-+    } catch (e: EvaluatorException) {
-+        // Syntax/compile errors are reported back to the UI, never rethrown.
-+        ScriptResult.Failure("JS error: ${e.message}")
-+    } catch (e: StackOverflowError) {
-+        ScriptResult.Failure("Script caused a stack overflow (possible infinite recursion)")
-     } catch (e: Exception) {
-         ScriptResult.Failure(e.message ?: e.javaClass.simpleName)
-     }
- }
+--- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/AndroidManifest.xml
++++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/rocat-app/app/src/main/AndroidManifest.xml
+@@ -18,7 +18,12 @@
+                 <action android:name="android.intent.action.MAIN" />
+                 <category android:name="android.intent.category.LAUNCHER" />
+             </intent-filter>
+         </activity>
++
++        <activity
++            android:name=".ui.crash.CrashActivity"
++            android:exported="false"
++            android:excludeFromRecents="true" />
+     </application>
+ 
+ </manifest>
+\ No newline at end of file
 
 [0m
-Build & test final:
-[0m$ [0m./gradlew :app:assembleDebug :domain:testDebugUnitTest :scripting:rhino:testDebugUnitTest --console=plain 2>&1 | tail -6; echo "EXIT: ${PIPESTATUS[0]}"
+Tahap 5.3: Register the activity in the manifest.
+[0m$ [0m./gradlew :app:assembleDebug --console=plain 2>&1 | tail -40
+/bin/bash: line 1: ./gradlew: Permission denied
+[0m
+Now let me build to verify compilation.
+[0m$ [0mchmod +x gradlew && ls -la gradlew
+-rwxr-xr-x 1 runner runner 8656 Aug  8 04:29 gradlew
+[0m
+[0m$ [0m./gradlew :app:assembleDebug --console=plain 2>&1 | tail -40
+> Task :domain:bundleLibCompileToJarDebug
+> Task :domain:bundleLibRuntimeToJarDebug
+> Task :domain:processDebugJavaRes
+> Task :domain:bundleLibRuntimeToDirDebug
+> Task :scripting:rhino:compileDebugKotlin
+> Task :scripting:rhino:compileDebugJavaWithJavac NO-SOURCE
+> Task :scripting:rhino:bundleLibCompileToJarDebug
+> Task :scripting:rhino:bundleLibRuntimeToJarDebug
+> Task :scripting:rhino:processDebugJavaRes
+> Task :scripting:rhino:bundleLibRuntimeToDirDebug
+> Task :data:compileDebugKotlin
+> Task :data:compileDebugJavaWithJavac NO-SOURCE
+> Task :data:bundleLibCompileToJarDebug
+> Task :data:bundleLibRuntimeToJarDebug
+> Task :data:processDebugJavaRes
+> Task :data:bundleLibRuntimeToDirDebug
+> Task :app:mergeDebugJniLibFolders
+> Task :app:mergeLibDexDebug
+> Task :app:mergeDebugNativeLibs
+> Task :app:validateSigningDebug
+> Task :app:writeDebugAppMetadata
+> Task :app:writeDebugSigningConfigVersions
+
+> Task :app:stripDebugDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so.
+
+> Task :app:compileDebugKotlin
+> Task :app:compileDebugJavaWithJavac
+> Task :app:dexBuilderDebug
+> Task :app:mergeDebugGlobalSynthetics
+> Task :app:processDebugJavaRes
+> Task :app:mergeProjectDexDebug
+> Task :app:mergeDebugJavaResource
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect
 > Task :app:assembleDebug
-> Task :scripting:rhino:testDebugUnitTest
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1786158798024.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1786163576779.json
 
-BUILD SUCCESSFUL in 4s
-161 actionable tasks: 10 executed, 151 up-to-date
-EXIT: 0
+BUILD SUCCESSFUL in 3m 31s
+151 actionable tasks: 124 executed, 27 from cache
 [0m
-Semua hijau. Review akhir seluruh perubahan:
-[0m$ [0mgit --no-pager diff --stat; echo "---"; git --no-pager diff -- rocat-app/data rocat-app/scripting
-ai-response-recap.txt                              | 1890 +++++++-------------
- .../app/src/main/java/app/rocat/di/AppModule.kt    |   11 +
- .../java/app/rocat/ui/detail/ScriptDetailScreen.kt |    5 +-
- .../app/rocat/ui/detail/ScriptDetailViewModel.kt   |   14 +
- .../java/app/rocat/ui/import/ImportScriptScreen.kt |    3 +-
- .../app/rocat/ui/playground/PlaygroundScreen.kt    |    3 +-
- .../java/app/rocat/ui/scripts/ScriptsScreen.kt     |    3 +-
- .../app/rocat/data/script/ScriptRepositoryImpl.kt  |   36 +-
- .../app/rocat/data/script/ScriptSourceFetcher.kt   |   38 +-
- rocat-app/gradlew                                  |    0
- .../app/rocat/scripting/rhino/RhinoScriptEngine.kt |    5 +
- 11 files changed, 712 insertions(+), 1296 deletions(-)
----
-diff --git a/rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt b/rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
-index 65e5095..1fc2828 100644
---- a/rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
-+++ b/rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
-@@ -10,11 +10,16 @@ import app.rocat.scripting.api.model.DefaultScriptEnvironment
- import app.rocat.scripting.api.model.Script
- import app.rocat.scripting.api.network.scriptFetch
- import app.rocat.scripting.rhino.RhinoScriptEngine
-+import kotlinx.coroutines.CoroutineScope
-+import kotlinx.coroutines.Dispatchers
-+import kotlinx.coroutines.SupervisorJob
- import kotlinx.coroutines.flow.Flow
- import kotlinx.coroutines.flow.MutableStateFlow
- import kotlinx.coroutines.flow.asStateFlow
-+import kotlinx.coroutines.launch
- import kotlinx.coroutines.sync.Mutex
- import kotlinx.coroutines.sync.withLock
-+import kotlinx.coroutines.withContext
- import kotlinx.serialization.decodeFromString
- import kotlinx.serialization.encodeToString
- import okhttp3.OkHttpClient
-@@ -30,11 +35,21 @@ class ScriptRepositoryImpl(
- 
-     private val storeFile = File(storageDir, "scripts.json")
- 
--    private val _scripts = MutableStateFlow(load())
-+    // Own scope so initial load never runs on the caller (often the main) thread.
-+    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-+
-+    // Starts empty; populated asynchronously in [init] so construction never blocks.
-+    private val _scripts = MutableStateFlow<List<Script>>(emptyList())
-     override fun getAllScripts(): Flow<List<Script>> = _scripts.asStateFlow()
- 
-     private val mutex = Mutex()
- 
-+    init {
-+        ioScope.launch {
-+            _scripts.value = load()
-+        }
-+    }
-+
-     override suspend fun getScriptById(id: String): Script? =
-         _scripts.value.firstOrNull { it.id == id }
- 
-@@ -61,19 +76,24 @@ class ScriptRepositoryImpl(
-         save(updated)
-     }
- 
--    private fun load(): List<Script> {
--        return try {
--            if (!storeFile.exists()) return emptyList()
--            JsonUtil.json.decodeFromString<List<Script>>(storeFile.readText())
-+    private suspend fun load(): List<Script> = withContext(Dispatchers.IO) {
-+        try {
-+            if (!storeFile.exists()) {
-+                emptyList()
-+            } else {
-+                JsonUtil.json.decodeFromString<List<Script>>(storeFile.readText())
-+            }
-         } catch (e: Exception) {
-             emptyList()
-         }
-     }
- 
--    private fun save(scripts: List<Script>) {
-+    private suspend fun save(scripts: List<Script>) {
-         try {
--            storeFile.parentFile?.mkdirs()
--            storeFile.writeText(JsonUtil.json.encodeToString(scripts))
-+            withContext(Dispatchers.IO) {
-+                storeFile.parentFile?.mkdirs()
-+                storeFile.writeText(JsonUtil.json.encodeToString(scripts))
-+            }
-         } catch (e: Exception) {
-             // Best-effort persistence; failures should not crash the app.
-         }
-diff --git a/rocat-app/data/src/main/java/app/rocat/data/script/ScriptSourceFetcher.kt b/rocat-app/data/src/main/java/app/rocat/data/script/ScriptSourceFetcher.kt
-index a9cbcaa..c3acb05 100644
---- a/rocat-app/data/src/main/java/app/rocat/data/script/ScriptSourceFetcher.kt
-+++ b/rocat-app/data/src/main/java/app/rocat/data/script/ScriptSourceFetcher.kt
-@@ -1,19 +1,51 @@
- package app.rocat.data.script
- 
- import app.rocat.core.common.network.GET
--import app.rocat.core.common.network.awaitSuccessString
-+import app.rocat.core.common.network.awaitSuccess
- import okhttp3.OkHttpClient
- 
- /**
-  * Downloads a raw `.js` script from a URL. GitHub blob URLs are transparently
-- * rewritten to their `raw.githubusercontent.com` equivalent.
-+ * rewritten to their `raw.githubusercontent.com` equivalent. The response is validated
-+ * to be plain text/JS (rejecting HTML error pages and other non-script payloads)
-+ * before it is handed to the importer for storage.
-  */
- class ScriptSourceFetcher(
-     private val client: OkHttpClient,
- ) {
-     suspend fun fetchSource(url: String): String {
-         val effectiveUrl = rewriteUrl(url)
--        return client.newCall(GET(effectiveUrl, cacheControl = null)).awaitSuccessString()
-+        val response = client.newCall(GET(effectiveUrl, cacheControl = null)).awaitSuccess()
-+        response.use { res ->
-+            val body = res.body?.string() ?: ""
-+            validateContentType(res.header("Content-Type"), effectiveUrl)
-+            validateBody(body, effectiveUrl)
-+            return body
-+        }
-+    }
-+
-+    private fun validateContentType(contentType: String?, url: String) {
-+        val mime = contentType?.substringBefore(';')?.trim()?.lowercase().orEmpty()
-+        if (mime.startsWith("text/html") || mime.contains("xml")) {
-+            throw IllegalArgumentException(
-+                "URL returned \"$mime\" instead of a script (expected plain text or JavaScript): $url",
-+            )
-+        }
-+    }
-+
-+    private fun validateBody(body: String, url: String) {
-+        val trimmed = body.trimStart()
-+        if (trimmed.startsWith("<!DOCTYPE", ignoreCase = true) ||
-+            trimmed.startsWith("<html", ignoreCase = true)
-+        ) {
-+            throw IllegalArgumentException(
-+                "URL returned an HTML page instead of a script. " +
-+                    "Use a raw/link-to-file URL (e.g. raw.githubusercontent.com): $url",
-+            )
-+        }
-+        if (trimmed.isEmpty()) {
-+            throw IllegalArgumentException("URL returned an empty response: $url")
-+        }
-     }
- 
-     private fun rewriteUrl(url: String): String {
-diff --git a/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt b/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
-index f7d64a7..69144b3 100644
---- a/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
-+++ b/rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
-@@ -48,6 +48,11 @@ class RhinoScriptEngine(
-     ): ScriptResult = withContext(Dispatchers.IO) {
-         try {
-             ScriptResult.Success(evaluate(script, environment, args))
-+        } catch (e: EvaluatorException) {
-+            // Syntax/compile errors are reported back to the UI, never rethrown.
-+            ScriptResult.Failure("JS error: ${e.message}")
-+        } catch (e: StackOverflowError) {
-+            ScriptResult.Failure("Script caused a stack overflow (possible infinite recursion)")
-         } catch (e: Exception) {
-             ScriptResult.Failure(e.message ?: e.javaClass.simpleName)
-         }
+[0m$ [0mdate +%Y%m%d_%H%M
+20260808_0436
 [0m
-[0m$ [0mgit status --short; echo "---"; git --no-pager diff -- ai-response-recap.txt | head -20
-M ai-response-recap.txt
- M rocat-app/app/src/main/java/app/rocat/di/AppModule.kt
- M rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailScreen.kt
- M rocat-app/app/src/main/java/app/rocat/ui/detail/ScriptDetailViewModel.kt
- M rocat-app/app/src/main/java/app/rocat/ui/import/ImportScriptScreen.kt
- M rocat-app/app/src/main/java/app/rocat/ui/playground/PlaygroundScreen.kt
- M rocat-app/app/src/main/java/app/rocat/ui/scripts/ScriptsScreen.kt
- M rocat-app/data/src/main/java/app/rocat/data/script/ScriptRepositoryImpl.kt
- M rocat-app/data/src/main/java/app/rocat/data/script/ScriptSourceFetcher.kt
- M rocat-app/gradlew
- M rocat-app/scripting/rhino/src/main/java/app/rocat/scripting/rhino/RhinoScriptEngine.kt
-?? rocat-app/app/src/main/java/app/rocat/di/AppViewModelFactory.kt
----
-diff --git a/ai-response-recap.txt b/ai-response-recap.txt
-index cec173f..5bdd672 100644
---- a/ai-response-recap.txt
-+++ b/ai-response-recap.txt
-@@ -1,886 +1,288 @@
- [0m
- > build · deepseek-v4-flash-free
- [0m
--[0m$ [0mls -la && echo "---" && ls memory_prompt.md 2>/dev/null || echo "memory_prompt.md not found in root"
--total 268
--drwxr-xr-x 20 runner runner  4096 Aug  7 04:23 .
--drwxr-xr-x  3 runner runner  4096 Aug  7 04:22 ..
---rw-r--r--  1 runner runner   971 Aug  7 04:23 .editorconfig
--drwxr-xr-x  7 runner runner  4096 Aug  7 04:23 .git
---rw-r--r--  1 runner runner   304 Aug  7 04:23 .gitattributes
--drwxr-xr-x  5 runner runner  4096 Aug  7 04:23 .github
---rw-r--r--  1 runner runner   183 Aug  7 04:23 .gitignore
--drwxr-xr-x  2 runner runner  4096 Aug  7 04:23 .idea
---rw-r--r--  1 runner runner     0 Aug  7 04:23 .nomedia
---rw-r--r--  1 runner runner 73171 Aug  7 04:23 CHANGELOG.md
-[0m
-[0m$ [0mdate +%Y%m%d_%H%M; ls ai_memory/
-20260808_0313
-00_INDEX.md
-task_20260807_0440_tahap2_3_script_infrastruktur_dan_ui.md
-[0m
-Perubahan kode selesai & build hijau. `ai-response-recap.txt` adalah artefak recap environment yang sudah berubah sebelum sesi ini (bukan perubahan saya). Sekarang tulis log memori:
-[0m← [0mWrite ai_memory/task_20260808_0313_tahap4_stabilisasi_dan_perbaikan_script.md
+Build successful. Now updating the memory system per `memory_prompt.md` protocol.
+[0m← [0mWrite ai_memory/task_20260808_0436_tahap5_global_crash_handler.md
 Wrote file successfully.
 [0m
 [0m← [0mEdit ai_memory/00_INDEX.md
@@ -976,61 +202,48 @@ Index: /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
 ===================================================================
 --- /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
 +++ /home/runner/work/mihon_ROCCKY/mihon_ROCCKY/ai_memory/00_INDEX.md
-@@ -2,16 +2,18 @@
+@@ -2,18 +2,20 @@
  
  Proyek: `rocat-app` — Android app modular ala Mihon untuk mengelola & menjalankan custom userscript (Rhino engine). Workspace: `rocat-app/` di root repo ini.
  
  ## Status Proyek Terkini
--- **Tahap 2 & 3 SELESAI** (2026-08-07): Metadata parser (Tampermonkey header), fetch bridge Rhino yang ditingkatkan (headers, status, JSON, error/timeout, watchdog instruction budget), storage script file-based JSON + CRUD repository, UI Mihon-style (Scripts list, Detail + edit/delete, Import via URL/text, Playground test-runner).
--- Build: `./gradlew :app:assembleDebug` SUCCESS. Unit tests: 14 passing (9 engine Rhino, 5 metadata parser).
--- Baseline Tahap 1 (sebelum sesi ini): modular gradle (app, core:common, core:viewmodel, domain, data, scripting:api, scripting:rhino), NetworkHelper OkHttp, Injekt DI, RhinoScriptEngine dasar.
-+- **Tahap 4 SELESAI** (2026-08-08): Stabilisasi crash (root cause: `viewModel()` tanpa factory utk ViewModel ber-constructor default → default factory gagal instansiasi). Fix: `AppViewModelFactory` + registrasi semua ViewModel via Injekt, semua screen pakai `viewModel(factory=...)`. I/O repository dipindah ke `Dispatchers.IO`. Penyempurnaan: validasi import URL (tolak HTML/empty), engine menangkap `EvaluatorException` (syntax error) & `StackOverflowError` tanpa crash.
-+- Build: `./gradlew :app:assembleDebug` SUCCESS. Unit tests domain + rhino SUCCESS.
-+- Sebelumnya (Tahap 2 & 3, 2026-08-07): metadata parser, fetch bridge Rhino, storage file-based JSON + CRUD, UI Mihon-style (list/detail/import/playground).
-+- Baseline Tahap 1: modular gradle, NetworkHelper OkHttp, Injekt DI, RhinoScriptEngine dasar.
+-- **Tahap 4 SELESAI** (2026-08-08): Stabilisasi crash (root cause: `viewModel()` tanpa factory utk ViewModel ber-constructor default → default factory gagal instansiasi). Fix: `AppViewModelFactory` + registrasi semua ViewModel via Injekt, semua screen pakai `viewModel(factory=...)`. I/O repository dipindah ke `Dispatchers.IO`. Penyempurnaan: validasi import URL (tolak HTML/empty), engine menangkap `EvaluatorException` (syntax error) & `StackOverflowError` tanpa crash.
++- **Tahap 5 SELESAI** (2026-08-08): Global Crash Handler. `CrashHandler` (default uncaught exception handler) menulis report ke `Android/data/app.rocat/files/crash_logs/` via `CrashLogStore`, lalu meluncurkan `CrashActivity` (Activity Compose terpisah, bukan di RoCatNav) yang menampilkan stack trace scrollable + tombol Copy to Clipboard + info path, kemudian `Process.killProcess`. Terdaftar di manifest. Build: `./gradlew :app:assembleDebug` SUCCESS.
+ - Build: `./gradlew :app:assembleDebug` SUCCESS. Unit tests domain + rhino SUCCESS.
++- Sebelumnya (Tahap 4, 2026-08-08): Stabilisasi crash ViewModel factory (`AppViewModelFactory` + Injekt), I/O `Dispatchers.IO`, validasi import URL, error handling Rhino engine.
+ - Sebelumnya (Tahap 2 & 3, 2026-08-07): metadata parser, fetch bridge Rhino, storage file-based JSON + CRUD, UI Mihon-style (list/detail/import/playground).
+ - Baseline Tahap 1: modular gradle, NetworkHelper OkHttp, Injekt DI, RhinoScriptEngine dasar.
  
  ## Riwayat Log
  | # | Tanggal | File | Ringkasan |
  |---|---------|------|-----------|
  | 1 | 2026-08-07 | `task_20260807_0440_tahap2_3_script_infrastruktur_dan_ui.md` | Tahap 2 (loader/metadata/fetch/storage) + Tahap 3 (UI management & playground) selesai, build & test hijau. |
-+| 2 | 2026-08-08 | `task_20260808_0313_tahap4_stabilisasi_dan_perbaikan_script.md` | Tahap 4: fix crash ViewModel factory + I/O Dispatchers.IO, validasi import URL, error handling engine; build & test hijau. |
+ | 2 | 2026-08-08 | `task_20260808_0313_tahap4_stabilisasi_dan_perbaikan_script.md` | Tahap 4: fix crash ViewModel factory + I/O Dispatchers.IO, validasi import URL, error handling engine; build & test hijau. |
++| 3 | 2026-08-08 | `task_20260808_0436_tahap5_global_crash_handler.md` | Tahap 5: global crash handler + CrashLogStore (Android/data) + CrashActivity (stack trace scrollable, copy, path info); build hijau. |
  
  ## Catatan Teknis Penting
  - Rhino 1.7.15: support `let/const`, arrow fn, template literal, Promise, generator; TIDAK support `async/await`, spread, optional-chaining, class. Script sample harus ditulis sync (`fetch()` mengembalikan objek Response sync dengan `.text()`/`.json()`).
  - `fetch()` bridge: sync, melewati `scriptFetch` (OkHttp client app), balikkan `{status,statusText,ok,url,body,headers,error,text(),json()}`.
 
 [0m
-Verifikasi build final setelah semua perubahan:
-[0m$ [0m./gradlew :app:assembleDebug --console=plain 2>&1 | tail -3; echo "EXIT: ${PIPESTATUS[0]}"
-BUILD SUCCESSFUL in 1s
-151 actionable tasks: 151 up-to-date
-EXIT: 0
-[0m
 [0m# [0mTodos
-[✓] Buat AppViewModelFactory + registrasi ViewModel di AppModule (Injekt)
-[✓] Perbaiki 4 screen Compose agar memakai ViewModel factory eksplisit
-[✓] Pindahkan I/O ScriptRepositoryImpl ke Dispatchers.IO
-[✓] Tahap 4.2: validasi import URL di ScriptSourceFetcher (plain text/JS)
-[✓] Tahap 4.2: verifikasi Playground meneruskan URL & render error JS
-[✓] Build verifikasi ./gradlew assembleDebug
-[✓] Tulis log memori (file task + update 00_INDEX.md)
+[✓] 5.1: Create CrashLogStore utility + CrashHandler, wire into RoApp.kt
+[✓] 5.2: Create CrashActivity with Compose UI (scrollable trace, copy, path info)
+[✓] 5.3: Register CrashActivity in AndroidManifest.xml + build check
+[✓] Update ai_memory/00_INDEX.md + create task log file
 [0m
-Tahap 4 selesai. `./gradlew assembleDebug` + unit test SUCCESS.
+Saya sudah membaca `memory_prompt.md` dan `ai_memory/00_INDEX.md`. Tahap 5 selesai, build hijau.
 
-## Akar Masalah Force Close (Utama)
-Screen `ScriptsScreen` (screen pertama saat app dibuka), `ImportScriptScreen`, dan `PlaygroundScreen` membuat ViewModel via `viewModel()` tanpa factory. Constructor ViewModel tersebut memiliki parameter ber-default (`Injekt.get()`), sehingga Kotlin **tidak** menghasilkan public no-arg constructor — hanya constructor sintetis. Default `ViewModelProvider` gagal instansiasi dengan `NoSuchMethodException` → `RuntimeException: Cannot create an instance of class ...ScriptsViewModel` → app force close seketika.
+## Ringkasan Implementasi `UncaughtExceptionHandler`
 
-## Perubahan yang Dilakukan
-**Tahap 4.1 (Stabilisasi):**
-- `di/AppViewModelFactory.kt` (baru): factory eksplisit untuk `ScriptsViewModel`, `ImportScriptViewModel`, `PlaygroundViewModel`.
-- `AppModule.kt`: registrasi keempat ViewModel via Injekt `addSingletonFactory` + `AppViewModelFactory`.
-- `ScriptDetailViewModel`: nested `Factory(scriptId)` (koreksi: nested langsung di class, bukan di companion — divalidasi via kotlinc).
-- Keempat screen kini `viewModel(factory = ...)` eksplisit (ScriptsScreen.kt:45, ImportScriptScreen.kt:43, PlaygroundScreen.kt:50, ScriptDetailScreen.kt:51).
-- `ScriptRepositoryImpl`: `load()`/`save()` dipindah ke `Dispatchers.IO`; load awal asinkron di `init` via `CoroutineScope(Dispatchers.IO)` — tidak lagi memblokir main thread.
-- `MainActivity`/`RoCatNav`: sudah benar (backstack selalu non-empty, `decode` fallback ke `Scripts`; tidak ada route null).
+**Tahap 5.1 — `CrashLogStore.kt`** (baru): utilitas menulis report (throwable + cause chain + device info) ke `context.getExternalFilesDir(null)/crash_logs/crash_log_<timestamp>.txt` → tersimpan di `Android/data/app.rocat/files/`, tanpa runtime permission.
 
-**Tahap 4.2 (Penyempurnaan):**
-- `ScriptSourceFetcher`: validasi respons import URL — tolak Content-Type `text/html`/`xml` dan body HTML/empty dengan pesan error jelas (ditampilkan di UI Import).
-- `RhinoScriptEngine.execute`: menangkap `EvaluatorException` (syntax error → "JS error: ...") dan `StackOverflowError` agar tidak crash. URL Playground sudah diteruskan `main(url)` via `args` (RhinoScriptEngine.kt:74-78) dan `ScriptResult.Failure` dirender merah di Playground.
+**`CrashHandler.kt`** (baru, dipasang dari `RoApp.kt:17`): menggantikan default handler. Alurnya: ① simpan log ke file → ② kirim `Intent` berisi stack trace + path ke `CrashActivity` (flag `NEW_TASK | CLEAR_TASK`) → ③ fallback ke default handler bila proses crash-handling sendiri gagal → ④ `Process.killProcess`. Tujuannya: crash tak menutup app secara senyap, tapi mampir ke crash screen.
 
-Log memori ditulis di `ai_memory/task_20260808_0313_tahap4_stabilisasi_dan_perbaikan_script.md` dan `00_INDEX.md` diperbarui.
+**Tahap 5.2 — `CrashActivity.kt`** (baru): Activity Compose terpisah dari `RoCatNav`/`MainActivity` (agar tetap muncul walau main UI yang crash). Menampilkan stack trace dalam `verticalScroll` monospace, tombol **Copy to Clipboard** (ClipboardManager + Toast), info path "Log saved to…", dan tombol Exit.
+
+**Tahap 5.3** — `CrashActivity` didaftarkan di `AndroidManifest.xml` (`exported=false`, `excludeFromRecents=true`).
+
+**Verifikasi:** `./gradlew :app:assembleDebug` → **BUILD SUCCESSFUL** (151 tasks). Log memori diperbarui (`task_20260808_0436_tahap5_global_crash_handler.md` + `00_INDEX.md`).
+
+Catatan: jika saat uji nyata crash terjadi di main thread dan CrashActivity tak sempat dirender karena race dengan `killProcess`, langkah lanjutan yang disarankan (tercatat di log memori) adalah menjalankan CrashActivity di proses terpisah (`android:process=":crash"`) dengan guard bootstrap DI di `RoApp`.
