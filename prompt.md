@@ -1,89 +1,97 @@
 
 # Role and Objective
-Kamu adalah AI Software Engineer dan Android Developer handal. Kita akan melanjutkan pengembangan aplikasi ke **Tahap 12: Media Renderer & Smart Playground Inputs**.
-Tujuan utama tahap ini adalah membuat Playground bisa me-render *output* gambar/video, menyederhanakan *form* input parameter, dan memfilter fungsi mana yang boleh dieksekusi oleh pengguna (Public vs Private).
+Kamu adalah AI Software Engineer dan Android Developer handal. Kita akan merevisi total arah **Tahap 12: Script-Driven UI & Media Previews (Mihon-Style)**.
+Tujuan utamanya adalah mengubah `PlaygroundScreen` agar perilakunya mirip dengan tab ekstensi di Mihon. UI tidak lagi statis atau mengandalkan tebakan output JSON, melainkan **sepenuhnya dikendalikan oleh skrip JS**. Skrip akan menggunakan fungsi *native bridge* untuk menampilkan input, tombol, gambar, atau video.
 
 # Memory and Constraints (CRITICAL)
 1. **BACA ATURAN MEMORI:**
    - Buka dan baca file `memory_prompt.md`.
-   - Wajib memperbarui log di `ai_memory/00_INDEX.md` dan membuat catatan tugas terperinci di `ai_memory/task_YYYYMMDD_HHMM_tahap12_media_renderer_and_smart_inputs.md` setelah tahap ini selesai.
+   - Wajib memperbarui log di `ai_memory/00_INDEX.md` dan membuat catatan di `ai_memory/task_YYYYMMDD_HHMM_tahap12_script_driven_ui.md` setelah tahap ini selesai.
 2. **Build Verification:**
    - Pastikan setiap perubahan dikonfirmasi dengan `./gradlew assembleDebug` tanpa *error* kompilasi sebelum kamu menyatakan tugas selesai.
 
 ---
 
 # Feature Requirements Analysis
-1. **Media Preview (Image & Video) di Result Card:**
-   - Jika skrip menghasilkan *output* JSON dengan format kontrak tertentu (misalnya memiliki properti `media_type: "image" | "video"` dan `media_url: "..."`), UI Playground tidak hanya menampilkan teks JSON-nya, tetapi juga merender medianya di atas log JSON.
-   - Gunakan pustaka **Coil** (`AsyncImage`) di Jetpack Compose untuk memuat gambar dari URL.
-   - Untuk Video, gunakan *fallback* sederhana seperti tombol "Play Video" yang memicu `Intent.ACTION_VIEW` ke aplikasi pemutar video bawaan / *browser* menggunakan URL tersebut.
-2. **Simplified Dynamic Inputs (Value Only):**
-   - Hapus konsep "Key" pada input. Saat memanggil fungsi JS, pengguna hanya perlu memasukkan nilainya (*value*) secara berurutan (Arg 1, Arg 2, dst).
-   - Secara *default*, sediakan 1 baris input (*value* saja) kosong jika daftar input belum ada. Jika *user* butuh 2 argumen (misal: URL dan Format), mereka tinggal menekan "+ Add Input" untuk menambah baris *value* kedua.
-3. **Public vs Private Functions (Visibility):**
-   - Skrip yang kompleks pasti punya banyak fungsi pembantu (*helper*). Fungsi ini tidak boleh dieksekusi langsung dari Playground.
-   - **Aturan Konvensi:** Fungsi yang namanya diawali dengan *underscore* (contoh: `_fetchData`, `_parseHTML`) dianggap sebagai **Private Function**.
-   - Fungsi normal (contoh: `main`, `getDetail`) dianggap sebagai **Public Function**.
-   - *Dropdown Selector* hanya boleh menampilkan *Public Functions*.
+Kita perlu membuat jembatan UI (`RoCatUI`) yang disuntikkan ke dalam *Rhino Engine* agar skrip JS bisa memanggil komponen UI Compose secara dinamis.
+
+1. **`RoCatUI` Native Bridge:**
+   Skrip JS harus bisa memanggil fungsi berikut:
+   - `RoCatUI.addInput(id, hint)`: Menampilkan *text field*.
+   - `RoCatUI.addButton(label, functionName)`: Menampilkan tombol yang jika diklik akan mengeksekusi fungsi JS bernama `functionName`.
+   - `RoCatUI.thumbnailPreview(url)`: Menampilkan gambar (*image rendering*) menggunakan Coil.
+   - `RoCatUI.videoPreview(url)`: Menampilkan *card/button* untuk memutar video (memicu `Intent.ACTION_VIEW`).
+   - `RoCatUI.clear()`: Membersihkan seluruh komponen UI dari layar.
+   - `RoCatUI.log(text)`: Menambah teks ke area log.
+
+2. **State Management (ViewModel & Compose):**
+   - Buat *sealed class* `UIComponent` di Kotlin (contoh: `Input(id, hint)`, `Button(label, onClick)`, `Thumbnail(url)`, `Video(url)`).
+   - `PlaygroundViewModel` harus menyimpan `SnapshotStateList<UIComponent>`.
+   - Di Compose, lakukan *looping* (misal dengan `LazyColumn`) terhadap state komponen tersebut dan *render* komponen yang sesuai.
+   - Saat tombol ditekan, kumpulkan semua nilai dari komponen `Input`, jadikan satu objek JSON/Map, dan teruskan sebagai argumen ke `ExecuteScript.invoke(..., functionName, inputs)`.
 
 ---
 
 # Execution Plan (Kerjakan Secara Bertahap)
 
-### Tahap 12.1: Update `PlaygroundViewModel.kt` & Regex Parser
-- Ubah state argumen dari `List<Pair<String, String>>` atau data class *Key-Value* menjadi sekadar `List<String>`. 
-- Perbarui logika Regex di `extractFunctionNames`. Gunakan *negative lookahead* agar fungsi yang diawali dengan `_` (underscore) diabaikan.
-  - Contoh Regex: `function\s+(?!_)([a-zA-Z$][\w$]*)\s*\(`
-- Sesuaikan fungsi eksekusi `runFunction()` agar hanya meneruskan daftar nilai *string* (arguments) tersebut ke `ExecuteScript.invoke()`.
+### Tahap 12.1: Buat UI State & `RoCatUI` Bridge
+1. Buat model data untuk UI (misal di folder `domain` atau `presentation`):
+   ```kotlin
+   sealed class ScriptUIComponent {
+       data class Input(val id: String, val hint: String, var value: String = "") : ScriptUIComponent()
+       data class Button(val label: String, val functionName: String) : ScriptUIComponent()
+       data class Thumbnail(val url: String) : ScriptUIComponent()
+       data class Video(val url: String) : ScriptUIComponent()
+       data class LogText(val text: String) : ScriptUIComponent()
+   }
 
-### Tahap 12.2: Update `PlaygroundScreen.kt` (Input UI)
-- Rombak bagian input parameter: Hilangkan kolom "Key". Cukup gunakan satu `OutlinedTextField` *full-width* dengan label "Argument Value (e.g. URL)" untuk setiap item di dalam *list* argumen.
-- Tombol hapus (ikon *Delete*) tetap ada di sebelah kanan tiap input.
-- Default state: tampilkan 1 kolom input kosong.
-
-### Tahap 12.3: Update UI Result / Media Renderer
-- Buat komponen `MediaPreviewRenderer` di dalam atau di atas `CopyableResultCard`.
-- Lakukan *parsing* hasil JSON *output* secara dinamis. Jika mengandung `"media_type": "image"` dan `"media_url"`, tampilkan `AsyncImage` (Coil) menggunakan URL tersebut dengan `contentScale = ContentScale.Fit` dan batas tinggi wajar (misal `heightIn(max = 300.dp)`).
-- Jika `"media_type": "video"`, tampilkan sebuah `OutlinedButton` atau `ElevatedCard` berisi ikon *Play* yang jika diklik akan memicu `Intent(Intent.ACTION_VIEW, Uri.parse(media_url))` dengan MIME type `video/*`.
-
-### Tahap 12.4: Verifikasi & Pembaruan Memori
-- Gunakan dan tes dengan format *script* berikut di Playground:
-
+```
+ 2. Buat *class* UiBridge yang menyimpan *reference* ke fungsi *callback* di ViewModel untuk menambah komponen ini ke state Compose. Ekspos *class* ini ke Rhino dengan nama RoCatUI.
+### Tahap 12.2: Rombak PlaygroundScreen.kt & ViewModel
+ 1. Hapus logika *Function Selector* dan *Input Arg* statis dari Tahap 11.
+ 2. Di saat skrip pertama kali di-load di Playground, otomatis panggil fungsi buildUI() dari JS (jika ada) untuk melakukan *initial render*.
+ 3. Render ScriptUIComponent di layar menggunakan Jetpack Compose:
+   * Thumbnail: Gunakan AsyncImage (Coil).
+   * Video: Gunakan OutlinedButton berikon Play, gunakan Intent.ACTION_VIEW ke URL saat diklik.
+   * Input: Gunakan OutlinedTextField.
+ 4. Saat komponen Button diklik: kumpulkan semua properti value dari state Input ke dalam Map<String, String>, lalu panggil invokeFunction JS sesuai functionName milik tombol tersebut.
+### Tahap 12.3: Uji Coba dengan Skrip Dinamis
+ * Gunakan skrip pengujian ini dan pastikan UI tergambar sesuai instruksi JS:
 ```javascript
 // ==UserScript==
-// @name        Media Downloader Tester
+// @name        Script-Driven UI Tester
 // @version     1.0.0
-// @description Test Image and Video output with private functions
-// @author      Tester
-// @match       *://*/*
 // ==/UserScript==
 
-// Fungsi ini PRIVATE (tidak akan muncul di dropdown)
-function _getResolution(url) {
-    return "1080p"; // Simulasi proses internal
+// Fungsi ini akan dipanggil otomatis oleh Kotlin saat ekstensi dibuka
+function buildUI() {
+    RoCatUI.clear();
+    RoCatUI.thumbnailPreview("[https://via.placeholder.com/300](https://via.placeholder.com/300)");
+    RoCatUI.addInput("video_url", "Masukkan URL Video / Halaman");
+    RoCatUI.addButton("Extract Video", "onExtractClick");
 }
 
-// Fungsi PUBLIC 1: Hanya butuh 1 argumen (URL)
-function getImage(url) {
-    return {
-        media_type: "image",
-        media_url: url,
-        title: "Test Image",
-        resolution: _getResolution(url)
-    };
-}
-
-// Fungsi PUBLIC 2: Butuh 2 argumen (URL, Format)
-function getVideo(url, format) {
-    return {
-        media_type: "video",
-        media_url: url,
-        format_requested: format,
-        resolution: _getResolution(url)
-    };
+function onExtractClick(inputs) {
+    // Membaca nilai dari input berdasarkan ID
+    var url = inputs.video_url;
+    
+    if (!url) {
+        RoCatUI.log("URL tidak boleh kosong!");
+        return;
+    }
+    
+    RoCatUI.log("Memproses: " + url);
+    
+    // Simulasi hasil scrape
+    var extractedVideoUrl = "[https://www.w3schools.com/html/mov_bbb.mp4](https://www.w3schools.com/html/mov_bbb.mp4)";
+    
+    // Menampilkan video preview di UI
+    RoCatUI.videoPreview(extractedVideoUrl);
+    RoCatUI.log("Selesai!");
 }
 
 ```
- * Uji cobakan: masukkan URL gambar valid (.jpg/.png) ke dalam *Argumen 1* dan panggil fungsi getImage. Pastikan gambar ter-render di UI di atas log JSON.
+### Tahap 12.4: Verifikasi & Pembaruan Memori
+ * Pastikan gambar *placeholder* muncul, kolom input berfungsi, dan saat tombol diklik, *preview video* serta log muncul.
  * Jalankan ./gradlew :app:assembleDebug.
- * Perbarui status di ai_memory/00_INDEX.md menjadi **Tahap 12 SELESAI** dan buat catatan di file memori baru sesuai instruksi (CRITICAL).
+ * Perbarui status di ai_memory/00_INDEX.md menjadi **Tahap 12 SELESAI** dan buat catatan terperinci.
