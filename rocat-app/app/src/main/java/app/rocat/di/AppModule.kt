@@ -29,7 +29,7 @@ class AppModule(val app: Application) : InjektModule {
         registrar.add(app)
         registrar.addSingleton(app as Context)
 
-        val networkHelper = NetworkHelper(app.cacheDir)
+        val networkHelper = NetworkHelper(app)
         registrar.addSingleton(networkHelper)
 
         // Wires the Rhino engine + network-backed environment into a single manager.

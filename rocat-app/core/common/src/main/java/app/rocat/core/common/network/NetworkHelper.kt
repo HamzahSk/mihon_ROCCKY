@@ -1,5 +1,8 @@
 package app.rocat.core.common.network
 
+import android.content.Context
+import app.rocat.core.common.network.interceptor.CloudflareInterceptor
+import app.rocat.core.common.network.interceptor.StealthHeadersInterceptor
 import okhttp3.Cache
 import okhttp3.ConnectionSpec
 import okhttp3.OkHttpClient
@@ -18,17 +21,27 @@ import java.util.concurrent.TimeUnit
  *  - [network_security_config.xml] already trusts system + user anchors, and
  *  - here we explicitly configure a browser-grade TLS [ConnectionSpec] set and
  *    disable hostname/SSL redirect blocking so 301 → https jumps keep working.
+ *
+ * Stealth networking (Tahap 10): every client shares [AndroidCookieJar] so OkHttp and
+ * the WebView see identical, persistent cookies, requests carry browser-grade defaults
+ * via [UserAgentInterceptor] + [StealthHeadersInterceptor], and [CloudflareInterceptor]
+ * transparently solves Cloudflare's JS challenge with a headless WebView.
  */
 class NetworkHelper(
-    cacheDir: File,
+    private val context: Context,
     userAgent: String = DEFAULT_USER_AGENT,
 ) {
+
+    /** Single cookie store shared by OkHttp and the WebView (see [AndroidCookieJar]). */
+    val cookieJar = AndroidCookieJar()
+
     private val baseClient: OkHttpClient = OkHttpClient.Builder()
+        .cookieJar(cookieJar)
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .callTimeout(2, TimeUnit.MINUTES)
         .writeTimeout(30, TimeUnit.SECONDS)
-        .cache(Cache(File(cacheDir, "http_cache"), 5L * 1024 * 1024))
+        .cache(Cache(File(context.cacheDir, "network_cache"), 5L * 1024 * 1024))
         .followRedirects(true)
         .followSslRedirects(true)
         .connectionSpecs(
@@ -39,16 +52,19 @@ class NetworkHelper(
             ),
         )
         .addInterceptor(UserAgentInterceptor(userAgent))
+        .addInterceptor(StealthHeadersInterceptor())
         .build()
 
-    val client: OkHttpClient
-        get() = baseClient
+    val client: OkHttpClient = baseClient.newBuilder()
+        .addInterceptor(CloudflareInterceptor(context, cookieJar) { userAgent })
+        .build()
 
     /**
      * A short-lived client with aggressive timeouts, used by script executions so a
-     * misbehaving script cannot hang the app or poison the shared connection pool.
+     * misbehaving script cannot hang the app or poison the shared connection pool. It
+     * still carries the cookie jar and Cloudflare interceptor of the main client.
      */
-    fun newScriptClient(): OkHttpClient = baseClient.newBuilder()
+    fun newScriptClient(): OkHttpClient = client.newBuilder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(10, TimeUnit.SECONDS)
         .callTimeout(30, TimeUnit.SECONDS)
