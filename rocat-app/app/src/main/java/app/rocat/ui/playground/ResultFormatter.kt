@@ -6,7 +6,7 @@ import kotlinx.serialization.json.JsonElement
 
 /**
  * Helpers used by the playground result/log card to format output before it is
- * copied to the clipboard.
+ * displayed and copied to the clipboard.
  */
 object ResultFormatter {
 
@@ -16,16 +16,15 @@ object ResultFormatter {
      */
     @OptIn(ExperimentalSerializationApi::class)
     fun prettyJson(raw: String): String {
-        val pretty = Json {
+        val jsonElement = try {
+            Json.parseToJsonElement(raw)
+        } catch (e: Exception) {
+            return raw
+        }
+        val format = Json {
             prettyPrint = true
             prettyPrintIndent = "  "
-            ignoreUnknownKeys = true
         }
-        return try {
-            val element: JsonElement = Json.parseToJsonElement(raw)
-            pretty.encodeToString(JsonElement.serializer(), element)
-        } catch (e: Exception) {
-            raw
-        }
+        return format.encodeToString(JsonElement.serializer(), jsonElement)
     }
 }

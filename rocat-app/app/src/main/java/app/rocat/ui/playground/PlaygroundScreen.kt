@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -98,43 +99,6 @@ fun PlaygroundScreen(
                 onSelect = viewModel::select,
             )
 
-            ElevatedCard(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Run main",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Text(
-                        text = "Executes the script's `main(...)` entry point.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = state.targetUrl,
-                        onValueChange = viewModel::onUrlChange,
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Target URL") },
-                        singleLine = true,
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    Button(
-                        onClick = viewModel::run,
-                        enabled = !state.running,
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        if (state.running) {
-                            CircularProgressIndicator(modifier = Modifier.width(18.dp).height(18.dp))
-                            Spacer(Modifier.width(8.dp))
-                        }
-                        Text(if (state.running) "Running…" else "Run")
-                    }
-                }
-            }
-
-            ResultCard(result = state.result)
-
             TestFunctionSection(
                 function = state.testFunction,
                 suggestions = state.testFunctionSuggestions,
@@ -190,17 +154,6 @@ private fun ScriptPicker(
     }
 }
 
-@Composable
-private fun ResultCard(result: String) {
-    CopyableResultCard(
-        title = "Result",
-        emptyHint = "No output yet. Run the script to see its return value here.",
-        content = result,
-        maxHeight = 480.dp,
-        modifier = Modifier.fillMaxWidth().padding(16.dp),
-    )
-}
-
 /**
  * Card that renders [content] in a scrollable monospace text area and offers a small
  * action bar to copy the output to the clipboard either as pretty-printed JSON or as
@@ -216,6 +169,7 @@ private fun CopyableResultCard(
 ) {
     val clipboard = LocalClipboardManager.current
     val context = LocalContext.current
+    val displayText = ResultFormatter.prettyJson(content)
 
     ElevatedCard(modifier = modifier) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -249,8 +203,7 @@ private fun CopyableResultCard(
                     )
                     TextButton(
                         onClick = {
-                            val text = ResultFormatter.prettyJson(content)
-                            clipboard.setText(AnnotatedString(text))
+                            clipboard.setText(AnnotatedString(displayText))
                             Toast.makeText(context, "JSON copied to clipboard", Toast.LENGTH_SHORT).show()
                         },
                     ) {
@@ -260,7 +213,7 @@ private fun CopyableResultCard(
                     }
                     OutlinedButton(
                         onClick = {
-                            clipboard.setText(AnnotatedString(content))
+                            clipboard.setText(AnnotatedString(displayText))
                             Toast.makeText(context, "Text copied to clipboard", Toast.LENGTH_SHORT).show()
                         },
                     ) {
@@ -270,11 +223,13 @@ private fun CopyableResultCard(
                     }
                 }
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                Text(
-                    text = content,
-                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                    modifier = Modifier.fillMaxWidth().heightIn(max = maxHeight).verticalScroll(rememberScrollState()),
-                )
+                SelectionContainer {
+                    Text(
+                        text = displayText,
+                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                        modifier = Modifier.fillMaxWidth().heightIn(max = maxHeight).verticalScroll(rememberScrollState()),
+                    )
+                }
             }
         }
     }
@@ -347,43 +302,44 @@ private fun TestFunctionSection(
 
             Spacer(Modifier.height(12.dp))
 
-            Text(
-                "Inputs",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(4.dp))
+            if (args.isNotEmpty()) {
+                Text(
+                    "Inputs",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(4.dp))
 
-            args.forEachIndexed { index, arg ->
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    OutlinedTextField(
-                        value = arg.label,
-                        onValueChange = { onLabelChange(index, it) },
-                        modifier = Modifier.width(100.dp),
-                        label = { Text("Key") },
-                        singleLine = true,
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    OutlinedTextField(
-                        value = arg.value,
-                        onValueChange = { onValueChange(index, it) },
-                        modifier = Modifier.weight(1f),
-                        label = { Text("Value") },
-                        singleLine = true,
-                    )
-                    Spacer(Modifier.width(4.dp))
-                    IconButton(
-                        onClick = { onRemoveArg(index) },
-                        enabled = args.size > 1,
+                args.forEachIndexed { index, arg ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Icon(
-                            Icons.Filled.Delete,
-                            contentDescription = "Remove input",
-                            tint = MaterialTheme.colorScheme.error,
+                        OutlinedTextField(
+                            value = arg.label,
+                            onValueChange = { onLabelChange(index, it) },
+                            modifier = Modifier.width(100.dp),
+                            label = { Text("Key") },
+                            singleLine = true,
                         )
+                        Spacer(Modifier.width(8.dp))
+                        OutlinedTextField(
+                            value = arg.value,
+                            onValueChange = { onValueChange(index, it) },
+                            modifier = Modifier.weight(1f),
+                            label = { Text("Value") },
+                            singleLine = true,
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        IconButton(
+                            onClick = { onRemoveArg(index) },
+                        ) {
+                            Icon(
+                                Icons.Filled.Delete,
+                                contentDescription = "Remove input",
+                                tint = MaterialTheme.colorScheme.error,
+                            )
+                        }
                     }
                 }
             }

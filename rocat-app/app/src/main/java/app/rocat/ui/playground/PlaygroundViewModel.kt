@@ -23,29 +23,31 @@ data class TestArg(
 )
 
 /**
- * Test runner for installed scripts. Only enabled scripts are runnable; the chosen
- * script's `main(targetUrl)` is executed and its return value shown in the UI.
- * A separate "Test Execution" section can invoke any named function inside the
- * script (`search`, `detail`, ...) with a dynamic, user-controlled list of args.
+ * Test runner for installed scripts. The "Test Function" section can invoke any named
+ * function inside the script (`main`, `search`, `detail`, ...) with a dynamic,
+ * user-controlled list of args. Function names are detected automatically from the
+ * script source, so no manual entry is required; the default argument state is empty
+ * unless the user explicitly adds inputs.
  *
  * Every execution failure (engine error, validation, or a stray Throwable) is written
- * INTO the Result / log area instead of being rendered as floating red text, and is
- * caught so a runtime error from JS never force-closes the app.
+ * INTO the log area instead of being rendered as floating red text, and is caught so a
+ * runtime error from JS never force-closes the app.
  */
 class PlaygroundViewModel(
     private val getScripts: GetScripts = Injekt.get(),
     private val executeScript: ExecuteScript = Injekt.get(),
 ) : StateViewModel<PlaygroundViewModel.State>(State()) {
 
+    companion object {
+        private val FUNCTION_NAME_REGEX = Regex("function\\s+([a-zA-Z_$][\\w$]*)\\s*\\(")
+    }
+
     data class State(
         val scripts: List<Script> = emptyList(),
         val selectedId: String? = null,
-        val targetUrl: String = "https://example.com/",
-        val running: Boolean = false,
-        val result: String = "",
-        val testFunction: String = "search",
-        val testFunctionSuggestions: List<String> = listOf("search", "detail", "main"),
-        val testArgs: List<TestArg> = listOf(TestArg()),
+        val testFunction: String = "",
+        val testFunctionSuggestions: List<String> = emptyList(),
+        val testArgs: List<TestArg> = emptyList(),
         val executing: Boolean = false,
         val log: String = "",
     ) {
@@ -62,17 +64,39 @@ class PlaygroundViewModel(
                     } else {
                         enabled.firstOrNull()?.id
                     }
-                    current.copy(scripts = enabled, selectedId = selection)
+                    val script = enabled.firstOrNull { it.id == selection }
+                    val functions = script?.let { extractFunctionNames(it.source) }.orEmpty()
+                    val selectionChanged = selection != current.selectedId
+                    current.copy(
+                        scripts = enabled,
+                        selectedId = selection,
+                        testFunctionSuggestions = functions,
+                        testFunction = if (selectionChanged) (functions.firstOrNull() ?: "") else current.testFunction,
+                        testArgs = if (selectionChanged) emptyList() else current.testArgs,
+                    )
                 }
             }
         }
     }
 
-    fun select(id: String) = mutableState.update {
-        it.copy(selectedId = id, result = "", log = "")
-    }
+    /**
+     * Scans a script's source code and returns the names of every function declared
+     * with the classic `function name(...)` syntax.
+     */
+    fun extractFunctionNames(scriptCode: String): List<String> =
+        FUNCTION_NAME_REGEX.findAll(scriptCode).map { it.groupValues[1] }.toList()
 
-    fun onUrlChange(value: String) = mutableState.update { it.copy(targetUrl = value) }
+    fun select(id: String) = mutableState.update { current ->
+        val script = current.scripts.firstOrNull { it.id == id }
+        val functions = script?.let { extractFunctionNames(it.source) }.orEmpty()
+        current.copy(
+            selectedId = id,
+            testFunctionSuggestions = functions,
+            testFunction = functions.firstOrNull() ?: "",
+            testArgs = emptyList(),
+            log = "",
+        )
+    }
 
     fun onTestFunctionChange(value: String) = mutableState.update { it.copy(testFunction = value) }
 
@@ -91,37 +115,6 @@ class PlaygroundViewModel(
     fun updateArgValue(index: Int, value: String) = mutableState.update {
         if (index < 0 || index >= it.testArgs.size) it
         else it.copy(testArgs = it.testArgs.mapIndexed { i, arg -> if (i == index) arg.copy(value = value) else arg })
-    }
-
-    fun run() {
-        val current = state.value
-        val script = current.selectedScript
-        if (script == null) {
-            mutableState.update { it.copy(result = "Select an enabled script first") }
-            return
-        }
-        if (current.targetUrl.isBlank()) {
-            mutableState.update { it.copy(result = "Enter a target URL") }
-            return
-        }
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                mutableState.update { it.copy(running = true, result = "") }
-                val res = executeScript.await(script, listOf(current.targetUrl))
-                withContext(Dispatchers.Main) {
-                    when (res) {
-                        is ScriptResult.Success -> mutableState.update { it.copy(running = false, result = res.value) }
-                        is ScriptResult.Failure -> mutableState.update { it.copy(running = false, result = "Error: ${res.error}") }
-                    }
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Throwable) {
-                withContext(Dispatchers.Main) {
-                    mutableState.update { it.copy(running = false, result = "Error: ${e.message ?: e.javaClass.simpleName}") }
-                }
-            }
-        }
     }
 
     /**
