@@ -1,7 +1,9 @@
 package app.rocat.ui.playground
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,10 +22,12 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -114,6 +118,15 @@ fun PlaygroundScreen(
             }
 
             ResultCard(state.result)
+            TestExecutionSection(
+                param = state.testParam,
+                onParamChange = viewModel::onTestParamChange,
+                onSearch = viewModel::runSearch,
+                onDetail = viewModel::runDetail,
+                executing = state.executing,
+                log = state.log,
+                logError = state.logError,
+            )
             Spacer(Modifier.height(24.dp))
         }
     }
@@ -173,6 +186,83 @@ private fun ResultCard(result: String) {
                     text = result,
                     style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                     modifier = Modifier.fillMaxWidth().heightIn(max = 480.dp).verticalScroll(rememberScrollState()),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * "Test Execution" section: runs a specific function in the selected script
+ * (`search(query)` or `detail(url)`) with a dynamic parameter typed in the UI,
+ * then shows the JSON return value in a scrollable log area.
+ */
+@Composable
+private fun TestExecutionSection(
+    param: String,
+    onParamChange: (String) -> Unit,
+    onSearch: () -> Unit,
+    onDetail: () -> Unit,
+    executing: Boolean,
+    log: String,
+    logError: String?,
+) {
+    Card(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("Test Execution", style = MaterialTheme.typography.titleSmall)
+            Text(
+                text = "Call a specific function inside the script and see its JSON output.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(
+                value = param,
+                onValueChange = onParamChange,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Parameter (query or URL)") },
+                singleLine = true,
+            )
+            Spacer(Modifier.height(12.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = onSearch, enabled = !executing) {
+                    if (executing) {
+                        CircularProgressIndicator(modifier = Modifier.width(16.dp).height(16.dp))
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    Text("Run Search")
+                }
+                OutlinedButton(onClick = onDetail, enabled = !executing) {
+                    Text("Run Detail")
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+            HorizontalDivider()
+
+            val error = logError
+            if (error != null) {
+                Text(
+                    text = error,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
+            if (log.isEmpty()) {
+                Text(
+                    text = "Function output will appear here as JSON.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            } else {
+                Text(
+                    text = log,
+                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                    modifier = Modifier.fillMaxWidth()
+                        .heightIn(max = 320.dp)
+                        .padding(top = 8.dp)
+                        .verticalScroll(rememberScrollState()),
                 )
             }
         }

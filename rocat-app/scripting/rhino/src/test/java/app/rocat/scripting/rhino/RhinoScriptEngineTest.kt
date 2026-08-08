@@ -162,4 +162,115 @@ class RhinoScriptEngineTest {
 
         assertEquals(ScriptResult.Success("result=42"), result)
     }
+
+    // --- Tahap 8: Script Execution API & Native DOM Bridge (RoCatDOM) ---
+
+    @Test
+    fun `invokeFunction calls search and stringifies result`() = runBlocking {
+        val html = """
+            <html><body>
+              <div class="col-12 col-lg-6 p-3 text">
+                <a class="linked-name-module__9zptFq__name_underline"
+                   href="/series/rccbc2h/turning" title="Click for Series Info">Turning</a>
+                <img src="https://cdn.example/turning.jpg"/>
+                <div class="mu-markdown-module___SC9hG__mu_markdown">A great manga</div>
+                <div class="textsmall"><span class="text-truncate">Action, Adventure, Comedy</span></div>
+              </div>
+            </body></html>
+        """.trimIndent()
+        server.enqueue(MockResponse().setResponseCode(200).setBody(html))
+
+        val source = """
+            function search(q) {
+                var u = serverUrl() + "search?q=" + encodeURIComponent(q);
+                var r = fetch(u);
+                return RoCatDOM.parse(r.text()).find(".col-12.col-lg-6.p-3.text").map(function (card) {
+                    return {
+                        title: card.textOf(".linked-name-module__9zptFq__name_underline"),
+                        url: card.attrOf('a[title="Click for Series Info"]', "href"),
+                        image: card.find("img").length > 0 ? card.find("img")[0].attr("src") : null,
+                        genres: card.textOf(".textsmall .text-truncate").split(",").map(function (v) { return v.trim(); })
+                    };
+                });
+            }
+            function serverUrl() { return "SERVER_URL"; }
+        """.trimIndent()
+        val finalSource = source.replace("SERVER_URL", server.url("/").toString())
+
+        val result = engine.invokeFunction(script(finalSource), environment, "search", listOf("turning"))
+
+        assertTrue(result is ScriptResult.Success)
+        val json = (result as ScriptResult.Success).value
+        assertTrue("json=$json", json.contains("Turning"))
+        assertTrue("json=$json", json.contains("/series/rccbc2h/turning"))
+        assertTrue("json=$json", json.contains("Action"))
+    }
+
+    @Test
+    fun `invokeFunction runs detail and parses json-ld via RoCatDOM`() = runBlocking {
+        val html = """
+            <html><head>
+              <script type="application/ld+json">{"name":"Turning","image":"https://cdn.example/t.jpg","genre":["Action"]}</script>
+            </head><body>
+              <div class="info-box-module__gIhiNW__sCat">Type</div>
+              <div class="info-box-module__gIhiNW__sContent">Manga</div>
+              <div class="info-box-module__gIhiNW__sCat">Groups Scanlating</div>
+              <div class="info-box-module__gIhiNW__sContent"><a href="/groups/abc">GroupA</a></div>
+            </body></html>
+        """.trimIndent()
+        server.enqueue(MockResponse().setResponseCode(200).setBody(html))
+
+        val source = """
+            function detail(url) {
+                var r = fetch(url);
+                var root = RoCatDOM.parse(r.text());
+                var json = {};
+                var ld = root.find('script[type="application/ld+json"]');
+                if (ld.length > 0 && ld[0].innerHtml) json = JSON.parse(ld[0].innerHtml);
+                var data = { title: json.name, cover: json.image };
+                var keys = root.find(".info-box-module__gIhiNW__sCat");
+                for (var i = 0; i < keys.length; i++) {
+                    var box = keys[i].nextElement(".info-box-module__gIhiNW__sContent");
+                    if (keys[i].text === "Type") data.type = box.text;
+                    if (keys[i].text === "Groups Scanlating") {
+                        data.groups = box.find("a").map(function (a) { return { name: a.text, url: a.attr("href") }; });
+                    }
+                }
+                return data;
+            }
+        """.trimIndent()
+
+        val result = engine.invokeFunction(script(source), environment, "detail", listOf(server.url("/d").toString()))
+
+        assertTrue(result is ScriptResult.Success)
+        val json = (result as ScriptResult.Success).value
+        assertTrue("json=$json", json.contains("\"title\":\"Turning\""))
+        assertTrue("json=$json", json.contains("https://cdn.example/t.jpg"))
+        assertTrue("json=$json", json.contains("\"name\":\"GroupA\""))
+    }
+
+    @Test
+    fun `rocatdom exposes selectText and selectAttr`() = runBlocking {
+        val html = "<html><body><h1 class='title'>Hello World</h1><a href='/x'>link</a></body></html>"
+        val source = """
+            function main(h) {
+                return RoCatDOM.selectText(h, ".title") + "|" + RoCatDOM.selectAttr(h, "a", "href");
+            }
+        """.trimIndent()
+
+        val result = engine.execute(script(source), environment, listOf(html))
+
+        assertEquals(ScriptResult.Success("Hello World|/x"), result)
+    }
+
+    @Test
+    fun `invokeFunction reports missing function`() = runBlocking {
+        val source = "function other() { return 1; }"
+
+        val result = engine.invokeFunction(script(source), environment, "search", listOf("x"))
+
+        assertTrue(result is ScriptResult.Failure)
+        val error = (result as ScriptResult.Failure).error
+        assertTrue("error=$error", error.contains("search"))
+    }
 }

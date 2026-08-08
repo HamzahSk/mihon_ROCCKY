@@ -15,4 +15,15 @@ class ExecuteScript(
 ) {
     suspend fun await(script: Script, args: List<String> = emptyList()): ScriptResult =
         engine.execute(script, environment, args)
+
+    /**
+     * Runs a named function inside the script (e.g. `search(query)` or
+     * `detail(url)`) and returns its value serialized to JSON. Used by the
+     * playground's "Test Execution" section.
+     */
+    suspend fun invoke(
+        script: Script,
+        functionName: String,
+        args: List<String> = emptyList(),
+    ): ScriptResult = engine.invokeFunction(script, environment, functionName, args)
 }

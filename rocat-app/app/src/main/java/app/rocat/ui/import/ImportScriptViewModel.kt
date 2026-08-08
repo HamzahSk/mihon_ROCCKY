@@ -84,23 +84,170 @@ class ImportScriptViewModel(
             else -> "Import failed: ${e.message ?: e.javaClass.simpleName}"
         }
 
-        /** A small Rhino-compatible sample (no async/await) with a complete userscript header. */
+        /**
+         * A Rhino-compatible sample (no async/await, no imports) that uses the
+         * built-in [app.rocat.scripting.rhino.RhinoScriptEngine] `fetch` bridge and
+         * the `RoCatDOM` DOM bridge (Jsoup) instead of Cheerio. Exposes both
+         * `search(query)` and `detail(url)` for the playground's Test Execution.
+         */
         val EXAMPLE_SCRIPT = """
             // ==UserScript==
-            // @name        Example JSON Fetcher
+            // @name        MangaUpdates Searcher
             // @version     1.0.0
-            // @description Fetches the target URL and returns its raw text body.
+            // @description Search & detail for MangaUpdates (sync fetch + RoCatDOM).
             // @author      RoCat
-            // @match       *
+            // @match       https://www.mangaupdates.com/*
             // @grant       none
             // ==/UserScript==
 
-            function main(url) {
+            function main(query) {
+                return search(query);
+            }
+
+            function search(query) {
+                var url = "https://www.mangaupdates.com/series?search=" +
+                    encodeURIComponent(query) + "&perpage=10";
                 var res = fetch(url, "GET", {}, null);
                 if (!res.ok) {
-                    return "HTTP " + res.status + " | error: " + res.error;
+                    return { error: "HTTP " + res.status, message: res.body };
                 }
-                return res.text();
+                return parseSearch(res.text());
+            }
+
+            function parseSearch(html) {
+                var cards = RoCatDOM.parse(html).find(".col-12.col-lg-6.p-3.text");
+                var results = [];
+                for (var i = 0; i < cards.length; i++) {
+                    var card = cards[i];
+                    var url = card.attrOf('a[title="Click for Series Info"]', "href") || "";
+                    var imgEls = card.find("img");
+                    var parts = url.split("/");
+                    results.push({
+                        id: parts.length > 1 ? parts[parts.length - 2] : null,
+                        slug: parts.length > 0 ? parts[parts.length - 1] : null,
+                        title: card.textOf(".linked-name-module__9zptFq__name_underline"),
+                        url: url,
+                        image: imgEls.length > 0 ? imgEls[0].attr("src") : null,
+                        adult: card.contains(".series-box-module__K7yETa__adult"),
+                        genres: splitComma(card.textOf(".textsmall .text-truncate")),
+                        description: collapse(card.textOf(".mu-markdown-module___SC9hG__mu_markdown")),
+                        year: firstYear(lastText(card, "> .row .series-box-module__K7yETa__mw_flex .text")),
+                        rating: card.textOf("b") || null
+                    });
+                }
+                return results;
+            }
+
+            function detail(url) {
+                var res = fetch(url, "GET", {}, null);
+                if (!res.ok) {
+                    return { error: "HTTP " + res.status, message: res.body };
+                }
+                return parseDetail(res.text());
+            }
+
+            function parseDetail(html) {
+                var root = RoCatDOM.parse(html);
+                var data = {};
+
+                var json = {};
+                var ld = root.find('script[type="application/ld+json"]');
+                if (ld.length > 0 && ld[0].innerHtml) {
+                    try { json = JSON.parse(ld[0].innerHtml); } catch (e) { json = {}; }
+                }
+
+                var alt = orNull(json.alternateName);
+                var genres = orNull(json.genre);
+                data.id = orNull(json.identifier);
+                data.title = orNull(json.name);
+                data.alternativeTitles = alt !== null ? alt : [];
+                data.cover = orNull(json.image);
+                data.url = orNull(json.url);
+                data.synopsis = orNull(json.description);
+                data.year = orNull(json.datePublished);
+                data.genres = genres !== null ? genres : [];
+                data.authors = mapNamedLinks(json.author, "name");
+                data.publishers = mapNamedLinks(json.publisher, "name");
+
+                var keys = root.find(".info-box-module__gIhiNW__sCat");
+                for (var i = 0; i < keys.length; i++) {
+                    var key = keys[i].text;
+                    var valueBox = keys[i].nextElement(".info-box-module__gIhiNW__sContent");
+                    if (valueBox === null) continue;
+
+                    if (key === "Type") {
+                        data.type = valueBox.text;
+                    } else if (key === "Status in Country of Origin") {
+                        data.status = collapse(valueBox.text);
+                    } else if (key === "Licensed (in English)") {
+                        data.licensed = valueBox.text;
+                    } else if (key === "Completely Scanlated?") {
+                        data.scanlated = valueBox.text;
+                    } else if (key === "Anime Start/End Chapter") {
+                        data.anime = valueBox.text;
+                    } else if (key === "Associated Names") {
+                        data.associatedNames = valueBox.textsOf("div");
+                    } else if (key === "Groups Scanlating") {
+                        data.groups = mapNamedLinks(valueBox.find("a"), "name");
+                    } else if (key === "Related Series") {
+                        data.relatedSeries = mapNamedLinks(valueBox.find("a"), "title");
+                    } else if (key === "Recommendations") {
+                        data.recommendations = mapNamedLinks(valueBox.find("a"), "title");
+                    } else if (key === "Latest Release(s)") {
+                        var relEls = valueBox.find("> div");
+                        data.latestReleases = [];
+                        for (var j = 0; j < relEls.length; j++) {
+                            data.latestReleases.push(collapse(relEls[j].text));
+                        }
+                    } else {
+                        data[slugify(key)] = collapse(valueBox.text);
+                    }
+                }
+                return data;
+            }
+
+            function mapNamedLinks(list, keyName) {
+                var arr = [];
+                if (list === null || list === undefined) return arr;
+                for (var i = 0; i < list.length; i++) {
+                    var o = {};
+                    o[keyName] = list[i].name;
+                    o.url = orNull(list[i].url);
+                    arr.push(o);
+                }
+                return arr;
+            }
+
+            function orNull(v) {
+                return (v === undefined || v === null) ? null : v;
+            }
+
+            function firstYear(text) {
+                var m = text.match(/\d{4}/);
+                return m ? m[0] : null;
+            }
+
+            function lastText(el, selector) {
+                var els = el.find(selector);
+                return els.length > 0 ? collapse(els[els.length - 1].text) : "";
+            }
+
+            function splitComma(text) {
+                var parts = text.split(",");
+                var out = [];
+                for (var i = 0; i < parts.length; i++) {
+                    var v = parts[i].trim();
+                    if (v.length > 0) out.push(v);
+                }
+                return out;
+            }
+
+            function collapse(text) {
+                return text.replace(/\s+/g, " ").trim();
+            }
+
+            function slugify(text) {
+                return text.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
             }
         """.trimIndent()
     }

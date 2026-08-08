@@ -60,6 +60,24 @@ interface ScriptEngine {
         environment: ScriptEnvironment,
         args: List<String> = emptyList(),
     ): ScriptResult
+
+    /**
+     * Evaluates [script] to register its functions, then invokes the function named
+     * [functionName] with [args] (passed as JS strings).
+     *
+     * Used by the playground's "Test Execution" section to call a specific entry
+     * point (e.g. `search(query)` or `detail(url)`) instead of the generic
+     * `main(...)` entry point.
+     *
+     * @return the function's return value serialized to JSON, or a [ScriptResult.Failure]
+     *   if the script does not compile, the function is missing, or it throws.
+     */
+    suspend fun invokeFunction(
+        script: Script,
+        environment: ScriptEnvironment,
+        functionName: String,
+        args: List<String> = emptyList(),
+    ): ScriptResult
 }
 
 /**

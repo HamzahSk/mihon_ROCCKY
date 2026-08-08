@@ -1,203 +1,162 @@
-import * as cheerio from "cheerio";
+// ==UserScript==
+// @name        MangaUpdates Searcher
+// @version     1.0.0
+// @description Search & detail for MangaUpdates (sync fetch + RoCatDOM, no cheerio).
+// @author      RoCat
+// @match       https://www.mangaupdates.com/*
+// @grant       none
+// ==/UserScript==
 
-async function search(query) {
-    const res = await fetch(
-        `https://www.mangaupdates.com/series?search=${encodeURIComponent(query)}&perpage=10`
-    );
+// Rhino 1.7.15 does NOT support async/await or imports. This script uses the
+// synchronous fetch() bridge (returns a Response with .text()/.json()) and the
+// built-in RoCatDOM DOM bridge (Jsoup) instead of cheerio.
 
-    const html = await res.text();
+function main(query) {
+    return search(query);
+}
 
-    return parseSearch(html);
+function search(query) {
+    var url = "https://www.mangaupdates.com/series?search=" +
+        encodeURIComponent(query) + "&perpage=10";
+    var res = fetch(url, "GET", {}, null);
+    if (!res.ok) {
+        return { error: "HTTP " + res.status, message: res.body };
+    }
+    return parseSearch(res.text());
 }
 
 function parseSearch(html) {
-    const $ = cheerio.load(html);
-    const results = [];
-
-    $(".col-12.col-lg-6.p-3.text").each((_, el) => {
-        const card = $(el);
-
-        const title = card
-            .find(".linked-name-module__9zptFq__name_underline")
-            .first()
-            .text()
-            .trim();
-
-        const url = card
-            .find('a[title="Click for Series Info"]')
-            .attr("href") || "";
-
-        const image = card.find("img").attr("src") || null;
-
-        const adult =
-            card.find(".series-box-module__K7yETa__adult").length > 0;
-
-        const genres = card
-            .find(".textsmall .text-truncate")
-            .text()
-            .trim()
-            .split(",")
-            .map(v => v.trim())
-            .filter(Boolean);
-
-        const description = card
-            .find(".mu-markdown-module___SC9hG__mu_markdown")
-            .text()
-            .replace(/\s+/g, " ")
-            .trim();
-
-        const infoText = card
-            .find("> .row .series-box-module__K7yETa__mw_flex .text")
-            .last()
-            .text()
-            .replace(/\s+/g, " ")
-            .trim();
-
-        const year = infoText.match(/\d{4}/)?.[0] ?? null;
-        const rating = card.find("b").first().text().trim() || null;
-
-        const slug = url.split("/").pop() || null;
-        const id = url.split("/").at(-2) || null;
-
+    var cards = RoCatDOM.parse(html).find(".col-12.col-lg-6.p-3.text");
+    var results = [];
+    for (var i = 0; i < cards.length; i++) {
+        var card = cards[i];
+        var url = card.attrOf('a[title="Click for Series Info"]', "href") || "";
+        var imgEls = card.find("img");
+        var parts = url.split("/");
         results.push({
-            id,
-            slug,
-            title,
-            url,
-            image,
-            adult,
-            genres,
-            description,
-            year,
-            rating,
+            id: parts.length > 1 ? parts[parts.length - 2] : null,
+            slug: parts.length > 0 ? parts[parts.length - 1] : null,
+            title: card.textOf(".linked-name-module__9zptFq__name_underline"),
+            url: url,
+            image: imgEls.length > 0 ? imgEls[0].attr("src") : null,
+            adult: card.contains(".series-box-module__K7yETa__adult"),
+            genres: splitComma(card.textOf(".textsmall .text-truncate")),
+            description: collapse(card.textOf(".mu-markdown-module___SC9hG__mu_markdown")),
+            year: firstYear(lastText(card, "> .row .series-box-module__K7yETa__mw_flex .text")),
+            rating: card.textOf("b") || null
         });
-    });
-
+    }
     return results;
 }
 
-export async function detail(url) {
-    const res = await fetch(url);
-    const html = await res.text();
-
-    return parseDetail(html);
+function detail(url) {
+    var res = fetch(url, "GET", {}, null);
+    if (!res.ok) {
+        return { error: "HTTP " + res.status, message: res.body };
+    }
+    return parseDetail(res.text());
 }
 
 function parseDetail(html) {
-    const $ = cheerio.load(html);
+    var root = RoCatDOM.parse(html);
+    var data = {};
 
-    // JSON-LD
-    const json = JSON.parse(
-        $('script[type="application/ld+json"]').first().html() || "{}"
-    );
+    var json = {};
+    var ld = root.find('script[type="application/ld+json"]');
+    if (ld.length > 0 && ld[0].innerHtml) {
+        try { json = JSON.parse(ld[0].innerHtml); } catch (e) { json = {}; }
+    }
 
-    const data = {
-        id: json.identifier ?? null,
-        title: json.name ?? null,
-        alternativeTitles: json.alternateName ?? [],
-        cover: json.image ?? null,
-        url: json.url ?? null,
-        synopsis: json.description ?? null,
-        year: json.datePublished ?? null,
-        genres: json.genre ?? [],
-        authors: (json.author || []).map(v => ({
-            name: v.name,
-            url: v.url
-        })),
-        publishers: (json.publisher || []).map(v => ({
-            name: v.name,
-            url: v.url
-        }))
-    };
+    var alt = orNull(json.alternateName);
+    var genres = orNull(json.genre);
+    data.id = orNull(json.identifier);
+    data.title = orNull(json.name);
+    data.alternativeTitles = alt !== null ? alt : [];
+    data.cover = orNull(json.image);
+    data.url = orNull(json.url);
+    data.synopsis = orNull(json.description);
+    data.year = orNull(json.datePublished);
+    data.genres = genres !== null ? genres : [];
+    data.authors = mapNamedLinks(json.author, "name");
+    data.publishers = mapNamedLinks(json.publisher, "name");
 
-    // Semua info-box
-    $(".info-box-module__gIhiNW__sCat").each((_, el) => {
-        const key = $(el).text().trim();
-        const valueBox = $(el).next(".info-box-module__gIhiNW__sContent");
+    var keys = root.find(".info-box-module__gIhiNW__sCat");
+    for (var i = 0; i < keys.length; i++) {
+        var key = keys[i].text;
+        var valueBox = keys[i].nextElement(".info-box-module__gIhiNW__sContent");
+        if (valueBox === null) continue;
 
-        switch (key) {
-            case "Type":
-                data.type = valueBox.text().trim();
-                break;
-
-            case "Status in Country of Origin":
-                data.status = valueBox.text().replace(/\s+/g, " ").trim();
-                break;
-
-            case "Licensed (in English)":
-                data.licensed = valueBox.text().trim();
-                break;
-
-            case "Completely Scanlated?":
-                data.scanlated = valueBox.text().trim();
-                break;
-
-            case "Anime Start/End Chapter":
-                data.anime = valueBox.text().trim();
-                break;
-
-            case "Associated Names":
-                data.associatedNames = valueBox
-                    .find("div")
-                    .map((_, x) => $(x).text().trim())
-                    .get();
-                break;
-
-            case "Groups Scanlating":
-                data.groups = valueBox
-                    .find("a")
-                    .map((_, x) => ({
-                        name: $(x).text().trim(),
-                        url: $(x).attr("href")
-                    }))
-                    .get();
-                break;
-
-            case "Related Series":
-                data.relatedSeries = valueBox
-                    .find("a")
-                    .map((_, x) => ({
-                        title: $(x).text().trim(),
-                        url: $(x).attr("href")
-                    }))
-                    .get();
-                break;
-
-            case "Recommendations":
-                data.recommendations = valueBox
-                    .find("a")
-                    .map((_, x) => ({
-                        title: $(x).text().trim(),
-                        url: $(x).attr("href")
-                    }))
-                    .get();
-                break;
-
-            case "Latest Release(s)":
-                data.latestReleases = valueBox
-                    .find("> div")
-                    .map((_, x) => $(x).text().replace(/\s+/g, " ").trim())
-                    .get();
-                break;
-
-            default:
-                data[
-                    key
-                        .toLowerCase()
-                        .replace(/[^a-z0-9]+/g, "_")
-                        .replace(/^_|_$/g, "")
-                ] = valueBox.text().replace(/\s+/g, " ").trim();
+        if (key === "Type") {
+            data.type = valueBox.text;
+        } else if (key === "Status in Country of Origin") {
+            data.status = collapse(valueBox.text);
+        } else if (key === "Licensed (in English)") {
+            data.licensed = valueBox.text;
+        } else if (key === "Completely Scanlated?") {
+            data.scanlated = valueBox.text;
+        } else if (key === "Anime Start/End Chapter") {
+            data.anime = valueBox.text;
+        } else if (key === "Associated Names") {
+            data.associatedNames = valueBox.textsOf("div");
+        } else if (key === "Groups Scanlating") {
+            data.groups = mapNamedLinks(valueBox.find("a"), "name");
+        } else if (key === "Related Series") {
+            data.relatedSeries = mapNamedLinks(valueBox.find("a"), "title");
+        } else if (key === "Recommendations") {
+            data.recommendations = mapNamedLinks(valueBox.find("a"), "title");
+        } else if (key === "Latest Release(s)") {
+            var relEls = valueBox.find("> div");
+            data.latestReleases = [];
+            for (var j = 0; j < relEls.length; j++) {
+                data.latestReleases.push(collapse(relEls[j].text));
+            }
+        } else {
+            data[slugify(key)] = collapse(valueBox.text);
         }
-    });
-
+    }
     return data;
 }
 
-// Contoh penggunaan
-//const result = await search("turning");
-//console.log(result);
+function mapNamedLinks(list, keyName) {
+    var arr = [];
+    if (list === null || list === undefined) return arr;
+    for (var i = 0; i < list.length; i++) {
+        var o = {};
+        o[keyName] = list[i].name;
+        o.url = orNull(list[i].url);
+        arr.push(o);
+    }
+    return arr;
+}
 
-const result = await detail(
-    "https://www.mangaupdates.com/series/rccbc2h/turning"
-);
-console.log(result);
+function orNull(v) {
+    return (v === undefined || v === null) ? null : v;
+}
+
+function firstYear(text) {
+    var m = text.match(/\d{4}/);
+    return m ? m[0] : null;
+}
+
+function lastText(el, selector) {
+    var els = el.find(selector);
+    return els.length > 0 ? collapse(els[els.length - 1].text) : "";
+}
+
+function splitComma(text) {
+    var parts = text.split(",");
+    var out = [];
+    for (var i = 0; i < parts.length; i++) {
+        var v = parts[i].trim();
+        if (v.length > 0) out.push(v);
+    }
+    return out;
+}
+
+function collapse(text) {
+    return text.replace(/\s+/g, " ").trim();
+}
+
+function slugify(text) {
+    return text.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+}

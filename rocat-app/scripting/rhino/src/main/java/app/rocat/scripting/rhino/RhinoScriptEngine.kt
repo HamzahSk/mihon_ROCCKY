@@ -15,6 +15,7 @@ import org.mozilla.javascript.Context
 import org.mozilla.javascript.ContextFactory
 import org.mozilla.javascript.EvaluatorException
 import org.mozilla.javascript.Function
+import org.mozilla.javascript.NativeJSON
 import org.mozilla.javascript.Scriptable
 import org.mozilla.javascript.ScriptableObject
 import org.mozilla.javascript.Undefined
@@ -58,22 +59,45 @@ class RhinoScriptEngine(
         }
     }
 
+    override suspend fun invokeFunction(
+        script: Script,
+        environment: ScriptEnvironment,
+        functionName: String,
+        args: List<String>,
+    ): ScriptResult = withContext(Dispatchers.IO) {
+        try {
+            val cx = contextFactory.enterContext()
+            try {
+                cx.setLanguageVersion(Context.VERSION_ES6)
+                val scope = createScope(cx, environment)
+                cx.evaluateString(scope, script.source, script.name, 1, null)
+
+                val fn = scope.get(functionName, scope)
+                if (fn !is Function) {
+                    ScriptResult.Failure("Script has no function named '$functionName'")
+                } else {
+                    val jsArgs = args.map { Context.javaToJS(it, scope) }.toTypedArray()
+                    val result = fn.call(cx, scope, scope, jsArgs)
+                    val json = NativeJSON.stringify(cx, scope, result, null, null)
+                    ScriptResult.Success(json?.toString() ?: "null")
+                }
+            } finally {
+                Context.exit()
+            }
+        } catch (e: EvaluatorException) {
+            ScriptResult.Failure("JS error: ${e.message}")
+        } catch (e: StackOverflowError) {
+            ScriptResult.Failure("Script caused a stack overflow (possible infinite recursion)")
+        } catch (e: Exception) {
+            ScriptResult.Failure(e.message ?: e.javaClass.simpleName)
+        }
+    }
+
     private fun evaluate(script: Script, environment: ScriptEnvironment, args: List<String>): String {
         val cx = contextFactory.enterContext()
         return try {
             cx.setLanguageVersion(Context.VERSION_ES6)
-            val scope = cx.initStandardObjects()
-
-            // Expose fetch(); internally it bridges to OkHttp (see runFetch).
-            val fetchFn = BridgeFetch { url, method, headers, body ->
-                runFetch(url, method, headers, body)
-            }
-            ScriptableObject.putProperty(scope, "fetch", fetchFn)
-
-            if (environment.document != null) {
-                val docWrapper = Context.javaToJS(environment.document, scope)
-                ScriptableObject.putProperty(scope, "document", docWrapper)
-            }
+            val scope = createScope(cx, environment)
 
             val evaluated = cx.evaluateString(scope, script.source, script.name, 1, null)
             val mainFn = scope.get("main", scope)
@@ -86,6 +110,29 @@ class RhinoScriptEngine(
         } finally {
             Context.exit()
         }
+    }
+
+    /**
+     * Builds the standard execution scope shared by [evaluate] and [invokeFunction]:
+     * standard objects + `fetch` + the [RoCatDOM] DOM bridge (+ optional `document`).
+     */
+    private fun createScope(cx: Context, environment: ScriptEnvironment): Scriptable {
+        val scope = cx.initStandardObjects()
+
+        // Expose fetch(); internally it bridges to OkHttp (see runFetch).
+        val fetchFn = BridgeFetch { url, method, headers, body ->
+            runFetch(url, method, headers, body)
+        }
+        ScriptableObject.putProperty(scope, "fetch", fetchFn)
+
+        // Expose the Jsoup-backed DOM bridge as the global `RoCatDOM` object.
+        ScriptableObject.putProperty(scope, "RoCatDOM", RoCatDomBridge(cx, scope))
+
+        if (environment.document != null) {
+            val docWrapper = Context.javaToJS(environment.document, scope)
+            ScriptableObject.putProperty(scope, "document", docWrapper)
+        }
+        return scope
     }
 
     private fun runFetch(
@@ -151,7 +198,7 @@ private class BridgeFetch(
         thisObj: Scriptable,
         args: Array<out Any?>,
     ): Any? {
-        val url = args.getOrNull(0) as? String ?: return null
+        val url = argStringOrNull(args, 0) ?: return null
 
         var method = "GET"
         var headers = emptyMap<String, String>()
@@ -170,7 +217,7 @@ private class BridgeFetch(
             headers = getStringMap(third)
         }
         val fourth = args.getOrNull(3)
-        if (fourth is String) body = fourth
+        if (fourth != null && fourth !== Undefined.instance) body = Context.toString(fourth)
 
         val result = bridge(url, method, headers, body)
 
@@ -220,4 +267,90 @@ private class SyncValueFn(private val supplier: () -> Any?) : BaseFunction() {
         thisObj: Scriptable,
         args: Array<out Any?>,
     ): Any? = supplier()
+}
+
+/**
+ * The `RoCatDOM` global: the Jsoup-backed DOM bridge exposed to user scripts.
+ * Every function takes the raw HTML string plus a CSS selector and returns plain
+ * JS values (strings, booleans, arrays of element objects) built via [cx] and
+ * [scope]. Element wrappers expose a Cheerio-like surface (see [elementToJs]).
+ */
+private class RoCatDomBridge(
+    private val cx: Context,
+    private val scope: Scriptable,
+) : ScriptableObject() {
+
+    init {
+        // Pre-create the function members so scripts can call RoCatDOM.selectText(...) etc.
+        put("parse", this, Fn { args -> elementToJs(cx, scope, JsoupBridge.parse(argString(args, 0))) })
+        put("select", this, Fn { args -> elementsToJs(cx, scope, JsoupBridge.select(argString(args, 0), argString(args, 1))) })
+        put("selectText", this, Fn { args -> JsoupBridge.selectText(argString(args, 0), argString(args, 1)) })
+        put("selectAttr", this, Fn { args -> JsoupBridge.selectAttr(argString(args, 0), argString(args, 1), argString(args, 2)) })
+        put("selectHtml", this, Fn { args -> JsoupBridge.selectHtml(argString(args, 0), argString(args, 1)) })
+        put("has", this, Fn { args -> JsoupBridge.has(argString(args, 0), argString(args, 1)) })
+    }
+
+    override fun getClassName(): String = "RoCatDomBridge"
+}
+
+/** Converts a [JsoupElement] into a plain JS object with a Cheerio-like API. */
+private fun elementToJs(cx: Context, scope: Scriptable, el: JsoupElement): Scriptable {
+    val obj = cx.newObject(scope)
+    ScriptableObject.putProperty(obj, "text", el.text)
+    ScriptableObject.putProperty(obj, "html", el.html)
+    ScriptableObject.putProperty(obj, "innerHtml", el.innerHtml)
+
+    val attrs = cx.newObject(scope)
+    el.attrNames.forEach { name -> ScriptableObject.putProperty(attrs, name, el.attr(name)) }
+    ScriptableObject.putProperty(obj, "attrs", attrs)
+
+    ScriptableObject.putProperty(obj, "attr", Fn { args -> el.attr(argString(args, 0)) })
+    ScriptableObject.putProperty(obj, "has", Fn { args -> el.has(argString(args, 0)) })
+    ScriptableObject.putProperty(obj, "contains", Fn { args -> el.contains(argString(args, 0)) })
+    ScriptableObject.putProperty(obj, "find", Fn { args -> elementsToJs(cx, scope, el.find(argString(args, 0))) })
+    ScriptableObject.putProperty(obj, "textOf", Fn { args -> el.textOf(argString(args, 0)) })
+    ScriptableObject.putProperty(obj, "attrOf", Fn { args -> el.attrOf(argString(args, 0), argString(args, 1)) })
+    ScriptableObject.putProperty(obj, "textsOf", Fn { args -> stringsToJs(cx, scope, el.textsOf(argString(args, 0))) })
+    ScriptableObject.putProperty(obj, "nextElement", Fn { args ->
+        el.nextElement(argString(args, 0))?.let { elementToJs(cx, scope, it) }
+    })
+    return obj
+}
+
+/** Converts a list of [JsoupElement] into a JS array of element objects. */
+private fun elementsToJs(cx: Context, scope: Scriptable, elements: List<JsoupElement>): Scriptable {
+    val array = cx.newArray(scope, elements.size)
+    elements.forEachIndexed { index, el -> array.put(index, array, elementToJs(cx, scope, el)) }
+    return array
+}
+
+/** Converts a list of strings into a JS array of strings. */
+private fun stringsToJs(cx: Context, scope: Scriptable, strings: List<String>): Scriptable {
+    val array = cx.newArray(scope, strings.size)
+    strings.forEachIndexed { index, value -> array.put(index, array, value) }
+    return array
+}
+
+/** Reads the [index]-th JS argument as a String, or [default] when absent/undefined. */
+private fun argString(args: Array<out Any?>, index: Int, default: String = ""): String {
+    val value = args.getOrNull(index) ?: return default
+    if (value === Undefined.instance) return default
+    return Context.toString(value)
+}
+
+/** Reads the [index]-th JS argument as a String, or null when absent/undefined. */
+private fun argStringOrNull(args: Array<out Any?>, index: Int): String? {
+    val value = args.getOrNull(index) ?: return null
+    if (value === Undefined.instance) return null
+    return Context.toString(value)
+}
+
+/** A Rhino function that receives its raw JS arguments for a Kotlin lambda. */
+private class Fn(private val fn: (Array<out Any?>) -> Any?) : BaseFunction() {
+    override fun call(
+        cx: Context,
+        scope: Scriptable,
+        thisObj: Scriptable,
+        args: Array<out Any?>,
+    ): Any? = fn(args)
 }

@@ -23,6 +23,7 @@ dependencies {
     implementation(projects.scripting.api)
     implementation(projects.core.common)
     implementation(libs.rhino)
+    implementation(libs.jsoup)
     implementation(libs.bundles.coroutines)
     implementation(libs.bundles.serialization)
 
