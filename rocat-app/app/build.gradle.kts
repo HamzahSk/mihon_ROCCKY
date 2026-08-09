@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,9 +7,34 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+// Tahap 14.1: Signing & keystore (opsional). Baca `keystore.properties` dari
+// root proyek rocat-app/. Jika file atau keystore tidak ada, build tetap jalan
+// (release memakai signingConfig debug sebagai fallback, tidak pernah throw).
+val keystoreProperties = Properties().apply {
+    val keystoreFile = rootProject.file("keystore.properties")
+    if (keystoreFile.exists()) {
+        keystoreFile.inputStream().use { load(it) }
+    }
+}
+val releaseStoreFile: java.io.File? = keystoreProperties.getProperty("storeFile")?.let {
+    rootProject.file(it)
+}
+val hasReleaseSigning: Boolean = releaseStoreFile != null && releaseStoreFile.exists()
+
 android {
     namespace = "app.rocat"
     compileSdk = 35
+
+    signingConfigs {
+        create("release") {
+            if (hasReleaseSigning) {
+                storeFile = releaseStoreFile
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
 
     defaultConfig {
         applicationId = "app.rocat"
@@ -17,9 +44,37 @@ android {
         versionName = "0.1.0"
     }
 
+    // Tahap 14.3: Build types
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+        }
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+            signingConfig = if (hasReleaseSigning) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
+        }
+        create("preview") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".preview"
+        }
+    }
+
+    // Tahap 14.2: ABI splits (APK per-arsitektur + universal)
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            isUniversalApk = true
         }
     }
 
@@ -35,6 +90,14 @@ android {
         buildConfig = true
         viewBinding = true
     }
+}
+
+// Tahap 14.4: Firebase (opsional & aman). Plugin hanya di-apply bila
+// `app/google-services.json` benar-benar ada, agar build tidak pernah gagal
+// hanya karena Firebase belum disiapkan.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
 }
 
 dependencies {
@@ -66,6 +129,12 @@ dependencies {
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+
+    if (file("google-services.json").exists()) {
+        implementation(platform(libs.firebase.bom))
+        implementation(libs.firebase.analytics)
+        implementation(libs.firebase.crashlytics)
+    }
 
     debugImplementation(libs.compose.ui.tooling)
 

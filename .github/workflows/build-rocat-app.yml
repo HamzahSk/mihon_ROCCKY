@@ -14,7 +14,7 @@ on:
 
 jobs:
   build:
-    name: Build Debug APK
+    name: Build Signed Release APK
     runs-on: ubuntu-latest
 
     # Sangat penting: Set default working directory ke folder project rocat-app
@@ -39,13 +39,33 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: Build Debug APK
-        run: ./gradlew :app:assembleDebug --no-daemon
+      # 1. Decode keystore dari Base64 secret ke file jks
+      - name: Decode Keystore
+        env:
+          ENCODED_STRING: ${{ secrets.SIGNING_KEY }}
+        run: |
+          echo $ENCODED_STRING | base64 -d > keystore.jks
 
-      - name: Upload APK Artifact
+      # 2. Buat file keystore.properties sesuai format yang dibaca oleh build.gradle.kts
+      - name: Create keystore.properties
+        env:
+          STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "storeFile=keystore.jks" > keystore.properties
+          echo "storePassword=$STORE_PASSWORD" >> keystore.properties
+          echo "keyAlias=$KEY_ALIAS" >> keystore.properties
+          echo "keyPassword=$KEY_PASSWORD" >> keystore.properties
+
+      # 3. Ubah perintah dari assembleDebug menjadi assembleRelease
+      - name: Build Release APK
+        run: ./gradlew :app:assembleRelease --no-daemon
+
+      # 4. Upload HANYA APK arm64-v8a
+      - name: Upload arm64 APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: rocat-app-debug
-          # Path dihitung dari root repository, jadi harus pakai prefix rocat-app/
-          path: rocat-app/app/build/outputs/apk/debug/app-debug.apk
-          
+          name: rocat-app-arm64-release
+          # Path diarahkan langsung ke file arm64
+          path: rocat-app/app/build/outputs/apk/release/app-arm64-v8a-release.apk
