@@ -1,44 +1,44 @@
 # Role and Objective
-Kamu adalah AI Software Engineer dan Android Developer handal. Kita sekarang masuk ke **Tahap 16: Perbaikan Storage & Clear Data, serta Implementasi In-App Browser Bebas**.
-Fokus tahap ini adalah memperbaiki *bug* kritis di mana hasil *scrape* gagal tersimpan ke dalam memori perangkat, memastikan fitur "Clear Cache & Cookies" benar-benar menghapus data hingga ke akar (termasuk WebView), dan merombak tab navigasi dengan menghapus *Playground* lalu menggantinya dengan fitur peramban web (*Browser*) penuh yang bisa membuka URL apapun secara bebas.
+Kamu adalah AI Software Engineer dan Android Developer handal. Kita sekarang masuk ke **Tahap 17: Perbaikan Bug First-Launch, Storage Skrip, dan UI Kategori (Collapsible)**.
+Fokus tahap ini adalah memperbaiki *bug* reaktivitas saat pengguna pertama kali mengatur *storage*, memastikan skrip yang diimpor langsung disimpan sebagai file fisik (`.js`) di *storage*, menambahkan menu *long-press* pada daftar skrip, dan membuat sistem kategori skrip yang bisa dilipat (berbasis metadata) agar UI lebih rapi.
 
 # Memory and Constraints (CRITICAL)
 1. **BACA ATURAN MEMORI:**
-   - Wajib memperbarui log di `ai_memory/00_INDEX.md` dan membuat catatan di `ai_memory/task_YYYYMMDD_HHMM_tahap16_bugfixes_and_browser.md` setelah tahap ini selesai.
+   - Wajib memperbarui log di `ai_memory/00_INDEX.md` dan membuat catatan di `ai_memory/task_YYYYMMDD_HHMM_tahap17_ui_and_storage_fixes.md` setelah tahap ini selesai.
 2. **Context Path (SANGAT PENTING):**
    - Proyek ini berada di dalam *sub-directory* `rocat-app/`.
    - **SEMUA** modifikasi file **WAJIB** dilakukan di dalam folder `rocat-app/`.
 3. **Jetpack Compose & Modern Android:**
-   - Gunakan Jetpack Compose untuk UI `BrowserScreen`.
-   - Modifikasi interaksi penyimpanan menggunakan `DocumentFile` dan `ContentResolver.openOutputStream`.
+   - Gunakan `combinedClickable` untuk *long-press*.
+   - Buat *state* menjadi reaktif menggunakan `StateFlow` atau `collectAsState`.
 
 ---
 
 # Execution Plan (Kerjakan Secara Bertahap)
 
-### Tahap 16.1: Perbaikan Bug Storage (Save Scraped Files)
-- Masalah saat ini: `StorageManager.createScrapeFolder()` berhasil membuat sub-folder, tetapi file hasil *scrape* tidak tersimpan di dalamnya.
-- **Solusi:** Buat fungsi eksekusi atau utilitas di `StorageManager` (misal: `saveFileToScrapeFolder(folderUri, fileName, mimeType, content/bytes)`). 
-- Fungsi ini harus menggunakan `DocumentFile.fromTreeUri`, memanggil `createFile()`, lalu menggunakan `context.contentResolver.openOutputStream(uri)` untuk menulis data ke dalam file tersebut.
-- Pastikan modul *scripting* menggunakan fungsi baru ini agar file benar-benar tertulis ke *storage*.
+### Tahap 17.1: Perbaikan Bug First-Launch (Storage Setup Stuck)
+- **Masalah:** Saat instalasi baru, setelah pengguna memilih folder di `StorageSetupScreen`, aplikasi *stuck* dan tidak masuk ke menu utama (harus di-*restart* dulu).
+- **Akar Masalah:** Di `RoCatNav.kt`, pengecekan `if (!storageManager.isConfigured)` tidak reaktif, sehingga Compose tidak melakukan *re-compose* saat izin *storage* berhasil didapatkan.
+- **Solusi:** Ubah `isConfigured` di `StorageManager` menjadi `StateFlow<Boolean>` (atau sediakan *flow* observasi dari `SettingsRepository`). Di `RoCatApp()`, gunakan `collectAsState()` untuk memantau nilai ini, sehingga saat berubah menjadi `true`, UI otomatis berpindah ke `RoCatAppNav()`.
 
-### Tahap 16.2: Perbaikan Bug Clear Data (Cache & Cookies)
-- Masalah saat ini: Menghapus data dari DAO Room (`CookieDao`) dan direktori standar tidak cukup membersihkan sesi web secara nyata.
-- **Solusi Cookies:** Di fungsi penghapusan *cookie* (di `SettingsViewModel`), selain `cookieDao.deleteAll()`, panggil juga `android.webkit.CookieManager.getInstance().removeAllCookies(null)` dan `flush()` agar *cookie* WebView bawaan terhapus tuntas.
-- **Solusi Cache:** Tambahkan logika untuk menghapus *cache* WebView melalui `WebView(context).clearCache(true)`.
+### Tahap 17.2: Simpan Fisik Skrip ke Storage Saat Import
+- **Masalah:** Skrip yang baru ditambahkan hanya masuk ke JSON/Database internal, belum dibuatkan file fisiknya di direktori SAF.
+- **Solusi:** Modifikasi alur *import* skrip (misal di `ImportScriptViewModel`). Saat skrip berhasil diimpor, gunakan `StorageManager` untuk membuat sub-folder baru di dalam direktori utama (misal: `[Utama]/Scripts/[Script_ID]/`).
+- Simpan *source code* skrip ke dalam sub-folder tersebut sebagai file berekstensi `.js` (atau `.txt`). Gunakan utilitas penulisan file menggunakan `ContentResolver.openOutputStream` seperti yang diterapkan di Tahap 16.
 
-### Tahap 16.3: Refaktor Navigasi (Hapus Playground)
-- Buka file navigasi utama (misal: `RoCatNav.kt`).
-- Hapus total semua referensi ke `Screen.Playground`, rute, *string resource* (i18n), dan ikonnya.
-- Ganti dengan tab baru: `Screen.Browser`. Pastikan ikon navigasi di *bottom bar* menggunakan ikon web (misal: `Icons.Filled.Public` atau `Language`).
+### Tahap 17.3: Menu Aksi Tahan Lama (Long Press) pada Skrip
+- Buka file `ScriptsScreen.kt`.
+- Tambahkan `Modifier.combinedClickable` (pastikan menggunakan `ExperimentalFoundationApi` jika diperlukan) pada kartu/item skrip.
+- **Aksi:** - *Click* (klik biasa): Buka Canvas (seperti biasa).
+  - *Long Click* (tahan lama): Tampilkan `ModalBottomSheet` atau `DropdownMenu` (Dialog) yang berisi opsi: **Edit** dan **Hapus (Delete)**.
+- Hubungkan opsi "Hapus" ke fungsi penghapusan yang sudah ada, dan "Edit" ke halaman detail atau editor.
 
-### Tahap 16.4: Implementasi BrowserScreen (Freestyle Web Browser)
-- Buat file `BrowserScreen.kt` menggunakan Jetpack Compose.
-- **UI Address Bar Bebas:** Buat *top bar* yang berisi kolom input URL (`OutlinedTextField` atau `BasicTextField`) dan tombol *Enter/Go*. Pengguna harus bisa mengetikkan URL APAPUN (misal `https://google.com`) dan melakukan *browsing* sebebas-bebasnya layaknya aplikasi Chrome. Ini murni fitur *browser* mandiri dan tidak menjalankan *scrape*.
-- **Kontrol Navigasi:** Sediakan tombol *Back* (untuk mundur halaman web), *Forward*, *Refresh*, dan *Stop*.
-- **Engine WebView:** Gunakan komponen `AndroidView` untuk me-*render* WebView. Pastikan WebView ini memuat URL yang diketik pengguna.
-- **Sinkronisasi Cookie (Nilai Plus):** Karena kita menggunakan `AndroidCookieJar`, *cookie* dari sesi *login* pengguna di *browser* bebas ini (misal login akun atau lewat Cloudflare) akan otomatis tersimpan ke `CookieManager` dan bisa dinikmati oleh mesin *scraper* kita di belakang layar.
+### Tahap 17.4: UI Kategori Skrip (Collapsible/Akordion)
+- **Metadata:** Tambahkan dukungan *parsing* metadata kategori (misal membaca `// @category` atau `// @group` dari *header* skrip). Jika tidak ada, masukkan ke kategori "Lainnya" atau "Default".
+- **UI:** Di `ScriptsScreen`, kelompokkan daftar skrip berdasarkan kategorinya (`Map<String, List<Script>>`).
+- Gunakan `LazyColumn` dan ubah tampilannya menjadi kategori yang bisa dilipat (*collapsible*).
+- Tampilkan nama kategori sebagai *header* (tebal/rapi). Jika *header* diklik, daftar skrip di bawahnya akan menyusut (terlipat) atau memuai. Simpan status *expand/collapse* ini menggunakan `remember { mutableStateMapOf<String, Boolean>() }` agar tiap kategori bisa dikontrol secara independen.
 
-### Tahap 16.5: Verifikasi Build & Update Memory
-- Jalankan `cd rocat-app && ./gradlew :app:assembleDebug` untuk memastikan tidak ada *build error*.
-- Perbarui file `00_INDEX.md` dengan status **Tahap 16 SELESAI** dan rangkum perubahannya.
+### Tahap 17.5: Verifikasi Build & Update Memory
+- Jalankan `cd rocat-app && ./gradlew :app:assembleDebug` untuk memastikan semua perbaikan reaktivitas dan UI berjalan mulus tanpa *error*.
+- Perbarui file `00_INDEX.md` dengan status **Tahap 17 SELESAI** dan rangkum perubahan teknisnya.
