@@ -37,6 +37,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.rocat.di.AppViewModelFactory
+import app.rocat.i18n.StringKey
+import app.rocat.i18n.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,10 +51,10 @@ fun ImportScriptScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Add Script") },
+                title = { Text(stringResource(StringKey.addScriptTitle)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(StringKey.back))
                     }
                 },
             )
@@ -81,13 +83,13 @@ fun ImportScriptScreen(
             }
 
             Text(
-                text = "Import from URL",
+                text = stringResource(StringKey.importFromUrl),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(start = 16.dp, top = 16.dp),
             )
             Text(
-                text = "Point to a raw .js file (GitHub blob links are rewritten automatically).",
+                text = stringResource(StringKey.importFromUrlBody),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
@@ -96,7 +98,7 @@ fun ImportScriptScreen(
                 value = state.url,
                 onValueChange = viewModel::onUrlChange,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                label = { Text("Script URL") },
+                label = { Text(stringResource(StringKey.scriptUrl)) },
                 singleLine = true,
             )
             Button(
@@ -107,7 +109,7 @@ fun ImportScriptScreen(
                 if (state.busy) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp))
                 } else {
-                    Text("Fetch & Import")
+                    Text(stringResource(StringKey.fetchImport))
                 }
             }
 
@@ -118,24 +120,24 @@ fun ImportScriptScreen(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             ) {
                 Text(
-                    "Paste source",
+                    stringResource(StringKey.pasteSource),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.weight(1f),
                 )
                 OutlinedButton(onClick = viewModel::loadCanvasExample) {
-                    Text("Canvas demo")
+                    Text(stringResource(StringKey.canvasDemo))
                 }
                 Spacer(Modifier.width(8.dp))
                 OutlinedButton(onClick = viewModel::loadExample) {
-                    Text("Load example")
+                    Text(stringResource(StringKey.loadExample))
                 }
             }
             OutlinedTextField(
                 value = state.source,
                 onValueChange = viewModel::onSourceChange,
                 modifier = Modifier.fillMaxWidth().padding(16.dp).heightIn(min = 220.dp),
-                label = { Text("Script source") },
+                label = { Text(stringResource(StringKey.scriptSource)) },
                 textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
             )
             Button(
@@ -143,7 +145,7 @@ fun ImportScriptScreen(
                 enabled = !state.busy,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             ) {
-                Text("Import source")
+                Text(stringResource(StringKey.importSource))
             }
             Spacer(Modifier.height(24.dp))
         }

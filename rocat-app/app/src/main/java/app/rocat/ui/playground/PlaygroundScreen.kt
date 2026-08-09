@@ -61,6 +61,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.rocat.di.AppViewModelFactory
+import app.rocat.i18n.StringKey
+import app.rocat.i18n.stringResource
 import app.rocat.scripting.api.model.Script
 import coil3.compose.AsyncImage
 import kotlinx.serialization.json.Json
@@ -79,10 +81,10 @@ fun PlaygroundScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Playground") },
+                title = { Text(stringResource(StringKey.playground)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(StringKey.back))
                     }
                 },
             )
@@ -94,7 +96,7 @@ fun PlaygroundScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "No enabled scripts. Enable or add a script first.",
+                    text = stringResource(StringKey.noEnabledScripts),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(24.dp),
                 )
@@ -176,10 +178,10 @@ private fun ScriptPicker(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
     ) {
         OutlinedTextField(
-            value = selectedScript?.name ?: "Select a script",
+            value = selectedScript?.name ?: stringResource(StringKey.selectScript),
             onValueChange = {},
             readOnly = true,
-            label = { Text("Script") },
+            label = { Text(stringResource(StringKey.script)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
         )
@@ -212,12 +214,12 @@ private fun BuildUiToolbar(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    "Script-Driven UI",
+                    stringResource(StringKey.scriptDrivenUi),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                 )
                 Text(
-                    "The script builds this tab with RoCatUI.* calls (addInput, addButton, previews, log).",
+                    stringResource(StringKey.scriptDrivenUiBody),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -225,7 +227,7 @@ private fun BuildUiToolbar(
             TextButton(onClick = onRebuild) {
                 Icon(Icons.Filled.Refresh, contentDescription = null, modifier = Modifier.width(16.dp).height(16.dp))
                 Spacer(Modifier.width(4.dp))
-                Text("Build UI")
+                Text(stringResource(StringKey.buildUi))
             }
         }
     }
@@ -282,13 +284,14 @@ private fun ThumbnailComponent(url: String) {
 @Composable
 private fun VideoComponent(url: String) {
     val context = LocalContext.current
+    val noVideoPlayer = stringResource(StringKey.noVideoPlayer)
     ElevatedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                "Video preview",
+                stringResource(StringKey.videoPreview),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -300,13 +303,13 @@ private fun VideoComponent(url: String) {
                     }
                     runCatching { context.startActivity(intent) }
                         .onFailure {
-                            Toast.makeText(context, "No video player available", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, noVideoPlayer, Toast.LENGTH_SHORT).show()
                         }
                 },
             ) {
                 Icon(Icons.Filled.PlayArrow, contentDescription = null)
                 Spacer(Modifier.width(6.dp))
-                Text("Play Video")
+                Text(stringResource(StringKey.playVideo))
             }
         }
     }
@@ -342,7 +345,7 @@ private fun OutputConsole(
     ElevatedCard(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                "Output",
+                stringResource(StringKey.output),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -353,13 +356,13 @@ private fun OutputConsole(
                 ) {
                     CircularProgressIndicator(modifier = Modifier.width(16.dp).height(16.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Running…", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(StringKey.running), style = MaterialTheme.typography.bodySmall)
                 }
             }
             if (log.isNotEmpty()) {
                 Spacer(Modifier.height(8.dp))
                 CopyableResultCard(
-                    title = "Console",
+                    title = stringResource(StringKey.console),
                     emptyHint = "",
                     content = log,
                     maxHeight = 320.dp,
@@ -397,6 +400,7 @@ private fun parseMediaPreview(raw: String): MediaPreview? {
 @Composable
 private fun MediaPreviewRenderer(preview: MediaPreview, modifier: Modifier = Modifier) {
     val context = LocalContext.current
+    val noVideoPlayer = stringResource(StringKey.noVideoPlayer)
     when (preview) {
         is MediaPreview.Image -> {
             ElevatedCard(modifier = modifier.fillMaxWidth()) {
@@ -419,7 +423,7 @@ private fun MediaPreviewRenderer(preview: MediaPreview, modifier: Modifier = Mod
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
-                        "Media output (video)",
+                        stringResource(StringKey.mediaOutputVideo),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -431,13 +435,13 @@ private fun MediaPreviewRenderer(preview: MediaPreview, modifier: Modifier = Mod
                             }
                             runCatching { context.startActivity(intent) }
                                 .onFailure {
-                                    Toast.makeText(context, "No video player available", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, noVideoPlayer, Toast.LENGTH_SHORT).show()
                                 }
                         },
                     ) {
                         Icon(Icons.Filled.PlayArrow, contentDescription = null)
                         Spacer(Modifier.width(6.dp))
-                        Text("Play Video")
+                        Text(stringResource(StringKey.playVideo))
                     }
                 }
             }
@@ -459,6 +463,8 @@ private fun CopyableResultCard(
 ) {
     val clipboard = LocalClipboardManager.current
     val context = LocalContext.current
+    val jsonCopied = stringResource(StringKey.jsonCopied)
+    val textCopied = stringResource(StringKey.textCopied)
     val displayText = ResultFormatter.prettyJson(content)
     val mediaPreview = remember(content) { parseMediaPreview(content) }
 
@@ -481,7 +487,7 @@ private fun CopyableResultCard(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
-                        text = "JSON",
+                        text = stringResource(StringKey.json),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(end = 8.dp),
@@ -489,22 +495,22 @@ private fun CopyableResultCard(
                     TextButton(
                         onClick = {
                             clipboard.setText(AnnotatedString(displayText))
-                            Toast.makeText(context, "JSON copied to clipboard", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, jsonCopied, Toast.LENGTH_SHORT).show()
                         },
                     ) {
                         Icon(Icons.Filled.ContentCopy, contentDescription = null, modifier = Modifier.width(16.dp).height(16.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text("Copy JSON")
+                        Text(stringResource(StringKey.copyJson))
                     }
                     OutlinedButton(
                         onClick = {
                             clipboard.setText(AnnotatedString(displayText))
-                            Toast.makeText(context, "Text copied to clipboard", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, textCopied, Toast.LENGTH_SHORT).show()
                         },
                     ) {
                         Icon(Icons.Filled.ContentCopy, contentDescription = null, modifier = Modifier.width(16.dp).height(16.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text("Copy Text")
+                        Text(stringResource(StringKey.copyText))
                     }
                 }
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))

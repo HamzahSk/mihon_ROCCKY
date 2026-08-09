@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.CreationExtras
 import app.rocat.ui.import.ImportScriptViewModel
 import app.rocat.ui.playground.PlaygroundViewModel
+import app.rocat.ui.settings.SettingsViewModel
 import app.rocat.ui.scripts.ScriptsViewModel
 
 /**
@@ -20,6 +21,7 @@ object AppViewModelFactory : ViewModelProvider.Factory {
         modelClass.isAssignableFrom(ScriptsViewModel::class.java) -> ScriptsViewModel() as T
         modelClass.isAssignableFrom(ImportScriptViewModel::class.java) -> ImportScriptViewModel() as T
         modelClass.isAssignableFrom(PlaygroundViewModel::class.java) -> PlaygroundViewModel() as T
+        modelClass.isAssignableFrom(SettingsViewModel::class.java) -> SettingsViewModel() as T
         else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
 }

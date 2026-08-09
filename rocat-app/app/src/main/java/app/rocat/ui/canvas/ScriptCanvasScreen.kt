@@ -44,6 +44,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import app.rocat.i18n.StringKey
+import app.rocat.i18n.stringResource
 import app.rocat.ui.playground.GridComponent
 import app.rocat.ui.playground.ScriptUIComponent
 import coil3.compose.AsyncImage
@@ -71,15 +73,15 @@ fun ScriptCanvasScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(state.script?.name ?: "Script") },
+                title = { Text(state.script?.name ?: stringResource(StringKey.script)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(StringKey.back))
                     }
                 },
                 actions = {
                     IconButton(onClick = viewModel::rebuildCanvas) {
-                        Icon(Icons.Filled.Refresh, contentDescription = "Rebuild canvas")
+                        Icon(Icons.Filled.Refresh, contentDescription = stringResource(StringKey.rebuildCanvas))
                     }
                 },
             )
@@ -97,7 +99,7 @@ fun ScriptCanvasScreen(
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("Script not found", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(StringKey.scriptNotFound), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
             else -> LazyColumn(
@@ -155,18 +157,17 @@ private fun CanvasEmptyHint(onRefresh: () -> Unit) {
     ElevatedCard(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
             Text(
-                "Blank canvas",
+                stringResource(StringKey.blankCanvas),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                "The script did not publish any UI. Canvas-driven scripts define onLaunch() " +
-                    "and draw with RoCatUI.{addInput,addButton,addGrid,log,...}.",
+                stringResource(StringKey.blankCanvasBody),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            TextButton(onClick = onRefresh) { Text("Re-run onLaunch()") }
+            TextButton(onClick = onRefresh) { Text(stringResource(StringKey.rerunOnLaunch)) }
         }
     }
 }
@@ -222,13 +223,14 @@ private fun ThumbnailComponent(url: String) {
 @Composable
 private fun VideoComponent(url: String) {
     val context = LocalContext.current
+    val noVideoPlayer = stringResource(StringKey.noVideoPlayer)
     ElevatedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                "Video preview",
+                stringResource(StringKey.videoPreview),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -240,13 +242,13 @@ private fun VideoComponent(url: String) {
                             Intent(Intent.ACTION_VIEW).setDataAndType(Uri.parse(url), "video/*"),
                         )
                     }.onFailure {
-                        Toast.makeText(context, "No video player available", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, noVideoPlayer, Toast.LENGTH_SHORT).show()
                     }
                 },
             ) {
                 Icon(Icons.Filled.PlayArrow, contentDescription = null)
                 Spacer(Modifier.width(6.dp))
-                Text("Play Video")
+                Text(stringResource(StringKey.playVideo))
             }
         }
     }
@@ -274,7 +276,7 @@ private fun ConsoleOutput(log: String, executing: Boolean) {
     ElevatedCard(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                "Output",
+                stringResource(StringKey.output),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
             )
@@ -285,7 +287,7 @@ private fun ConsoleOutput(log: String, executing: Boolean) {
                 ) {
                     CircularProgressIndicator(modifier = Modifier.width(16.dp).height(16.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Running…", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(StringKey.running), style = MaterialTheme.typography.bodySmall)
                 }
             }
             if (log.isNotEmpty()) {

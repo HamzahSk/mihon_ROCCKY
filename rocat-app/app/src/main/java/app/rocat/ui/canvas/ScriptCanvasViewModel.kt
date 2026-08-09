@@ -14,6 +14,7 @@ import app.rocat.domain.script.GetScripts
 import app.rocat.scripting.api.ScriptResult
 import app.rocat.scripting.api.ScriptUiBridge
 import app.rocat.scripting.api.model.Script
+import app.rocat.storage.StorageManager
 import app.rocat.ui.playground.ScriptUIComponent
 import app.rocat.ui.playground.parseGrid
 import kotlinx.coroutines.CancellationException
@@ -42,6 +43,7 @@ class ScriptCanvasViewModel(
     private val scriptId: String,
     private val getScripts: GetScripts = Injekt.get(),
     private val scriptManager: ScriptManager = Injekt.get(),
+    private val storageManager: StorageManager = Injekt.get(),
 ) : StateViewModel<ScriptCanvasViewModel.State>(State()) {
 
     data class State(
@@ -64,6 +66,20 @@ class ScriptCanvasViewModel(
 
     /** Last source string that triggered a render; used to auto-redraw on edit. */
     private var lastSource: String? = null
+
+    /** The per-script scrape folder inside `[MainDirectory]/Scrapes/`, created lazily. */
+    @Volatile
+    private var scrapeFolder: androidx.documentfile.provider.DocumentFile? = null
+
+    /**
+     * Creates (or reuses) the scrape output folder for this script. Tahap 15.2: every
+     * scrape writes into `[MainDirectory]/Scrapes/<scriptId>/` so results are isolated.
+     */
+    fun scrapeFolder(): androidx.documentfile.provider.DocumentFile? {
+        val current = scrapeFolder ?: state.value.script?.let { storageManager.createScrapeFolder(it.id) }
+        scrapeFolder = current
+        return current
+    }
 
     private val uiBridge = object : ScriptUiBridge {
         override fun addInput(id: String, hint: String) = postUi(uiSession) { addOrReplaceInput(id, hint) }
@@ -179,6 +195,8 @@ class ScriptCanvasViewModel(
         inputs: Map<String, String>,
         args: List<String>,
     ) {
+        // Ensure the per-script scrape folder exists before the scrape writes anything.
+        scrapeFolder()
         mutableState.update { it.copy(executing = true, output = "") }
         viewModelScope.launch {
             val result = try {

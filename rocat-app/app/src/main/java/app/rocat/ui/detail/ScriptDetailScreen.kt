@@ -46,6 +46,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import app.rocat.i18n.StringKey
+import app.rocat.i18n.stringResource
 import app.rocat.scripting.api.model.Script
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,8 +68,8 @@ fun ScriptDetailScreen(
     if (showDeleteDialog && script != null) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete script") },
-            text = { Text("Are you sure you want to delete \"${script.name}\"?") },
+            title = { Text(stringResource(StringKey.deleteScriptTitle)) },
+            text = { Text(stringResource(StringKey.deleteScriptBody, script.name)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -75,12 +77,12 @@ fun ScriptDetailScreen(
                         viewModel.delete(onBack)
                     },
                 ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(StringKey.delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(StringKey.cancel))
                 }
             },
         )
@@ -89,15 +91,15 @@ fun ScriptDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(script?.name ?: "Script") },
+                title = { Text(script?.name ?: stringResource(StringKey.script)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(StringKey.back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { showDeleteDialog = true }) {
-                        Icon(Icons.Filled.Delete, contentDescription = "Delete script")
+                        Icon(Icons.Filled.Delete, contentDescription = stringResource(StringKey.delete))
                     }
                 },
             )
@@ -105,7 +107,7 @@ fun ScriptDetailScreen(
     ) { innerPadding ->
         if (script == null) {
             Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
-                Text("Script not found", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(StringKey.scriptNotFound), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             return@Scaffold
         }
@@ -127,17 +129,21 @@ private fun MetadataCard(script: Script, onToggle: (Boolean) -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(script.name, style = MaterialTheme.typography.titleMedium)
-                    Text("version ${script.version}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                    Text(
+                        "${stringResource(StringKey.version)} ${script.version}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
                     Spacer(Modifier.height(6.dp))
                     StatusChip(enabled = script.enabled)
                 }
                 Switch(checked = script.enabled, onCheckedChange = onToggle)
             }
             Spacer(Modifier.height(12.dp))
-            DetailRow("Description", script.description.ifBlank { "—" })
-            DetailRow("Author", script.author.ifBlank { "—" })
-            if (script.icon.isNotBlank()) DetailRow("Icon", script.icon)
-            DetailRow("ID", script.id)
+            DetailRow(stringResource(StringKey.description), script.description.ifBlank { "—" })
+            DetailRow(stringResource(StringKey.author), script.author.ifBlank { "—" })
+            if (script.icon.isNotBlank()) DetailRow(stringResource(StringKey.icon), script.icon)
+            DetailRow(stringResource(StringKey.id), script.id)
         }
     }
 }
@@ -147,7 +153,7 @@ private fun StatusChip(enabled: Boolean) {
     val bg = if (enabled) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
     val fg = if (enabled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
     Text(
-        text = if (enabled) "Active" else "Inactive",
+        text = stringResource(if (enabled) StringKey.active else StringKey.inactive),
         style = MaterialTheme.typography.labelSmall,
         color = fg,
         modifier = Modifier
@@ -170,7 +176,7 @@ private fun MatchesCard(script: Script) {
     if (script.matches.isEmpty()) return
     Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Matches", style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(StringKey.matches), style = MaterialTheme.typography.titleSmall)
             script.matches.forEach { match ->
                 Text(
                     text = match,
@@ -191,13 +197,13 @@ private fun CodeSection(script: Script, viewModel: ScriptDetailViewModel) {
     Card(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Source", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                Text(stringResource(StringKey.source), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
                 if (!editing) {
                     IconButton(onClick = {
                         draft = script.source
                         editing = true
                     }) {
-                        Icon(Icons.Filled.Edit, contentDescription = "Edit source")
+                        Icon(Icons.Filled.Edit, contentDescription = stringResource(StringKey.editSource))
                     }
                 }
             }
@@ -214,10 +220,10 @@ private fun CodeSection(script: Script, viewModel: ScriptDetailViewModel) {
                 Spacer(Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(onClick = { viewModel.saveSource(draft) { editing = false } }) {
-                        Text("Save")
+                        Text(stringResource(StringKey.save))
                     }
                     OutlinedButton(onClick = { editing = false; draft = script.source }) {
-                        Text("Cancel")
+                        Text(stringResource(StringKey.cancel))
                     }
                 }
             } else {

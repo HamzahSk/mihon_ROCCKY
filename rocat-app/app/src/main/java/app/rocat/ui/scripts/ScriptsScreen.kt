@@ -43,6 +43,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.rocat.di.AppViewModelFactory
+import app.rocat.i18n.StringKey
+import app.rocat.i18n.stringResource
 import app.rocat.scripting.api.model.Script
 import coil3.compose.AsyncImage
 
@@ -58,10 +60,10 @@ fun ScriptsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Scripts") },
+                title = { Text(stringResource(StringKey.scripts)) },
                 actions = {
                     IconButton(onClick = onImport) {
-                        Icon(Icons.Filled.Add, contentDescription = "Add script")
+                        Icon(Icons.Filled.Add, contentDescription = stringResource(StringKey.addScript))
                     }
                 },
             )
@@ -102,12 +104,12 @@ private fun EmptyScripts(onImport: () -> Unit, innerPadding: androidx.compose.fo
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "No scripts installed",
+            text = stringResource(StringKey.noScriptsTitle),
             style = MaterialTheme.typography.titleMedium,
         )
         Spacer(Modifier.heightIn(min = 8.dp))
         Text(
-            text = "Import a userscript to start scraping. Go to the Playground tab to test it.",
+            text = stringResource(StringKey.noScriptsBody),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -115,7 +117,7 @@ private fun EmptyScripts(onImport: () -> Unit, innerPadding: androidx.compose.fo
         FilledTonalButton(onClick = onImport) {
             Icon(Icons.Filled.Add, contentDescription = null)
             Spacer(Modifier.width(8.dp))
-            Text("Add script")
+            Text(stringResource(StringKey.addScript))
         }
     }
 }
@@ -156,7 +158,7 @@ private fun ScriptListItem(
             },
             supportingContent = {
                 Text(
-                    text = script.description.ifBlank { script.author.ifBlank { "No description" } },
+                    text = script.description.ifBlank { script.author.ifBlank { stringResource(StringKey.noDescription) } },
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -200,7 +202,7 @@ private fun StatusChip(enabled: Boolean) {
     val bg = if (enabled) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
     val fg = if (enabled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
     Text(
-        text = if (enabled) "Active" else "Inactive",
+        text = stringResource(if (enabled) StringKey.active else StringKey.inactive),
         style = MaterialTheme.typography.labelSmall,
         color = fg,
         modifier = Modifier
