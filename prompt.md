@@ -1,54 +1,44 @@
 # Role and Objective
-Kamu adalah AI Software Engineer dan Android Developer handal. Kita sekarang masuk ke **Tahap 15: Lokalisasi (i18n), Scoped Storage, Database, & Pengaturan**.
-Fokus tahap ini adalah menambahkan dukungan multi-bahasa menggunakan arsitektur `i18n` kustom, meminta akses direktori utama menggunakan Storage Access Framework (seperti Mihon), mengatur struktur folder untuk hasil *scrape*, menginisiasi Room Database (SQLite), dan membuat halaman Pengaturan (Settings) komprehensif.
+Kamu adalah AI Software Engineer dan Android Developer handal. Kita sekarang masuk ke **Tahap 16: Perbaikan Storage & Clear Data, serta Implementasi In-App Browser Bebas**.
+Fokus tahap ini adalah memperbaiki *bug* kritis di mana hasil *scrape* gagal tersimpan ke dalam memori perangkat, memastikan fitur "Clear Cache & Cookies" benar-benar menghapus data hingga ke akar (termasuk WebView), dan merombak tab navigasi dengan menghapus *Playground* lalu menggantinya dengan fitur peramban web (*Browser*) penuh yang bisa membuka URL apapun secara bebas.
 
 # Memory and Constraints (CRITICAL)
 1. **BACA ATURAN MEMORI:**
-   - Wajib memperbarui log di `rocat-app/ai_memory/00_INDEX.md` dan membuat catatan di `rocat-app/ai_memory/task_YYYYMMDD_HHMM_tahap15_localization_storage_db.md` setelah tahap ini selesai.
+   - Wajib memperbarui log di `ai_memory/00_INDEX.md` dan membuat catatan di `ai_memory/task_YYYYMMDD_HHMM_tahap16_bugfixes_and_browser.md` setelah tahap ini selesai.
 2. **Context Path (SANGAT PENTING):**
    - Proyek ini berada di dalam *sub-directory* `rocat-app/`.
    - **SEMUA** modifikasi file **WAJIB** dilakukan di dalam folder `rocat-app/`.
 3. **Jetpack Compose & Modern Android:**
-   - Gunakan Jetpack Compose untuk UI Pengaturan.
-   - Gunakan Room untuk Database.
-   - Gunakan Storage Access Framework (`ACTION_OPEN_DOCUMENT_TREE`) dan `DocumentFile` untuk mengelola folder.
+   - Gunakan Jetpack Compose untuk UI `BrowserScreen`.
+   - Modifikasi interaksi penyimpanan menggunakan `DocumentFile` dan `ContentResolver.openOutputStream`.
 
 ---
 
 # Execution Plan (Kerjakan Secara Bertahap)
 
-### Tahap 15.1: Lokalisasi Custom (Folder i18n)
-- Jangan gunakan standar `res/values/strings.xml`. Sebagai gantinya, buat implementasi lokalisasi di dalam folder/package `i18n` (misalnya membuat struktur package Kotlin `app/rocat/i18n/` berisi objek *string* atau menyimpan file terjemahan di `rocat-app/app/src/main/assets/i18n/`).
-- Buat *base language* (English `en`) dan bahasa Indonesia (`id`).
-- Buat *helper* atau *provider* di Jetpack Compose agar UI bisa reaktif saat bahasa diganti.
-- Pindahkan *hardcoded strings* utama yang sudah ada di UI (seperti judul aplikasi, tombol navigasi) ke dalam sistem `i18n` ini.
+### Tahap 16.1: Perbaikan Bug Storage (Save Scraped Files)
+- Masalah saat ini: `StorageManager.createScrapeFolder()` berhasil membuat sub-folder, tetapi file hasil *scrape* tidak tersimpan di dalamnya.
+- **Solusi:** Buat fungsi eksekusi atau utilitas di `StorageManager` (misal: `saveFileToScrapeFolder(folderUri, fileName, mimeType, content/bytes)`). 
+- Fungsi ini harus menggunakan `DocumentFile.fromTreeUri`, memanggil `createFile()`, lalu menggunakan `context.contentResolver.openOutputStream(uri)` untuk menulis data ke dalam file tersebut.
+- Pastikan modul *scripting* menggunakan fungsi baru ini agar file benar-benar tertulis ke *storage*.
 
-### Tahap 15.2: Storage Access Framework & Manajemen Folder Scrape
-- Buat logika untuk mendeteksi apakah aplikasi sudah memiliki *URI permission* untuk direktori utamanya (simpan statusnya di `DataStore` atau `SharedPreferences`).
-- Jika pada saat *first launch* direktori belum di-set, tampilkan UI (Dialog atau Screen khusus) yang menyuruh pengguna memilih folder utama aplikasi (mirip mekanisme Mihon).
-- Gunakan `rememberLauncherForActivityResult` dengan `ActivityResultContracts.OpenDocumentTree()` di Compose untuk memunculkan pemilih folder.
-- Simpan *URI path* dan ambil *persistable URI permission*.
-- **Struktur Folder Scrape:** Buat fungsi utilitas menggunakan `DocumentFile` untuk membuat sub-folder baru di dalam direktori utama setiap kali proses *scrape* berjalan (misal: `[Direktori_Utama]/Scrapes/[Nama_atau_ID_Scrape]/`). Semua file hasil *scrape* terkait harus disimpan di dalam sub-folder spesifik ini.
+### Tahap 16.2: Perbaikan Bug Clear Data (Cache & Cookies)
+- Masalah saat ini: Menghapus data dari DAO Room (`CookieDao`) dan direktori standar tidak cukup membersihkan sesi web secara nyata.
+- **Solusi Cookies:** Di fungsi penghapusan *cookie* (di `SettingsViewModel`), selain `cookieDao.deleteAll()`, panggil juga `android.webkit.CookieManager.getInstance().removeAllCookies(null)` dan `flush()` agar *cookie* WebView bawaan terhapus tuntas.
+- **Solusi Cache:** Tambahkan logika untuk menghapus *cache* WebView melalui `WebView(context).clearCache(true)`.
 
-### Tahap 15.3: Inisialisasi Room Database (SQLite)
-- Buka `rocat-app/gradle/libs.versions.toml` dan tambahkan dependensi untuk **Room** (`androidx.room`).
-- Implementasikan di `build.gradle.kts` (gunakan KSP untuk *annotation processing* Room).
-- Buat entitas dasar:
-  - `CookieEntity`: Untuk menyimpan data cookie aplikasi/script.
-  - `HistoryEntity`: Untuk menyimpan riwayat penggunaan/bacaan.
-- Buat DAO (Data Access Object) dan `AppDatabase`.
-- Integrasikan dengan Dependency Injection (atau buat *singleton instance*).
+### Tahap 16.3: Refaktor Navigasi (Hapus Playground)
+- Buka file navigasi utama (misal: `RoCatNav.kt`).
+- Hapus total semua referensi ke `Screen.Playground`, rute, *string resource* (i18n), dan ikonnya.
+- Ganti dengan tab baru: `Screen.Browser`. Pastikan ikon navigasi di *bottom bar* menggunakan ikon web (misal: `Icons.Filled.Public` atau `Language`).
 
-### Tahap 15.4: Tab Pengaturan (Settings Screen)
-- Tambahkan rute navigasi baru untuk `SettingsScreen`.
-- Buat UI Settings menggunakan Jetpack Compose.
-- Tambahkan fitur-fitur berikut di halaman pengaturan:
-  - **Bahasa:** Opsi untuk mengganti bahasa aplikasi (men-*trigger* sistem `i18n` yang dibuat di Tahap 15.1).
-  - **Ubah Direktori Penyimpanan:** Tombol untuk memanggil ulang *launcher* `OpenDocumentTree()` guna mengubah folder utama.
-  - **Hapus Cache:** Tombol untuk menghapus *cache* aplikasi. Ini harus membersihkan *cache* memori dan disk dari **Coil** (image loader) serta menghapus isi dari direktori `context.cacheDir`.
-  - **Hapus Cookie:** Tombol untuk mengeksekusi *query delete all* pada `CookieEntity` di Room Database.
-  - **Hapus Riwayat:** Tombol untuk mengeksekusi *query delete all* pada `HistoryEntity`.
+### Tahap 16.4: Implementasi BrowserScreen (Freestyle Web Browser)
+- Buat file `BrowserScreen.kt` menggunakan Jetpack Compose.
+- **UI Address Bar Bebas:** Buat *top bar* yang berisi kolom input URL (`OutlinedTextField` atau `BasicTextField`) dan tombol *Enter/Go*. Pengguna harus bisa mengetikkan URL APAPUN (misal `https://google.com`) dan melakukan *browsing* sebebas-bebasnya layaknya aplikasi Chrome. Ini murni fitur *browser* mandiri dan tidak menjalankan *scrape*.
+- **Kontrol Navigasi:** Sediakan tombol *Back* (untuk mundur halaman web), *Forward*, *Refresh*, dan *Stop*.
+- **Engine WebView:** Gunakan komponen `AndroidView` untuk me-*render* WebView. Pastikan WebView ini memuat URL yang diketik pengguna.
+- **Sinkronisasi Cookie (Nilai Plus):** Karena kita menggunakan `AndroidCookieJar`, *cookie* dari sesi *login* pengguna di *browser* bebas ini (misal login akun atau lewat Cloudflare) akan otomatis tersimpan ke `CookieManager` dan bisa dinikmati oleh mesin *scraper* kita di belakang layar.
 
-### Tahap 15.5: Verifikasi & Pembaruan Memori
-- Jalankan `cd rocat-app && ./gradlew :app:assembleDebug` untuk memastikan implementasi Room, KSP, dan sistem lokalisasi yang baru tidak menyebabkan *build error*.
-- Perbarui `00_INDEX.md` menjadi **Tahap 15 SELESAI** beserta ringkasan teknisnya.
+### Tahap 16.5: Verifikasi Build & Update Memory
+- Jalankan `cd rocat-app && ./gradlew :app:assembleDebug` untuk memastikan tidak ada *build error*.
+- Perbarui file `00_INDEX.md` dengan status **Tahap 16 SELESAI** dan rangkum perubahannya.
