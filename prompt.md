@@ -1,46 +1,54 @@
 # Role and Objective
-Kamu adalah AI Software Engineer dan Android Developer handal. Kita sekarang masuk ke **Tahap 14: Production Readiness (Build, Sign, Splits, & Firebase)**.
-Fokus tahap ini adalah pada konfigurasi Gradle untuk mempersiapkan rilis aplikasi `rocat-app`. Kita perlu mengatur *Signing Config*, memecah APK berdasarkan arsitektur CPU (*ABI Splits*), menyiapkan berbagai *Build Types*, serta menyiapkan infrastruktur dasar untuk Firebase (opsional).
+Kamu adalah AI Software Engineer dan Android Developer handal. Kita sekarang masuk ke **Tahap 15: Lokalisasi (i18n), Scoped Storage, Database, & Pengaturan**.
+Fokus tahap ini adalah menambahkan dukungan multi-bahasa menggunakan arsitektur `i18n` kustom, meminta akses direktori utama menggunakan Storage Access Framework (seperti Mihon), mengatur struktur folder untuk hasil *scrape*, menginisiasi Room Database (SQLite), dan membuat halaman Pengaturan (Settings) komprehensif.
 
 # Memory and Constraints (CRITICAL)
 1. **BACA ATURAN MEMORI:**
-   - Wajib memperbarui log di `rocat-app/ai_memory/00_INDEX.md` dan membuat catatan di `rocat-app/ai_memory/task_YYYYMMDD_HHMM_tahap14_production_readiness.md` setelah tahap ini selesai.
+   - Wajib memperbarui log di `rocat-app/ai_memory/00_INDEX.md` dan membuat catatan di `rocat-app/ai_memory/task_YYYYMMDD_HHMM_tahap15_localization_storage_db.md` setelah tahap ini selesai.
 2. **Context Path (SANGAT PENTING):**
-   - Proyek ini berada di dalam *sub-directory* `rocat-app/`. *Root directory* adalah milik aplikasi lain (Mihon).
-   - **SEMUA** modifikasi file (`build.gradle.kts`, `libs.versions.toml`, dll) **WAJIB** dilakukan di dalam folder `rocat-app/`, bukan di *root*.
-3. **Safe Build Protocol:**
-   - Jangan membuat *build* gagal (*crash*) jika `keystore.properties`, `keystore.jks`, atau `google-services.json` tidak ditemukan. Gunakan blok `try-catch` atau pengecekan `file.exists()` di dalam skrip Kotlin Gradle.
-   - Verifikasi akhir wajib menggunakan `cd rocat-app && ./gradlew :app:assembleDebug` dan pastikan sukses.
+   - Proyek ini berada di dalam *sub-directory* `rocat-app/`.
+   - **SEMUA** modifikasi file **WAJIB** dilakukan di dalam folder `rocat-app/`.
+3. **Jetpack Compose & Modern Android:**
+   - Gunakan Jetpack Compose untuk UI Pengaturan.
+   - Gunakan Room untuk Database.
+   - Gunakan Storage Access Framework (`ACTION_OPEN_DOCUMENT_TREE`) dan `DocumentFile` untuk mengelola folder.
 
 ---
 
 # Execution Plan (Kerjakan Secara Bertahap)
 
-### Tahap 14.1: Konfigurasi Signing & Keystore
-- Buka file `rocat-app/app/build.gradle.kts`.
-- Tambahkan logika Kotlin untuk membaca file `keystore.properties` dari folder `rocat-app/` (jika filenya ada). File ini akan mencari properti `storeFile`, `storePassword`, `keyAlias`, `keyPassword`.
-- Buat blok `signingConfigs` di dalam blok `android { ... }`.
-- Konfigurasikan `release` signing. Jika file properti atau keystore tidak ada, pasang *fallback* menggunakan konfigurasi *debug* (atau biarkan kosong/jangan *throw error*) agar kompilasi di CI/CD atau mesin lokal yang belum di- *setup* tidak putus.
+### Tahap 15.1: Lokalisasi Custom (Folder i18n)
+- Jangan gunakan standar `res/values/strings.xml`. Sebagai gantinya, buat implementasi lokalisasi di dalam folder/package `i18n` (misalnya membuat struktur package Kotlin `app/rocat/i18n/` berisi objek *string* atau menyimpan file terjemahan di `rocat-app/app/src/main/assets/i18n/`).
+- Buat *base language* (English `en`) dan bahasa Indonesia (`id`).
+- Buat *helper* atau *provider* di Jetpack Compose agar UI bisa reaktif saat bahasa diganti.
+- Pindahkan *hardcoded strings* utama yang sudah ada di UI (seperti judul aplikasi, tombol navigasi) ke dalam sistem `i18n` ini.
 
-### Tahap 14.2: Konfigurasi ABI Splits (Universal & Spesifik)
-- Di dalam blok `android { ... }` pada `rocat-app/app/build.gradle.kts`, tambahkan konfigurasi `splits` untuk memecah APK (ABI).
-- Atur `isEnable = true`.
-- Masukkan daftar arsitektur standar: `"armeabi-v7a", "arm64-v8a", "x86", "x86_64"`.
-- Atur `isUniversalApk = true` agar Gradle tetap menghasilkan satu APK gabungan selain APK per-arsitektur.
+### Tahap 15.2: Storage Access Framework & Manajemen Folder Scrape
+- Buat logika untuk mendeteksi apakah aplikasi sudah memiliki *URI permission* untuk direktori utamanya (simpan statusnya di `DataStore` atau `SharedPreferences`).
+- Jika pada saat *first launch* direktori belum di-set, tampilkan UI (Dialog atau Screen khusus) yang menyuruh pengguna memilih folder utama aplikasi (mirip mekanisme Mihon).
+- Gunakan `rememberLauncherForActivityResult` dengan `ActivityResultContracts.OpenDocumentTree()` di Compose untuk memunculkan pemilih folder.
+- Simpan *URI path* dan ambil *persistable URI permission*.
+- **Struktur Folder Scrape:** Buat fungsi utilitas menggunakan `DocumentFile` untuk membuat sub-folder baru di dalam direktori utama setiap kali proses *scrape* berjalan (misal: `[Direktori_Utama]/Scrapes/[Nama_atau_ID_Scrape]/`). Semua file hasil *scrape* terkait harus disimpan di dalam sub-folder spesifik ini.
 
-### Tahap 14.3: Pengaturan Build Types
-- Rombak blok `buildTypes` di `rocat-app/app/build.gradle.kts`.
-- **debug**: Konfigurasi standar untuk pengembangan (atur `applicationIdSuffix = ".debug"` agar bisa diinstal berdampingan dengan versi rilis).
-- **release**: Aktifkan `isMinifyEnabled = true`, `isShrinkResources = true`, gunakan `signingConfig = signingConfigs.getByName("release")`, dan definisikan Proguard *rules* (misal: `getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"`).
-- **preview**: Buat *build type* baru bernama `preview` menggunakan `initWith(getByName("release"))`. Tambahkan `applicationIdSuffix = ".preview"`. Ini berguna untuk menguji versi rilis tanpa menimpa aplikasi *production*.
+### Tahap 15.3: Inisialisasi Room Database (SQLite)
+- Buka `rocat-app/gradle/libs.versions.toml` dan tambahkan dependensi untuk **Room** (`androidx.room`).
+- Implementasikan di `build.gradle.kts` (gunakan KSP untuk *annotation processing* Room).
+- Buat entitas dasar:
+  - `CookieEntity`: Untuk menyimpan data cookie aplikasi/script.
+  - `HistoryEntity`: Untuk menyimpan riwayat penggunaan/bacaan.
+- Buat DAO (Data Access Object) dan `AppDatabase`.
+- Integrasikan dengan Dependency Injection (atau buat *singleton instance*).
 
-### Tahap 14.4: Persiapan Integrasi Firebase (Opsional & Aman)
-- Buka `rocat-app/gradle/libs.versions.toml`.
-- Tambahkan versi dan *library* untuk Firebase BOM (`com.google.firebase:firebase-bom`), Analytics, dan Crashlytics.
-- Tambahkan *declaration* plugin Google Services (`com.google.gms.google-services`) dan Crashlytics di bagian `[plugins]`.
-- Di `rocat-app/app/build.gradle.kts`, buat logika *conditional plugin application*. Terapkan plugin `com.google.gms.google-services` **hanya** jika file `rocat-app/app/google-services.json` terdeteksi menggunakan `file("google-services.json").exists()`. Jika tidak ada, jangan *apply* pluginnya agar Gradle tidak *error*.
+### Tahap 15.4: Tab Pengaturan (Settings Screen)
+- Tambahkan rute navigasi baru untuk `SettingsScreen`.
+- Buat UI Settings menggunakan Jetpack Compose.
+- Tambahkan fitur-fitur berikut di halaman pengaturan:
+  - **Bahasa:** Opsi untuk mengganti bahasa aplikasi (men-*trigger* sistem `i18n` yang dibuat di Tahap 15.1).
+  - **Ubah Direktori Penyimpanan:** Tombol untuk memanggil ulang *launcher* `OpenDocumentTree()` guna mengubah folder utama.
+  - **Hapus Cache:** Tombol untuk menghapus *cache* aplikasi. Ini harus membersihkan *cache* memori dan disk dari **Coil** (image loader) serta menghapus isi dari direktori `context.cacheDir`.
+  - **Hapus Cookie:** Tombol untuk mengeksekusi *query delete all* pada `CookieEntity` di Room Database.
+  - **Hapus Riwayat:** Tombol untuk mengeksekusi *query delete all* pada `HistoryEntity`.
 
-### Tahap 14.5: Verifikasi & Pembaruan Memori
-- Jalankan sinkronisasi Gradle pada `rocat-app`.
-- Jalankan perintah CLI: `cd rocat-app && ./gradlew :app:assembleDebug` untuk memastikan konfigurasi `build.gradle.kts` yang baru tidak merusak proyek.
-- Perbarui status di `rocat-app/ai_memory/00_INDEX.md` menjadi **Tahap 14 SELESAI** dan catat perubahan yang baru saja dilakukan.
+### Tahap 15.5: Verifikasi & Pembaruan Memori
+- Jalankan `cd rocat-app && ./gradlew :app:assembleDebug` untuk memastikan implementasi Room, KSP, dan sistem lokalisasi yang baru tidak menyebabkan *build error*.
+- Perbarui `00_INDEX.md` menjadi **Tahap 15 SELESAI** beserta ringkasan teknisnya.
