@@ -1,46 +1,49 @@
 # Role and Objective
-Kamu adalah AI Software Engineer dan Android Developer handal. Kita sekarang masuk ke **Tahap 20: Native Base64 Bridge, Custom User-Agent, & Custom DNS Settings**.
-Fokus tahap ini adalah memindahkan logika `decodeBase64` dari *scraper* JS ke *native* Kotlin agar lebih efisien, serta menambahkan pengaturan Jaringan (Network) di aplikasi yang mencakup kustomisasi *User-Agent* dan opsi DNS Over HTTPS (DoH).
+Kamu adalah AI Software Engineer dan Technical Writer handal. Kita sekarang masuk ke **Tahap 21: Pembuatan Dokumentasi Pembuatan Skrip RoCat (Rocat Scripting API Docs)**.
+Fokus tahap ini adalah menyusun panduan lengkap (dokumentasi) bagi developer/kreator skrip tentang cara membuat skrip *scraper* untuk aplikasi RoCat. 
 
 # Memory and Constraints (CRITICAL)
 1. **BACA ATURAN MEMORI:**
-   - Wajib memperbarui log di `ai_memory/00_INDEX.md` dan membuat catatan di `ai_memory/task_YYYYMMDD_HHMM_tahap20_network_settings.md` setelah tahap ini selesai.
+   - Wajib memperbarui log di `ai_memory/00_INDEX.md` dan membuat catatan di `ai_memory/task_YYYYMMDD_HHMM_tahap21_scripting_docs.md` setelah tahap ini selesai.
 2. **Context Path:**
-   - Semua modifikasi file wajib dilakukan di dalam folder `rocat-app/`.
-3. **Jetpack Compose & Modern Android:**
-   - Gunakan `SettingsRepository` (DataStore/SharedPreferences) untuk menyimpan konfigurasi *User-Agent* dan DNS.
-   - Gunakan `okhttp3-dnsoverhttps` (jika perlu) atau implementasi `Dns` OkHttp untuk mengatur *custom* DNS.
+   - Buat file dokumentasi baru di *root* proyek `rocat-app/` dengan nama `DOCS_SCRIPTING.md`.
+3. **Akurasi Data:**
+   - Pastikan dokumentasi **100% akurat** dengan API yang sudah kita bangun di tahap-tahap sebelumnya (terutama `ScriptUiBridge`, `JsoupBridge`, `NetworkHelper`/`fetch`, dan `Media3`/ExoPlayer integration).
 
 ---
 
 # Execution Plan (Kerjakan Secara Bertahap)
 
-### Tahap 20.1: Pembuatan Native Base64 Bridge
-- **Update Bridge:** Tambahkan fungsi baru `decodeBase64(input: String): String` pada antarmuka bridge global (misalnya di `ScriptUiBridge` atau buat `RoCatUtils` baru).
-- **Implementasi Native:** Gunakan `android.util.Base64.decode(input, Base64.DEFAULT)` di Kotlin, lalu ubah hasilnya menjadi `String` (UTF-8). Tangani *padding* error dengan aman (gunakan blok `try-catch` dan kembalikan *string* kosong jika gagal).
-- **Update JS Scraper:** Ubah file `scrape_anichin.js` agar menggunakan pemanggilan *native* ini (misalnya `RoCatUI.decodeBase64(str)`) alih-alih melakukan *decode* murni menggunakan fungsi JS.
+### Tahap 21.1: Struktur Dasar Skrip & Metadata
+- Buat file `DOCS_SCRIPTING.md`.
+- Jelaskan blok metadata wajib di awal skrip (format `==UserScript==` atau `// @tag`).
+- Daftarkan *tag* yang didukung (misalnya `@name`, `@version`, `@description`, `@author`, `@match`, `@icon`, `@category`).
+- Jelaskan siklus hidup skrip (Script Lifecycle), terutama fungsi `onLaunch()` yang dipanggil otomatis saat skrip pertama kali dijalankan di kanvas.
 
-### Tahap 20.2: UI Pengaturan Jaringan (Network Settings)
-- **SettingsScreen:** Tambahkan kategori baru "Jaringan" di `SettingsScreen`.
-- **Custom User-Agent:** Buat *input text* (TextField) untuk mengubah *User-Agent*. Jika kosong, gunakan *default* (misalnya "Chrome/143.0...").
-- **DNS Configuration:** Buat *dropdown* atau opsi *radio button* untuk memilih DNS. Opsi yang tersedia:
-  - System Default (Bawaan)
-  - Cloudflare (1.1.1.1)
-  - Google (8.8.8.8)
-  - Quad9 (9.9.9.9)
-  - Custom DNS (tampilkan TextField tambahan jika ini dipilih, untuk memasukkan URL DoH).
+### Tahap 21.2: Dokumentasi UI Bridge (`RoCatUI`)
+Jelaskan secara detail semua metode yang tersedia di objek global `RoCatUI`, beserta parameter dan contoh penggunaannya:
+- **Input & Interaksi:** `addInput(id, hint)`, `addButton(label, functionName)`
+- **Media & Pratinjau:** - `addImage(url, title, allowDownload)`
+  - `addVideo(url, title, isStreamHls, allowDownload)` -> Jelaskan bahwa HLS stream otomatis menggunakan pemutar ExoPlayer native.
+  - `thumbnailPreview(url)` dan `videoPreview(url)` (sebagai referensi backward-compatibility).
+- **Layouting:** `addGrid(columns, itemsJson, onClickFunction)` -> Jelaskan format JSON yang dibutuhkan.
+- **Utility UI:** `clear()`, `log(text)`
 
-### Tahap 20.3: Integrasi Data Store & OkHttp (NetworkHelper)
-- **State Management:** Simpan preferensi *User-Agent* dan setelan DNS di `SettingsRepository`.
-- **NetworkHelper:** Modifikasi `NetworkHelper` agar membaca preferensi ini saat membuat `OkHttpClient`.
-  - Jika *User-Agent* diubah, pastikan `StealthHeadersInterceptor` atau interceptor terkait menggunakan nilai baru tersebut.
-  - Jika DNS diubah dari sistem *default*, konfigurasikan `OkHttpClient.Builder().dns(...)` atau gunakan modul DoH OkHttp dengan URL yang sesuai (misal: `https://cloudflare-dns.com/dns-query`).
+### Tahap 21.3: Dokumentasi DOM Parsing (`RoCatDOM`)
+Jelaskan objek global `RoCatDOM` yang menggantikan Cheerio/Jsoup murni, beserta metodenya:
+- Cara *parsing* HTML statis: `parse(html)`
+- Metode penelusuran DOM: `select()`, `selectText()`, `selectAttr()`, `selectHtml()`
+- Metode elemen (*wrapper*): `text()`, `html()`, `attr()`, `find()`, dll.
+- Berikan contoh singkat cara mengekstrak daftar episode atau judul dari HTML Anichin/Manga.
 
-### Tahap 20.4: Pengujian & Validasi
-- Jalankan aplikasi dan pastikan perubahan DNS serta *User-Agent* tersimpan dan bertahan meski aplikasi di-*restart*.
-- Lakukan eksekusi *script* Anichin dan pastikan `decodeBase64` *native* berjalan dengan lancar saat melakukan *scraping stream* HLS.
-- Pastikan build tidak bermasalah: jalankan `./gradlew :app:assembleDebug` dan unit test terkait.
+### Tahap 21.4: Dokumentasi Network & Utilities
+- **Fetch API:** Jelaskan penggunaan fungsi `fetch(url, options)` *synchronous* bawaan RoCat. Ingatkan bahwa eksekusi Rhino di Android tidak mendukung `async/await`, jadi *fetch* bekerja secara sinkron.
+- **Stealth & Interceptor:** Beri tahu bahwa *fetch* otomatis diproteksi oleh *Cloudflare Bypasser*, *Custom User-Agent*, dan *Custom DNS* bawaan aplikasi.
+- **Native Utilities:** Jelaskan penggunaan fungsi seperti `RoCatUI.decodeBase64(str)` dan `RoCatUI.save(fileName, content, mimeType)`.
 
-### Tahap 20.5: Update Memory
-- Perbarui file `00_INDEX.md` dengan status **Tahap 20 SELESAI**.
-- Buat catatan di `task_YYYYMMDD_HHMM_tahap20_network_settings.md`.
+### Tahap 21.5: Contoh Skrip Lengkap (Boilerplate)
+- Sediakan satu contoh kode skrip *scraper* (Boilerplate) fiktif yang menggabungkan Metadata, `onLaunch`, `RoCatUI.addGrid`, pengambilan *fetch*, dan pemanggilan video HLS.
+
+### Tahap 21.6: Update Memory
+- Perbarui file `00_INDEX.md` dengan status **Tahap 21 SELESAI**.
+- Buat catatan teknis di `task_YYYYMMDD_HHMM_tahap21_scripting_docs.md`.
