@@ -1,56 +1,45 @@
 # Role and Objective
-Kamu adalah AI Software Engineer dan Android Developer handal. Kita sekarang masuk ke **Tahap 22: Simplifikasi API Scripting, Standardisasi Format Universal, & Ekspansi Template UI (JSON Viewer, HTML Preview, Audio, Alert, Badge)**.
-Fokus tahap ini adalah menyederhanakan format penulisan skrip agar lebih umum, toleran terhadap kesalahan data (*fault-tolerant*), serta memperkaya variasi template UI bawaan yang dapat dipanggil langsung dari skrip JS.
+Kamu adalah AI Software Engineer dan Technical Writer handal. Kita sekarang masuk ke **Tahap 23: Pembaruan Dokumentasi Scripting & Perbaikan Skrip Scraper (`testscrape.txt`)**.
+Fokus tahap ini adalah memperbarui file `DOCS_SCRIPTING.md` agar mencakup semua penyederhanaan API dan komponen UI baru dari Tahap 22, serta menganalisis dan memperbaiki kode *scraper* dari file `testscrape.txt` hingga berhasil dieksekusi dengan mulus menggunakan format API terbaru.
 
 # Memory and Constraints (CRITICAL)
 1. **BACA ATURAN MEMORI:**
-   - Wajib memperbarui log di `ai_memory/00_INDEX.md` dan membuat catatan di `ai_memory/task_YYYYMMDD_HHMM_tahap22_script_simplification_and_ui_templates.md` setelah tahap ini selesai.
+   - Wajib memperbarui log di `ai_memory/00_INDEX.md` dan membuat catatan di `ai_memory/task_YYYYMMDD_HHMM_tahap23_docs_update_and_script_fix.md` setelah tahap ini selesai.
 2. **Context Path:**
-   - Semua modifikasi kode Kotlin dan skrip JS berada di dalam sub-direktori `rocat-app/`.
-3. **Jetpack Compose & Rhino Compatibility:**
-   - Buat komponen Compose baru yang responsif, rapi, dan sesuai dengan sistem tema RoCat.
-   - Pastikan wrapper JS baru tetap kompatibel dengan Rhino Engine (mode interpretasi, tanpa ES6+ yang tidak didukung seperti `async/await` atau `class`).
+   - File dokumentasi `DOCS_SCRIPTING.md` berada di *root* proyek `rocat-app/`.
+   - Pastikan kamu membaca file `testscrape.txt` yang dilampirkan sebelum memperbaikinya.
 
 ---
 
 # Execution Plan (Kerjakan Secara Bertahap)
 
-### Tahap 22.1: Injeksi JS Core Wrapper (Universal API Abstraction)
-- **Auto-Injected Helper (`RoCat`):** Buat / suntikkan helper JS global (misalnya `RoCat`) secara otomatis sebelum skrip pengguna dieksekusi di Rhino Engine.
-- **Fitur Wrapper Helper:**
-  - `RoCat.render(items)`: Menerima *array* atau objek UI secara fleksibel tanpa perlu memanggil banyak fungsi `RoCatUI.add...` satu per satu.
-  - `RoCat.safeParseJson(str, fallback)`: Utilitas internal agar parsing JSON tidak pernah membuat skrip *crash*.
-  - `RoCat.fetchJson(url, options)`: Wrapper otomatis untuk `fetch()` yang langsung mengembalikan objek JSON ter-parse secara aman.
-  - **Toleransi Input:** Pastikan bridge `RoCatUI` di Kotlin secara otomatis menoleransi argumen yang `null`, `undefined`, atau salah tipe data (memberikan nilai *default* aman alih-alih melempar *exception*).
+### Tahap 23.1: Analisis Skrip `testscrape.txt`
+- Baca isi file `testscrape.txt`.
+- Identifikasi masalah utama pada skrip tersebut (apakah masalah *parsing* DOM, struktur JSON, pemanggilan API lama, atau *error logic*).
+- Pahami target situs/API yang sedang di-*scrape* oleh skrip tersebut untuk memastikan logika penggantinya nanti akurat.
 
-### Tahap 22.2: Ekspansi Komponen Template UI Baru (`ScriptUIComponent`)
-Tambahkan komponen UI baru pada sealed class `ScriptUIComponent` di Kotlin dan bridge `ScriptUiBridge`:
+### Tahap 23.2: Perbaikan Skrip & Migrasi ke API Baru
+- Tulis ulang dan perbaiki skrip tersebut. Ubah ekstensinya atau simpan sebagai file `.js` yang valid (misalnya `fixed_testscrape.js`).
+- **Terapkan API Tahap 22:**
+  - Gunakan helper global `RoCat` (seperti `RoCat.safeParseJson` atau `RoCat.fetchJson` jika relevan).
+  - Ganti pemanggilan UI manual yang rumit dengan komponen baru (misalnya gunakan `RoCatUI.addAlert()` untuk *error handling*, `RoCatUI.addBadgeGroup()` untuk genre/status, atau `RoCatUI.addJsonLog()` untuk *debugging* hasil API).
+- Pastikan *lifecycle* skrip (seperti `onLaunch()`) dan parsing HTML (`RoCatDOM`) sudah digunakan dengan format yang paling sederhana dan kebal *error* (*fault-tolerant*).
 
-1. **JSON Log Viewer (`RoCatUI.addJsonLog(dataJson, title, allowCopy)`):**
-   - Kartu tampilan data JSON yang rapi (*pretty printed*), berbunga warna (*syntax highlighting* sederhana / monospaced), dilengkapi tombol **"Copy JSON"** dengan indikator Toast.
-2. **HTML Preview (`RoCatUI.addHtmlPreview(htmlContent, title)`):**
-   - Komponen untuk menampilkan deskripsi/pengumuman kaya teks (Rich Text / WebView ringkas / AnnotatedString HTML) untuk *formatting* seperti bold, italic, link, dan list.
-3. **Audio Player (`RoCatUI.addAudio(url, title, allowDownload)`):**
-   - Pemutar media audio ringkas (menggunakan Media3 ExoPlayer) lengkap dengan kontrol Play/Pause, Progress Bar, dan tombol unduh SAF.
-4. **Alert / Banner Card (`RoCatUI.addAlert(message, type)`):**
-   - Kartu notifikasi/peringatan dengan tipe: `"info"`, `"warning"`, `"error"`, `"success"`. Dilengkapi ikon dan warna latar belakang yang disesuaikan.
-5. **Chip / Badge Group (`RoCatUI.addBadgeGroup(badgesJson)`):**
-   - Menampilkan deretan status/kategori (misalnya: `["Ongoing", "HD", "Action", "Rating 8.5"]`) dalam bentuk *FlowRow* chip yang rapi.
+### Tahap 23.3: Pembaruan File `DOCS_SCRIPTING.md`
+- Buka dan edit file `DOCS_SCRIPTING.md`.
+- **Tambahkan Bagian Wrapper Helper (`RoCat`):** Dokumentasikan fungsi `RoCat.render()`, `RoCat.safeParseJson()`, dan `RoCat.fetchJson()`.
+- **Tambahkan Komponen UI Baru:** Jelaskan penggunaan dan parameter untuk:
+  - `RoCatUI.addJsonLog(dataJson, title, allowCopy)`
+  - `RoCatUI.addHtmlPreview(htmlContent, title)`
+  - `RoCatUI.addAudio(url, title, allowDownload)`
+  - `RoCatUI.addAlert(message, type)`
+  - `RoCatUI.addBadgeGroup(badgesJson)`
+- Perbarui contoh *boilerplate* skrip di dalam dokumentasi agar mencerminkan gaya penulisan skrip gaya baru yang lebih bersih.
 
-### Tahap 22.3: Implementasi Native Compose UI & Visual Polish
-- Buat file composable baru di `app/rocat/ui/components/` untuk masing-masing template di atas:
-  - `JsonLogCard.kt`
-  - `HtmlPreviewCard.kt`
-  - `AudioPreviewCard.kt`
-  - `AlertBannerCard.kt`
-  - `BadgeGroupCard.kt`
-- Daftarkan komponen-komponen baru ini ke dalam LazyColumn di `ScriptCanvasScreen.kt`.
+### Tahap 23.4: Pengujian & Validasi
+- Simulasikan eksekusi skrip hasil perbaikan (`fixed_testscrape.js`) di dalam otak / test *environment* kamu.
+- Jika memungkinkan, jalankan unit test di `scripting/rhino` menggunakan skrip baru ini untuk memastikan tidak ada *syntax error* dan semua *bridge native* terpanggil dengan benar.
 
-### Tahap 22.4: Penyederhanan Skrip Demo & `scrape_anichin.js`
-- Terapkan format API penyederhanaan baru pada skrip `scrape_anichin.js` agar kodenya lebih ringkas, mudah dibaca, dan tidak rawan eror.
-- Manfaatkan komponen UI baru seperti `addAlert` untuk pesan *status/error* dan `addBadgeGroup` untuk menampilkan genre/status episode.
-
-### Tahap 22.5: Verifikasi Build, Unit Test, & Update Memory
-- Buat unit test baru di `scripting/rhino` untuk menguji pemanggilan komponen UI baru dari skrip JS.
-- Jalankan `./gradlew :app:assembleDebug` dan unit test untuk memastikan build dan eksekusi berjalan tanpa masalah.
-- Perbarui file `00_INDEX.md` dengan status **Tahap 22 SELESAI** dan buat catatan teknis di `task_YYYYMMDD_HHMM_tahap22_script_simplification_and_ui_templates.md`.
+### Tahap 23.5: Update Memory
+- Perbarui file `00_INDEX.md` dengan status **Tahap 23 SELESAI**.
+- Buat catatan teknis di `task_YYYYMMDD_HHMM_tahap23_docs_update_and_script_fix.md` yang merangkum apa saja yang salah dari skrip awal dan bagaimana kamu memperbaikinya.
