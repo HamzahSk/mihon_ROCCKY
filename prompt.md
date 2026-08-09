@@ -1,42 +1,46 @@
 # Role and Objective
-Kamu adalah AI Software Engineer dan Android Developer handal. Kita sekarang masuk ke **Tahap 19: Perbaikan Bug Scraper & Integrasi HLS Stream (Anichin)**.
-Fokus tahap ini adalah memperbaiki *bug* pada skrip *scraper* `scrape_anichin.js`, menyesuaikan formatnya dengan struktur asli di `anichin.js`, serta mengintegrasikan pemutar video *native* yang sudah kita buat di Tahap 18 (`RoCatUI.addVideo`) untuk menangani pemutaran *stream* HLS (`.m3u8`) dengan lancar.
+Kamu adalah AI Software Engineer dan Android Developer handal. Kita sekarang masuk ke **Tahap 20: Native Base64 Bridge, Custom User-Agent, & Custom DNS Settings**.
+Fokus tahap ini adalah memindahkan logika `decodeBase64` dari *scraper* JS ke *native* Kotlin agar lebih efisien, serta menambahkan pengaturan Jaringan (Network) di aplikasi yang mencakup kustomisasi *User-Agent* dan opsi DNS Over HTTPS (DoH).
 
 # Memory and Constraints (CRITICAL)
 1. **BACA ATURAN MEMORI:**
-   - Wajib memperbarui log di `ai_memory/00_INDEX.md` dan membuat catatan di `ai_memory/task_YYYYMMDD_HHMM_tahap19_bugfix_anichin_stream.md` setelah tahap ini selesai.
-2. **Context Path (SANGAT PENTING):**
-   - Proyek ini berada di dalam *sub-directory* `rocat-app/`.
-   - Modifikasi skrip dilakukan pada folder yang relevan tempat `scrape_anichin.js` disimpan.
+   - Wajib memperbarui log di `ai_memory/00_INDEX.md` dan membuat catatan di `ai_memory/task_YYYYMMDD_HHMM_tahap20_network_settings.md` setelah tahap ini selesai.
+2. **Context Path:**
+   - Semua modifikasi file wajib dilakukan di dalam folder `rocat-app/`.
 3. **Jetpack Compose & Modern Android:**
-   - Gunakan API `RoCatUI.addVideo(url, title, isStreamHls, allowDownload)` dari Tahap 18.
-   - Pastikan *error handling* pada skrip JS aman agar tidak membuat aplikasi *crash* jika elemen web berubah.
+   - Gunakan `SettingsRepository` (DataStore/SharedPreferences) untuk menyimpan konfigurasi *User-Agent* dan DNS.
+   - Gunakan `okhttp3-dnsoverhttps` (jika perlu) atau implementasi `Dns` OkHttp untuk mengatur *custom* DNS.
 
 ---
 
 # Execution Plan (Kerjakan Secara Bertahap)
 
-### Tahap 19.1: Analisis & Sinkronisasi Format Skrip
-- Baca dan bandingkan logika *scraping* antara file `anichin.js` (referensi asli) dengan `scrape_anichin.js` (versi RoCat).
-- Selaraskan struktur kode `scrape_anichin.js` agar mengikuti standar *lifecycle* RoCat (misalnya menggunakan fungsi `onLaunch()`, `buildUI()`, dll).
-- Pastikan penggunaan jembatan UI (seperti `RoCatUI.addInput`, `RoCatUI.addButton`, `RoCatUI.addGrid`) sudah tepat dan efisien.
+### Tahap 20.1: Pembuatan Native Base64 Bridge
+- **Update Bridge:** Tambahkan fungsi baru `decodeBase64(input: String): String` pada antarmuka bridge global (misalnya di `ScriptUiBridge` atau buat `RoCatUtils` baru).
+- **Implementasi Native:** Gunakan `android.util.Base64.decode(input, Base64.DEFAULT)` di Kotlin, lalu ubah hasilnya menjadi `String` (UTF-8). Tangani *padding* error dengan aman (gunakan blok `try-catch` dan kembalikan *string* kosong jika gagal).
+- **Update JS Scraper:** Ubah file `scrape_anichin.js` agar menggunakan pemanggilan *native* ini (misalnya `RoCatUI.decodeBase64(str)`) alih-alih melakukan *decode* murni menggunakan fungsi JS.
 
-### Tahap 19.2: Perbaikan Logika Search & Detail
-- **Pencarian (Search):** Perbaiki logika ekstraksi data dari hasil pencarian web Anichin. Pastikan *thumbnail*, judul, dan URL detail berhasil diambil dan ditampilkan dengan `RoCatUI.addGrid()`.
-- **Detail Anime:** Saat item dari *grid* diklik, pastikan skrip dapat mengambil daftar episode dengan benar. Gunakan fungsi `RoCatUI.addButton()` atau komponen *list* untuk menampilkan pilihan episode.
+### Tahap 20.2: UI Pengaturan Jaringan (Network Settings)
+- **SettingsScreen:** Tambahkan kategori baru "Jaringan" di `SettingsScreen`.
+- **Custom User-Agent:** Buat *input text* (TextField) untuk mengubah *User-Agent*. Jika kosong, gunakan *default* (misalnya "Chrome/143.0...").
+- **DNS Configuration:** Buat *dropdown* atau opsi *radio button* untuk memilih DNS. Opsi yang tersedia:
+  - System Default (Bawaan)
+  - Cloudflare (1.1.1.1)
+  - Google (8.8.8.8)
+  - Quad9 (9.9.9.9)
+  - Custom DNS (tampilkan TextField tambahan jika ini dipilih, untuk memasukkan URL DoH).
 
-### Tahap 19.3: Perbaikan Ekstraksi Stream & Integrasi HLS (`RoCatUI.addVideo`)
-- **Ekstraksi Video:** Perbaiki fungsi *scraper* untuk menembus *iframe* atau *player* Anichin hingga mendapatkan URL langsung dari video (terutama format `.m3u8` untuk HLS atau `.mp4`).
-- **Penerapan UI:** - Jika URL yang didapat adalah *stream* HLS, panggil:  
-    `RoCatUI.addVideo(videoUrl, "Judul Episode", true, true);`
-  - Jika formatnya MP4 biasa, panggil:  
-    `RoCatUI.addVideo(videoUrl, "Judul Episode", false, true);`
-- **Headers/Referrer (PENTING):** Analisis apakah URL *stream* membutuhkan *headers* khusus (seperti `Referer` atau `User-Agent`) untuk diputar. Jika ya, terapkan mekanisme pengiriman *header* melalui API `NetworkHelper` atau konfigurasikan `MediaSource` ExoPlayer di sisi native agar menyertakan *header* tersebut saat inisialisasi video.
+### Tahap 20.3: Integrasi Data Store & OkHttp (NetworkHelper)
+- **State Management:** Simpan preferensi *User-Agent* dan setelan DNS di `SettingsRepository`.
+- **NetworkHelper:** Modifikasi `NetworkHelper` agar membaca preferensi ini saat membuat `OkHttpClient`.
+  - Jika *User-Agent* diubah, pastikan `StealthHeadersInterceptor` atau interceptor terkait menggunakan nilai baru tersebut.
+  - Jika DNS diubah dari sistem *default*, konfigurasikan `OkHttpClient.Builder().dns(...)` atau gunakan modul DoH OkHttp dengan URL yang sesuai (misal: `https://cloudflare-dns.com/dns-query`).
 
-### Tahap 19.4: Pengujian & Validasi
-- Simulasikan atau pastikan skrip yang diperbarui tidak memiliki *syntax error*.
-- Verifikasi alur dari: Pencarian -> Klik Detail -> Pilih Episode -> *Card Video* muncul -> Video bisa di-*play* *inline* atau *fullscreen* tanpa *error*.
+### Tahap 20.4: Pengujian & Validasi
+- Jalankan aplikasi dan pastikan perubahan DNS serta *User-Agent* tersimpan dan bertahan meski aplikasi di-*restart*.
+- Lakukan eksekusi *script* Anichin dan pastikan `decodeBase64` *native* berjalan dengan lancar saat melakukan *scraping stream* HLS.
+- Pastikan build tidak bermasalah: jalankan `./gradlew :app:assembleDebug` dan unit test terkait.
 
-### Tahap 19.5: Update Memory
-- Perbarui file `00_INDEX.md` dengan status **Tahap 19 SELESAI**.
-- Buat catatan teknis di `task_YYYYMMDD_HHMM_tahap19_bugfix_anichin_stream.md` berisi kendala yang ditemukan pada DOM Anichin dan cara menyelesaikannya.
+### Tahap 20.5: Update Memory
+- Perbarui file `00_INDEX.md` dengan status **Tahap 20 SELESAI**.
+- Buat catatan di `task_YYYYMMDD_HHMM_tahap20_network_settings.md`.
