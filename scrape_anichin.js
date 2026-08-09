@@ -283,13 +283,12 @@ function resolveUrl(base, url) {
     return url;
 }
 
-/** Decode base64: pakai Android Base64 bila ada, fallback decoder murni JS. */
+/** Decode base64: pakai bridge native RoCatUI.decodeBase64 (Tahap 20), fallback decoder murni JS bila bridge tak ada. */
 function decodeBase64(input) {
     var s = String(input);
     try {
-        if (typeof android !== "undefined" && android.util && android.util.Base64) {
-            var bytes = android.util.Base64.decode(s, 0);
-            return new java.lang.String(bytes, "UTF-8").toString();
+        if (typeof RoCatUI !== "undefined" && RoCatUI.decodeBase64) {
+            return RoCatUI.decodeBase64(s);
         }
     } catch (e) { /* lanjut ke decoder murni JS */ }
     return b64Decode(s);

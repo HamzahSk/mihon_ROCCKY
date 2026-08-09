@@ -106,6 +106,20 @@ enum class StringKey(val key: String) {
     storagePermissionDenied("storage_permission_denied"),
     failure("failure"),
 
+    // Network settings (Tahap 20)
+    network("network"),
+    userAgent("user_agent"),
+    userAgentHint("user_agent_hint"),
+    userAgentBlank("user_agent_blank"),
+    dnsSelection("dns_selection"),
+    dnsSystemDefault("dns_system_default"),
+    dnsCloudflare("dns_cloudflare"),
+    dnsGoogle("dns_google"),
+    dnsQuad9("dns_quad9"),
+    dnsCustom("dns_custom"),
+    customDnsUrl("custom_dns_url"),
+    customDnsUrlHint("custom_dns_url_hint"),
+
     // Storage setup (first launch)
     setupStorageTitle("setup_storage_title"),
     setupStorageBody("setup_storage_body"),

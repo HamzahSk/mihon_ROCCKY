@@ -105,31 +105,61 @@ class ScriptRepositoryImpl(
  * Wires the [RhinoScriptEngine] together with a network-backed [ScriptEnvironment].
  * Every request made from script code goes through the app's OkHttp stack via the
  * shared [scriptFetch] helper (same interceptors/cookie jar as the rest of the app).
+ *
+ * The engine/environment are rebuilt lazily when the shared network configuration
+ * (custom User-Agent / DoH DNS, Tahap 20) changes, so a scraper always picks up the
+ * user's latest network settings without an app restart.
  */
 class ScriptManager(
     networkHelper: NetworkHelper,
 ) {
-    /** The shared script client with aggressive timeouts so runaway scripts stay bounded. */
-    val scriptClient: OkHttpClient = networkHelper.newScriptClient()
+    private val networkHelper: NetworkHelper = networkHelper
 
-    val engine: ScriptEngine = RhinoScriptEngine(scriptClient)
+    /** Fingerprint of the network config the current [currentEngine] was built with. */
+    private var lastFingerprint: String? = null
 
-    val environment: ScriptEnvironment = DefaultScriptEnvironment(
+    @Volatile
+    private var currentEngine: RhinoScriptEngine? = null
+
+    @Volatile
+    private var fetchImpl: (suspend (String, String, Map<String, String>, String?) -> FetchResult)? = null
+
+    /** Recreates the engine + fetch bridge whenever the network config changed. */
+    @Synchronized
+    private fun refresh() {
+        val fingerprint = networkHelper.fingerprint()
+        if (currentEngine != null && lastFingerprint == fingerprint) return
+        lastFingerprint = fingerprint
+        val scriptClient: OkHttpClient = networkHelper.newScriptClient()
+        currentEngine = RhinoScriptEngine(scriptClient)
         fetchImpl = { url: String, method: String, headers: Map<String, String>, body: String? ->
             scriptClient.scriptFetch(url, method, headers, body)
-        },
+        }
+    }
+
+    /** The (config-fresh) script engine. */
+    fun engine(): ScriptEngine {
+        refresh()
+        return currentEngine ?: error("ScriptManager not initialised")
+    }
+
+    /** The (config-fresh) plain environment, used for plain executions. */
+    fun environment(): ScriptEnvironment = DefaultScriptEnvironment(
+        fetchImpl = fetchImplOrThrow(),
     )
 
     /**
      * Builds a fresh environment wired to the same network stack but exposing [ui] as
      * the script's global `RoCatUI` object, letting a script drive a dynamic Compose
-     * UI (used by the playground).
+     * UI (used by the canvas/playground).
      */
-    fun createEnvironment(ui: ScriptUiBridge? = null): ScriptEnvironment =
-        DefaultScriptEnvironment(
-            fetchImpl = { url: String, method: String, headers: Map<String, String>, body: String? ->
-                scriptClient.scriptFetch(url, method, headers, body)
-            },
-            ui = ui,
-        )
+    fun createEnvironment(ui: ScriptUiBridge? = null): ScriptEnvironment = DefaultScriptEnvironment(
+        fetchImpl = fetchImplOrThrow(),
+        ui = ui,
+    )
+
+    private fun fetchImplOrThrow(): suspend (String, String, Map<String, String>, String?) -> FetchResult {
+        refresh()
+        return fetchImpl ?: error("ScriptManager not initialised")
+    }
 }

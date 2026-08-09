@@ -6,6 +6,7 @@ import android.webkit.CookieManager
 import android.webkit.WebView
 import androidx.lifecycle.viewModelScope
 import app.rocat.core.common.injekt.Injekt
+import app.rocat.core.common.network.DnsMode
 import app.rocat.core.viewmodel.StateViewModel
 import app.rocat.data.db.CookieDao
 import app.rocat.data.db.HistoryDao
@@ -16,14 +17,15 @@ import app.rocat.settings.SettingsRepository
 import app.rocat.storage.StorageManager
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
  * Backs the Settings screen. Coordinates the custom i18n provider, the SAF storage
- * manager and the Room DAOs for the three destructive actions (cache/cookies/history).
- * Every action updates [State.message] so the UI can surface a transient confirmation.
+ * manager, the Room DAOs for the three destructive actions (cache/cookies/history) and
+ * the network preferences (custom User-Agent + DoH DNS, Tahap 20). Every action updates
+ * [State.message] so the UI can surface a transient confirmation.
  */
 class SettingsViewModel(
     private val settings: SettingsRepository = Injekt.get(),
@@ -40,20 +42,54 @@ class SettingsViewModel(
         val storageName: String = "",
         val busy: Boolean = false,
         val message: StringKey? = null,
+        val userAgent: String = "",
+        val dnsMode: DnsMode = DnsMode.SYSTEM,
+        val customDnsUrl: String = "",
     )
 
-    val settingsState: StateFlow<State> = i18nProvider.language
-        .map { language ->
-            State(
-                language = language,
-                storageConfigured = storageManager.isConfigured.value,
-                storageName = storageManager.mainDirectoryName(),
-            )
-        }
+    val settingsState: StateFlow<State> = combine(
+        i18nProvider.language,
+        mutableState,
+    ) { language, current ->
+        current.copy(
+            language = language,
+            storageConfigured = storageManager.isConfigured.value,
+            storageName = storageManager.mainDirectoryName(),
+        )
+    }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), State())
+
+    init {
+        // Seed the network fields from the persisted preferences once.
+        mutableState.value = mutableState.value.copy(
+            userAgent = settings.userAgent,
+            dnsMode = settings.dnsMode,
+            customDnsUrl = settings.customDnsUrl,
+        )
+    }
 
     fun setLanguage(language: AppLanguage) {
         i18nProvider.setLanguage(language)
+    }
+
+    // ---- Tahap 20: Network settings ----
+    // Persisting happens on every keystroke (cheap SharedPreferences write); the
+    // NetworkHelper only *rebuilds* its client lazily on the next request, keyed by a
+    // fingerprint, so editing the field here never rebuilds anything per keystroke.
+
+    fun setUserAgent(value: String) {
+        settings.userAgent = value
+        mutableState.value = mutableState.value.copy(userAgent = value)
+    }
+
+    fun setDnsMode(mode: DnsMode) {
+        settings.dnsMode = mode
+        mutableState.value = mutableState.value.copy(dnsMode = mode)
+    }
+
+    fun setCustomDnsUrl(value: String) {
+        settings.customDnsUrl = value
+        mutableState.value = mutableState.value.copy(customDnsUrl = value)
     }
 
     /** Callback of the `OpenDocumentTree` launcher in the Settings screen. */

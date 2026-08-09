@@ -31,11 +31,24 @@ import app.rocat.ui.scripts.ScriptsViewModel
  */
 class AppModule(val app: Application) : InjektModule {
 
-    override fun registerInjectables(registrar: Registrar) {
+override fun registerInjectables(registrar: Registrar) {
         registrar.add(app)
         registrar.addSingleton(app as Context)
 
-        val networkHelper = NetworkHelper(app)
+        // Tahap 15: Settings / storage / i18n. Created before NetworkHelper so the HTTP
+        // stack can seed its User-Agent + DoH DNS from the persisted preferences.
+        val settingsRepository = SettingsRepository(app)
+        registrar.addSingleton(settingsRepository)
+
+        // Tahap 20: the network stack reads UA + DNS settings lazily (fingerprint-based
+        // rebuild) so changes are picked up on the next request without a restart.
+        val networkHelper = NetworkHelper(
+            app,
+            userAgentProvider = {
+                settingsRepository.userAgent.ifBlank { NetworkHelper.DEFAULT_USER_AGENT }
+            },
+            dnsConfigProvider = { settingsRepository.dnsMode to settingsRepository.customDnsUrl },
+        )
         registrar.addSingleton(networkHelper)
 
         // Wires the Rhino engine + network-backed environment into a single manager.
@@ -50,21 +63,18 @@ class AppModule(val app: Application) : InjektModule {
         registrar.addSingletonFactory { ImportScript(scriptRepository) }
         registrar.addSingletonFactory { DeleteScript(scriptRepository) }
         registrar.addSingletonFactory { SetScriptEnabled(scriptRepository) }
-        registrar.addSingletonFactory { ScriptSourceFetcher(networkHelper.client) }
+        registrar.addSingletonFactory { ScriptSourceFetcher(networkHelper.client()) }
         registrar.addSingletonFactory {
             ExecuteScript(
-                engine = scriptManager.engine,
-                environment = scriptManager.environment,
+                engine = scriptManager.engine(),
+                environment = scriptManager.environment(),
             )
         }
 
-        // Tahap 15: Settings / storage / i18n / Room.
-        val settingsRepository = SettingsRepository(app)
-        registrar.addSingleton(settingsRepository)
-
-        registrar.addSingleton(I18nProvider(settingsRepository))
         val storageManager = StorageManager(app, settingsRepository)
         registrar.addSingleton(storageManager)
+
+        registrar.addSingleton(I18nProvider(settingsRepository))
 
         // Tahap 18.1: media downloader for ImagePreviewCard / VideoPreviewCard saves.
         registrar.addSingleton(MediaDownloader(networkHelper, storageManager))

@@ -48,6 +48,7 @@ class AnichinScraperTest {
 
     private class UiRecorder : ScriptUiBridge {
         val calls = mutableListOf<String>()
+        var decodeBase64Calls = 0
         override fun addInput(id: String, hint: String) { calls += "input:$id:$hint" }
         override fun addButton(label: String, functionName: String) { calls += "button:$label:$functionName" }
         override fun thumbnailPreview(url: String) { calls += "thumb:$url" }
@@ -66,6 +67,12 @@ class AnichinScraperTest {
         override fun saveFile(fileName: String, content: String, mimeType: String): String {
             calls += "save:$fileName:$mimeType"
             return fileName
+        }
+        override fun decodeBase64(input: String): String {
+            decodeBase64Calls++
+            // Record so the test can prove the script reached the native bridge.
+            calls += "decodeBase64:$input"
+            return super.decodeBase64(input)
         }
     }
 
@@ -240,10 +247,13 @@ class AnichinScraperTest {
         assertTrue("title must include server name", videoCall.contains("Premium 1"))
         // The non-HLS OK.ru mirror must only be listed in the log, never rendered as a card.
         assertTrue(ui.calls.none { it.contains("ok.ru/videoembed") && it.startsWith("videoCard:") })
+        // Tahap 20.1: the iframe base64 must have been decoded through the native bridge.
+        assertTrue("expected native decodeBase64 bridge calls", ui.decodeBase64Calls > 0)
+        assertTrue(ui.calls.any { it.startsWith("decodeBase64:") })
     }
 
     @Test
-    fun `pure-js base64 decoder handles padded input`() = runBlocking {
+    fun `decodeBase64 resolves through the native bridge and matches expected output`() = runBlocking {
         val engine = RhinoScriptEngine(anichinClient())
         val ui = UiRecorder()
         val env = DefaultScriptEnvironment(
@@ -252,10 +262,10 @@ class AnichinScraperTest {
         )
         val probe = scriptSource + "\n" + """
             function main() {
-                var b = java.util.Base64.getEncoder();
                 var expected = '<iframe src="https://anichin.stream/?id=abc" frameborder="0"></iframe>';
                 var enc = 'PGlmcmFtZSBzcmM9Imh0dHBzOi8vYW5pY2hpbi5zdHJlYW0vP2lkPWFiYyIgZnJhbWVib3JkZXI9IjAiPjwvaWZyYW1lPg==';
-                return decodeBase64(enc) === expected ? 'ok' : 'mismatch:' + decodeBase64(enc);
+                var out = decodeBase64(enc);
+                return out === expected ? 'ok' : 'mismatch:' + out;
             }
         """.trimIndent()
 
@@ -263,5 +273,7 @@ class AnichinScraperTest {
 
         assertTrue("unexpected: $result", result is ScriptResult.Success)
         assertEquals("ok", (result as ScriptResult.Success).value)
+        // The JS `decodeBase64` wrapper must have preferred the native bridge.
+        assertTrue("expected the native bridge to be called", ui.decodeBase64Calls > 0)
     }
 }

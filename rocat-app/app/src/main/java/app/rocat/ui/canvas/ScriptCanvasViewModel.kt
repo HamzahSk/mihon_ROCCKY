@@ -122,15 +122,35 @@ class ScriptCanvasViewModel(
                 }.getOrNull()?.toString().orEmpty()
             }
         }
+
+        // Tahap 20.1: native Base64 → UTF-8. Scripts call RoCatUI.decodeBase64(str); this
+        // uses the platform decoder (android.util.Base64) instead of the JS fallback. An
+        // empty string is returned on padding/format errors so the script skips the mirror.
+        override fun decodeBase64(input: String): String {
+            val cleaned = input.trim().filterNot { it.isWhitespace() }
+            if (cleaned.isEmpty()) return ""
+            return try {
+                val padded = if (cleaned.length % 4 != 0) {
+                    cleaned + "=".repeat(4 - (cleaned.length % 4))
+                } else {
+                    cleaned
+                }
+                String(android.util.Base64.decode(padded, android.util.Base64.DEFAULT), Charsets.UTF_8)
+            } catch (e: Exception) {
+                ""
+            }
+        }
     }
 
-    /** The engine/environment pair used for every script-driven invocation. */
-    private val uiExecuteScript: ExecuteScript by lazy {
-        ExecuteScript(
-            engine = scriptManager.engine,
+    /** The engine/environment pair used for every script-driven invocation. Built fresh
+     *  per call: [ScriptManager] rebuilds the underlying engine when the user changes the
+     *  network settings (custom User-Agent / DoH DNS, Tahap 20), so the scraper always
+     *  uses the latest configuration. */
+    private val uiExecuteScript: ExecuteScript
+        get() = ExecuteScript(
+            engine = scriptManager.engine(),
             environment = scriptManager.createEnvironment(uiBridge),
         )
-    }
 
     init {
         viewModelScope.launch {

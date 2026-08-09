@@ -2,6 +2,7 @@ package app.rocat.settings
 
 import android.content.Context
 import android.net.Uri
+import app.rocat.core.common.network.DnsMode
 import app.rocat.i18n.AppLanguage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,9 +10,10 @@ import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * Thin persistence layer for app settings, backed by a private [android.content.SharedPreferences].
- * Stores the selected language and the main storage directory (as a SAF tree URI). A dedicated
- * repository keeps the value in a single place so both the i18n provider and the storage manager
- * observe the same source of truth.
+ * Stores the selected language, the main storage directory (as a SAF tree URI) and the
+ * network settings (custom User-Agent + DoH DNS mode, Tahap 20). A dedicated repository
+ * keeps each value in a single place so the i18n provider, the storage manager and the
+ * network stack observe the same source of truth.
  */
 class SettingsRepository(context: Context) {
 
@@ -45,9 +47,33 @@ class SettingsRepository(context: Context) {
     val hasStorageDirectory: Boolean
         get() = _storageUri.value != null
 
+    // ---- Tahap 20: Network settings (custom User-Agent + DoH DNS) ----
+
+    /**
+     * The user-defined User-Agent string, or "" when the default browser-grade agent
+     * ([app.rocat.core.common.network.NetworkHelper.DEFAULT_USER_AGENT]) should be used.
+     */
+    var userAgent: String
+        get() = prefs.getString(KEY_USER_AGENT, "").orEmpty()
+        set(value) = prefs.edit().putString(KEY_USER_AGENT, value).apply()
+
+    /** Which DNS-over-HTTPS provider should be used ([DnsMode.SYSTEM] = platform default). */
+    var dnsMode: DnsMode
+        get() = runCatching { DnsMode.valueOf(prefs.getString(KEY_DNS_MODE, null) ?: "") }
+            .getOrDefault(DnsMode.SYSTEM)
+        set(value) = prefs.edit().putString(KEY_DNS_MODE, value.name).apply()
+
+    /** The user-supplied DoH endpoint URL, relevant when [dnsMode] is [DnsMode.CUSTOM]. */
+    var customDnsUrl: String
+        get() = prefs.getString(KEY_CUSTOM_DNS_URL, "").orEmpty()
+        set(value) = prefs.edit().putString(KEY_CUSTOM_DNS_URL, value).apply()
+
     companion object {
         private const val PREFS_NAME = "rocat_settings"
         private const val KEY_LANGUAGE = "language"
         private const val KEY_STORAGE_URI = "storage_uri"
+        private const val KEY_USER_AGENT = "user_agent"
+        private const val KEY_DNS_MODE = "dns_mode"
+        private const val KEY_CUSTOM_DNS_URL = "custom_dns_url"
     }
 }

@@ -69,4 +69,32 @@ interface ScriptUiBridge {
      *   string when the write failed.
      */
     fun saveFile(fileName: String, content: String, mimeType: String = "text/plain"): String
+
+    /**
+     * Native Base64 → UTF-8 decode (Tahap 20.1). Scripts call this through
+     * `RoCatUI.decodeBase64(str)` instead of re-implementing a decoder in JavaScript,
+     * so the heavy lifting happens in native code (Android's `android.util.Base64`)
+     * and is much faster on large iframe blobs.
+     *
+     * The default implementation is a dependency-free `java.util.Base64` decoder that
+     * is safe on both Android (API 26+) and plain JVM unit tests. The app overrides it
+     * with `android.util.Base64.decode(input, Base64.DEFAULT)` for the true native path.
+     *
+     * Padding/format errors never throw: on failure an empty string is returned so a
+     * script can skip the (unparseable) mirror instead of crashing.
+     */
+    fun decodeBase64(input: String): String {
+        val cleaned = input.trim().filterNot { it.isWhitespace() }
+        if (cleaned.isEmpty()) return ""
+        return try {
+            val padded = if (cleaned.length % 4 != 0) {
+                cleaned + "=".repeat(4 - (cleaned.length % 4))
+            } else {
+                cleaned
+            }
+            String(java.util.Base64.getDecoder().decode(padded), Charsets.UTF_8)
+        } catch (e: Exception) {
+            ""
+        }
+    }
 }

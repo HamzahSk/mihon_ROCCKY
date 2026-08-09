@@ -46,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import app.rocat.core.common.network.DnsMode
 import app.rocat.di.AppViewModelFactory
 import app.rocat.i18n.AppLanguage
 import app.rocat.i18n.LocalStrings
@@ -147,6 +148,18 @@ fun SettingsScreen(
 
             HorizontalDivider(Modifier.padding(vertical = 8.dp))
 
+            SectionHeader(strings[StringKey.network])
+            NetworkSettingsSection(
+                userAgent = state.userAgent,
+                onUserAgentChange = viewModel::setUserAgent,
+                dnsMode = state.dnsMode,
+                onDnsModeChange = viewModel::setDnsMode,
+                customDnsUrl = state.customDnsUrl,
+                onCustomDnsUrlChange = viewModel::setCustomDnsUrl,
+            )
+
+            HorizontalDivider(Modifier.padding(vertical = 8.dp))
+
             SectionHeader(strings[StringKey.dataManagement])
             SettingsActionRow(
                 icon = { Icon(Icons.Filled.Delete, contentDescription = null) },
@@ -213,6 +226,110 @@ private fun LanguageRow(
                     text = { Text(strings.languageLabel(language)) },
                     onClick = {
                         onSelect(language)
+                        expanded = false
+                    },
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Tahap 20.2: the "Network"-category settings. Custom User-Agent (blank = default) plus
+ * a DNS-over-HTTPS provider dropdown. When [DnsMode.CUSTOM] is selected an extra field
+ * appears for the DoH endpoint URL.
+ */
+@Composable
+private fun NetworkSettingsSection(
+    userAgent: String,
+    onUserAgentChange: (String) -> Unit,
+    dnsMode: DnsMode,
+    onDnsModeChange: (DnsMode) -> Unit,
+    customDnsUrl: String,
+    onCustomDnsUrlChange: (String) -> Unit,
+) {
+    val strings = LocalStrings.current
+
+    Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Text(strings[StringKey.userAgent], style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(
+                value = userAgent,
+                onValueChange = onUserAgentChange,
+                label = { Text(strings[StringKey.userAgent]) },
+                supportingText = { Text(strings[StringKey.userAgentHint]) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            if (userAgent.isBlank()) {
+                Text(
+                    text = strings[StringKey.userAgentBlank],
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
+        }
+    }
+
+    Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Text(strings[StringKey.dnsSelection], style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.height(8.dp))
+            DnsModeRow(selected = dnsMode, onSelect = onDnsModeChange)
+            if (dnsMode == DnsMode.CUSTOM) {
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = customDnsUrl,
+                    onValueChange = onCustomDnsUrlChange,
+                    label = { Text(strings[StringKey.customDnsUrl]) },
+                    placeholder = { Text(strings[StringKey.customDnsUrlHint]) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+    }
+}
+
+/** Dropdown of the available [DnsMode] options with localized labels. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DnsModeRow(
+    selected: DnsMode,
+    onSelect: (DnsMode) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val strings = LocalStrings.current
+
+    fun labelOf(mode: DnsMode): String = when (mode) {
+        DnsMode.SYSTEM -> strings[StringKey.dnsSystemDefault]
+        DnsMode.CLOUDFLARE -> strings[StringKey.dnsCloudflare]
+        DnsMode.GOOGLE -> strings[StringKey.dnsGoogle]
+        DnsMode.QUAD9 -> strings[StringKey.dnsQuad9]
+        DnsMode.CUSTOM -> strings[StringKey.dnsCustom]
+    }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        OutlinedTextField(
+            value = labelOf(selected),
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(strings[StringKey.dnsSelection]) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DnsMode.entries.forEach { mode ->
+                DropdownMenuItem(
+                    text = { Text(labelOf(mode)) },
+                    onClick = {
+                        onSelect(mode)
                         expanded = false
                     },
                 )

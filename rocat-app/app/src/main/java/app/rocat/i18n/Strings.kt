@@ -118,6 +118,19 @@ object EnglishStrings : Strings(
         StringKey.storagePermissionDenied to "Could not persist storage permission",
         StringKey.failure to "Failed",
 
+        StringKey.network to "Network",
+        StringKey.userAgent to "User-Agent",
+        StringKey.userAgentHint to "Custom User-Agent (leave empty to use the default)",
+        StringKey.userAgentBlank to "Default (Chrome 141)",
+        StringKey.dnsSelection to "DNS over HTTPS",
+        StringKey.dnsSystemDefault to "System default",
+        StringKey.dnsCloudflare to "Cloudflare (1.1.1.1)",
+        StringKey.dnsGoogle to "Google (8.8.8.8)",
+        StringKey.dnsQuad9 to "Quad9 (9.9.9.9)",
+        StringKey.dnsCustom to "Custom DoH URL",
+        StringKey.customDnsUrl to "Custom DNS URL",
+        StringKey.customDnsUrlHint to "https://example.com/dns-query",
+
         StringKey.setupStorageTitle to "Choose a storage folder",
         StringKey.setupStorageBody to "RoCat saves scrape results to a folder on your device. " +
             "Pick a folder you can easily access (for example your Downloads folder).",
@@ -222,6 +235,19 @@ object IndonesianStrings : Strings(
         StringKey.storageChanged to "Direktori penyimpanan diubah",
         StringKey.storagePermissionDenied to "Izin penyimpanan tidak dapat dipertahankan",
         StringKey.failure to "Gagal",
+
+        StringKey.network to "Jaringan",
+        StringKey.userAgent to "User-Agent",
+        StringKey.userAgentHint to "User-Agent kustom (biarkan kosong untuk memakai bawaan)",
+        StringKey.userAgentBlank to "Bawaan (Chrome 141)",
+        StringKey.dnsSelection to "DNS over HTTPS",
+        StringKey.dnsSystemDefault to "Sistem bawaan",
+        StringKey.dnsCloudflare to "Cloudflare (1.1.1.1)",
+        StringKey.dnsGoogle to "Google (8.8.8.8)",
+        StringKey.dnsQuad9 to "Quad9 (9.9.9.9)",
+        StringKey.dnsCustom to "URL DoH kustom",
+        StringKey.customDnsUrl to "URL DNS kustom",
+        StringKey.customDnsUrlHint to "https://example.com/dns-query",
 
         StringKey.setupStorageTitle to "Pilih folder penyimpanan",
         StringKey.setupStorageBody to "RoCat menyimpan hasil scrape ke sebuah folder di perangkat Anda. " +

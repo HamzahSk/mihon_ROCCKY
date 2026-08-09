@@ -415,6 +415,11 @@ private class RoCatUiBridge(
                 )
             }
         })
+        // Tahap 20.1: native Base64 decode. Returns a plain JS string (empty on failure),
+        // so scripts can decode iframe blobs without shipping a JS decoder.
+        put("decodeBase64", this, Fn { args ->
+            runSafeValue("") { ui.decodeBase64(argString(args, 0)) }
+        })
     }
 
     override fun getClassName(): String = "RoCatUiBridge"
@@ -426,6 +431,14 @@ private class RoCatUiBridge(
             // A UI bridge failure must never crash the script evaluation.
         }
     }
+
+    /** Like [runSafe] but returns [default] when the bridge throws. */
+    private fun <T> runSafeValue(default: T, block: () -> T): T =
+        try {
+            block()
+        } catch (_: Throwable) {
+            default
+        }
 }
 
 /** Converts a [JsoupElement] into a plain JS object with a Cheerio-like API. */

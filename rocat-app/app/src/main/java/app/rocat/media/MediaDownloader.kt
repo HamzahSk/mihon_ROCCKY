@@ -14,11 +14,11 @@ import java.util.Locale
  * Downloads a media file (image / video) from the network and persists it into the
  * active scrape folder via the SAF-backed [StorageManager] (Tahap 18).
  *
- * The download reuses the app's shared OkHttp [NetworkHelper.client] so requests carry
- * the browser-grade user-agent, the stealth headers and the shared cookie jar — meaning
- * authenticated media (e.g. scraped video behind a login) downloads correctly.
- */
-class MediaDownloader(
+ * The download reuses the app's shared OkHttp client (`NetworkHelper.client()`) so
+ * requests carry the browser-grade user-agent, the custom DoH DNS, the stealth headers
+ * and the shared cookie jar — meaning authenticated media (e.g. scraped video behind a
+ * login) downloads correctly.
+ */class MediaDownloader(
     private val networkHelper: NetworkHelper,
     private val storageManager: StorageManager,
 ) {
@@ -64,7 +64,7 @@ class MediaDownloader(
     /** Streams the whole body of [url] into memory, reporting download progress. */
     private fun fetchBytes(url: String, onProgress: (Float) -> Unit): ByteArray? = runCatching {
         val request = Request.Builder().url(url).build()
-        networkHelper.client.newCall(request).execute().use { response ->
+        networkHelper.client().newCall(request).execute().use { response ->
             if (!response.isSuccessful) return@runCatching null
             val body = response.body ?: return@runCatching null
             val total = body.contentLength().coerceAtLeast(0L)
