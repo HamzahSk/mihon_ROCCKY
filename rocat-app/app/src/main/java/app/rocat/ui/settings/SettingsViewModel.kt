@@ -46,7 +46,7 @@ class SettingsViewModel(
         .map { language ->
             State(
                 language = language,
-                storageConfigured = storageManager.isConfigured,
+                storageConfigured = storageManager.isConfigured.value,
                 storageName = storageManager.mainDirectoryName(),
             )
         }
@@ -62,7 +62,7 @@ class SettingsViewModel(
         viewModelScope.launch {
             val persisted = storageManager.takePersistablePermission(uri)
             mutableState.value = mutableState.value.copy(
-                storageConfigured = storageManager.isConfigured,
+                storageConfigured = storageManager.isConfigured.value,
                 storageName = storageManager.mainDirectoryName(),
                 message = if (persisted) StringKey.storageChanged else StringKey.storagePermissionDenied,
             )

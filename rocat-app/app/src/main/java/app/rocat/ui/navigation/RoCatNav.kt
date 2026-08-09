@@ -83,7 +83,12 @@ fun RoCatApp() {
     // Tahap 15.2: storage access — gate the whole UI until the main folder is chosen.
     val storageManager: StorageManager = remember { Injekt.get() }
 
-    if (!storageManager.isConfigured) {
+    // Tahap 17.1: `isConfigured` is a StateFlow now, so choosing the folder in
+    // StorageSetupScreen recomposes this composable and swaps to the main nav instantly
+    // (no app restart required).
+    val storageConfigured by storageManager.isConfigured.collectAsState()
+
+    if (!storageConfigured) {
         I18nApp(strings = strings, language = language) {
             StorageSetupScreen(
                 onFolderPicked = { uri -> storageManager.takePersistablePermission(uri) },
@@ -155,6 +160,7 @@ private fun RoCatAppNav() {
             when (current) {
                 is Screen.Scripts -> ScriptsScreen(
                     onOpenScript = { navigate(Screen.Canvas(it)) },
+                    onEditScript = { navigate(Screen.Detail(it)) },
                     onImport = { navigate(Screen.Import) },
                 )
                 is Screen.Detail -> ScriptDetailScreen(scriptId = current.scriptId, onBack = ::goBack)

@@ -6,7 +6,13 @@ import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import app.rocat.settings.SettingsRepository
 import coil3.SingletonImageLoader
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 import java.io.OutputStream
 
@@ -23,13 +29,20 @@ class StorageManager(
     private val settings: SettingsRepository,
 ) {
 
-    /** Whether the user has picked (and we hold a grant for) a main directory. */
-    val isConfigured: Boolean
-        get() = settings.hasStorageDirectory
+    /** Small scope feeding the reactive `isConfigured` flow. */
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    /**
+     * Whether the user has picked (and we hold a grant for) a main directory. Reactive so
+     * the first-launch gate recomposes as soon as the folder is chosen (Tahap 17.1).
+     */
+    val isConfigured: StateFlow<Boolean> = settings.storageUri
+        .map { it != null }
+        .stateIn(scope, SharingStarted.Eagerly, settings.storageUri.value != null)
 
     /** The persisted main directory URI, if any. */
     val mainUri: Uri?
-        get() = settings.storageUri
+        get() = settings.storageUri.value
 
     /**
      * Persists the read/write grant for [uri] returned by the folder picker. Mirrors how
@@ -39,18 +52,18 @@ class StorageManager(
     fun takePersistablePermission(uri: Uri): Boolean = runCatching {
         val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
         context.contentResolver.takePersistableUriPermission(uri, flags)
-        settings.storageUri = uri
+        settings.setStorageUri(uri)
         true
     }.getOrDefault(false)
 
     /** Replaces the main directory with [uri] (called when the user changes it in Settings). */
     fun setMainDirectory(uri: Uri) {
-        settings.storageUri = uri
+        settings.setStorageUri(uri)
     }
 
     /** Clears the current main directory reference. */
     fun clearMainDirectory() {
-        settings.storageUri = null
+        settings.setStorageUri(null)
     }
 
     /** The [DocumentFile] for the main directory, or null when not configured. */
@@ -70,6 +83,47 @@ class StorageManager(
         val root = mainDocument() ?: return null
         val scrapes = root.findFile(SCRAPES_DIR) ?: root.createDirectory(SCRAPES_DIR) ?: return null
         return scrapes.findFile(name) ?: scrapes.createDirectory(name)
+    }
+
+    /**
+     * Creates (or reuses) the per-script folder `[MainDirectory]/Scripts/[id]/`. Imported
+     * scripts get a real, browsable `.js` file here (Tahap 17.2), complementing the
+     * JSON-backed in-app store.
+     */
+    fun createScriptFolder(scriptId: String): DocumentFile? {
+        val root = mainDocument() ?: return null
+        val scripts = root.findFile(SCRIPTS_DIR) ?: root.createDirectory(SCRIPTS_DIR) ?: return null
+        return scripts.findFile(scriptId) ?: scripts.createDirectory(scriptId)
+    }
+
+    /**
+     * Writes a script's [content] as a physical file inside `[MainDirectory]/Scripts/[id]/`.
+     * Reuses the same `DocumentFile.createFile` + `contentResolver.openOutputStream` pipeline
+     * as the scrape writer so the source genuinely lands on device storage.
+     *
+     * @return the content [Uri] of the written file, or null when storage is not configured /
+     *   the write failed.
+     */
+    suspend fun saveFileToScriptFolder(
+        scriptId: String,
+        fileName: String,
+        content: String,
+        mimeType: String = "application/javascript",
+    ): Uri? = saveFileToScrapeFolder(
+        folder = createScriptFolder(scriptId),
+        fileName = fileName,
+        mimeType = mimeType,
+        content = content.toByteArray(Charsets.UTF_8),
+    )
+
+    /**
+     * Deletes the physical per-script folder `[MainDirectory]/Scripts/[id]/` (used when a
+     * script is removed from the list). Best-effort: silently ignores a missing folder.
+     */
+    fun deleteScriptFolder(scriptId: String) {
+        val root = mainDocument() ?: return
+        val scripts = root.findFile(SCRIPTS_DIR) ?: return
+        runCatching { scripts.findFile(scriptId)?.delete() }
     }
 
     /**
@@ -137,5 +191,8 @@ class StorageManager(
     companion object {
         /** Top-level folder holding every scrape run. */
         const val SCRAPES_DIR = "Scrapes"
+
+        /** Top-level folder holding every imported script's physical `.js` file. */
+        const val SCRIPTS_DIR = "Scripts"
     }
 }

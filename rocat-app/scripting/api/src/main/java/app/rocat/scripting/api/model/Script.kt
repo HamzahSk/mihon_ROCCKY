@@ -16,6 +16,8 @@ data class Script(
     val author: String = "",
     /** Icon URL from the userscript metadata block. */
     val icon: String = "",
+    /** Grouping label from `@category`/`@group`; blank scripts fall into "Others". */
+    val category: String = "",
     /** The JavaScript source code. */
     val source: String,
     /** URL patterns (or host allow-list) this script is allowed to run against. */

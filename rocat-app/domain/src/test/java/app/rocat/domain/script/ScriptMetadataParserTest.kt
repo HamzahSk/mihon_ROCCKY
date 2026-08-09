@@ -73,6 +73,27 @@ class ScriptMetadataParserTest {
     }
 
     @Test
+    fun `parses category tag and falls back to legacy group`() {
+        val source = """
+            // ==UserScript==
+            // @name x
+            // @category Comics
+            // ==/UserScript==
+        """.trimIndent()
+        assertEquals("Comics", ScriptMetadataParser.parse(source).category)
+
+        val groupOnly = """
+            // ==UserScript==
+            // @name y
+            // @group Utilities
+            // ==/UserScript==
+        """.trimIndent()
+        assertEquals("Utilities", ScriptMetadataParser.parse(groupOnly).category)
+
+        assertEquals("", ScriptMetadataParser.parse("function main() {}").category)
+    }
+
+    @Test
     fun `legacy iconurl tag is honoured`() {
         val source = """
             // ==UserScript==

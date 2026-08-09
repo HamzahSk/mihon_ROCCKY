@@ -25,6 +25,7 @@ class ImportScript(private val repository: ScriptRepository) {
             description = metadata.description,
             author = metadata.author,
             icon = metadata.icon,
+            category = metadata.category,
             source = source,
             matches = metadata.matches,
             enabled = true,

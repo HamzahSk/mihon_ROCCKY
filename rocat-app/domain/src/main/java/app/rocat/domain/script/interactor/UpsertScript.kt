@@ -22,6 +22,7 @@ class UpsertScript(private val repository: ScriptRepository) {
             description = description.ifBlank { metadata.description },
             author = metadata.author,
             icon = metadata.icon,
+            category = metadata.category,
             source = source,
             matches = metadata.matches,
             enabled = existing?.enabled ?: true,

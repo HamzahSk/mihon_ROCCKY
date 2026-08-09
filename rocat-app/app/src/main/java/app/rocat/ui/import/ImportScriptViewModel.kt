@@ -5,6 +5,8 @@ import app.rocat.core.common.injekt.Injekt
 import app.rocat.core.viewmodel.StateViewModel
 import app.rocat.data.script.ScriptSourceFetcher
 import app.rocat.domain.script.ImportScript
+import app.rocat.scripting.api.model.Script
+import app.rocat.storage.StorageManager
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -15,6 +17,7 @@ import javax.net.ssl.SSLException
 class ImportScriptViewModel(
     private val importScript: ImportScript = Injekt.get(),
     private val scriptSourceFetcher: ScriptSourceFetcher = Injekt.get(),
+    private val storageManager: StorageManager = Injekt.get(),
 ) : StateViewModel<ImportScriptViewModel.State>(State()) {
 
     data class State(
@@ -41,6 +44,7 @@ class ImportScriptViewModel(
                 // inside the fetcher; network work runs on Dispatchers.IO there.
                 val fetched = scriptSourceFetcher.fetchSource(url)
                 val script = importScript.await(fetched)
+                persistToStorage(script)
                 mutableState.update {
                     it.copy(busy = false, url = "", message = "Imported \"${script.name}\" v${script.version}")
                 }
@@ -61,6 +65,7 @@ class ImportScriptViewModel(
             mutableState.update { it.copy(busy = true, error = null, message = null) }
             try {
                 val script = importScript.await(source)
+                persistToStorage(script)
                 mutableState.update {
                     it.copy(busy = false, source = "", message = "Imported \"${script.name}\" v${script.version}")
                 }
@@ -74,6 +79,21 @@ class ImportScriptViewModel(
     fun loadExample() = mutableState.update { it.copy(source = EXAMPLE_SCRIPT) }
 
     fun loadCanvasExample() = mutableState.update { it.copy(source = CANVAS_EXAMPLE_SCRIPT) }
+
+    /**
+     * Tahap 17.2: writes a real, browsable `.js` file for the imported script under
+     * `[MainDirectory]/Scripts/[scriptId]/`. Best-effort — a failure (e.g. storage not
+     * configured on first run) must never block the import.
+     */
+    private suspend fun persistToStorage(script: Script) {
+        runCatching {
+            storageManager.saveFileToScriptFolder(
+                scriptId = script.id,
+                fileName = "${script.id}.js",
+                content = script.source,
+            )
+        }
+    }
 
     companion object {
         /** Maps raw exceptions to messages a user can actually act on. */

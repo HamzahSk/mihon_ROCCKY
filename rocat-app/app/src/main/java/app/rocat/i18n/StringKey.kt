@@ -16,6 +16,7 @@ enum class StringKey(val key: String) {
     back("back"),
     cancel("cancel"),
     delete("delete"),
+    edit("edit"),
     save("save"),
     active("active"),
     inactive("inactive"),
@@ -27,6 +28,7 @@ enum class StringKey(val key: String) {
     noScriptsBody("no_scripts_body"),
     scriptNotFound("script_not_found"),
     version("version"),
+    othersCategory("others_category"),
 
     // Detail screen
     deleteScriptTitle("delete_script_title"),

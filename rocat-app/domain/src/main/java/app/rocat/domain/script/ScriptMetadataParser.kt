@@ -47,6 +47,7 @@ object ScriptMetadataParser {
             description = tags["description"]?.firstOrNull()?.trim().orEmpty(),
             author = tags["author"]?.firstOrNull()?.trim().orEmpty(),
             icon = (tags["icon"] ?: tags["iconurl"] ?: emptyList()).firstOrNull()?.trim().orEmpty(),
+            category = (tags["category"] ?: tags["group"] ?: emptyList()).firstOrNull()?.trim().orEmpty(),
             matches = matches.map { it.trim() }.filter { it.isNotEmpty() },
         )
     }

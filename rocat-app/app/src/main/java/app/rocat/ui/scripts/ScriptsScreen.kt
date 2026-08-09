@@ -1,6 +1,9 @@
 package app.rocat.ui.scripts
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,22 +21,34 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Extension
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,14 +63,92 @@ import app.rocat.i18n.stringResource
 import app.rocat.scripting.api.model.Script
 import coil3.compose.AsyncImage
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ScriptsScreen(
     onOpenScript: (String) -> Unit,
+    onEditScript: (String) -> Unit,
     onImport: () -> Unit,
     viewModel: ScriptsViewModel = viewModel(factory = AppViewModelFactory),
 ) {
     val state by viewModel.scriptsState.collectAsState()
+
+    // Tahap 17.3: long-press target shown in the bottom sheet.
+    var actionScript by remember { mutableStateOf<Script?>(null) }
+    // Confirmation before actually removing a script.
+    var deleteTarget by remember { mutableStateOf<Script?>(null) }
+    // Tahap 17.4: per-category expand/collapse state (missing entries default to expanded).
+    val expandedCategories = remember { mutableStateMapOf<String, Boolean>() }
+
+    actionScript?.let { script ->
+        ModalBottomSheet(onDismissRequest = { actionScript = null }) {
+            Column(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
+                Text(
+                    text = script.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 6.dp),
+                )
+                Text(
+                    text = script.category.ifBlank { stringResource(StringKey.othersCategory) },
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 24.dp),
+                )
+                Spacer(Modifier.height(8.dp))
+                HorizontalDivider()
+                ListItem(
+                    leadingContent = { Icon(Icons.Filled.Edit, contentDescription = null) },
+                    headlineContent = { Text(stringResource(StringKey.edit)) },
+                    modifier = Modifier.clickable {
+                        val id = script.id
+                        actionScript = null
+                        onEditScript(id)
+                    },
+                )
+                ListItem(
+                    leadingContent = {
+                        Icon(
+                            Icons.Filled.Delete,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                        )
+                    },
+                    headlineContent = {
+                        Text(stringResource(StringKey.delete), color = MaterialTheme.colorScheme.error)
+                    },
+                    modifier = Modifier.clickable {
+                        actionScript = null
+                        deleteTarget = script
+                    },
+                )
+            }
+        }
+    }
+
+    deleteTarget?.let { script ->
+        AlertDialog(
+            onDismissRequest = { deleteTarget = null },
+            title = { Text(stringResource(StringKey.deleteScriptTitle)) },
+            text = { Text(stringResource(StringKey.deleteScriptBody, script.name)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val id = script.id
+                        deleteTarget = null
+                        viewModel.delete(id)
+                    },
+                ) {
+                    Text(stringResource(StringKey.delete), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deleteTarget = null }) {
+                    Text(stringResource(StringKey.cancel))
+                }
+            },
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -80,19 +173,70 @@ fun ScriptsScreen(
 
             state.scripts.isEmpty() -> EmptyScripts(onImport, innerPadding)
 
-            else -> LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(innerPadding),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 8.dp),
-            ) {
-                items(state.scripts, key = { it.id }) { script ->
-                    ScriptListItem(
-                        script = script,
-                        onToggle = { viewModel.setEnabled(script.id, it) },
-                        onClick = { onOpenScript(script.id) },
-                    )
+            else -> {
+                val grouped = state.scripts.groupBy { it.category }
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(innerPadding),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 8.dp),
+                ) {
+                    grouped.forEach { (category, scripts) ->
+                        item(key = "category:$category") {
+                            CategoryHeader(
+                                category = category,
+                                count = scripts.size,
+                                expanded = expandedCategories[category] ?: true,
+                                onClick = { expandedCategories[category] = !(expandedCategories[category] ?: true) },
+                            )
+                        }
+                        if (expandedCategories[category] ?: true) {
+                            items(scripts, key = { it.id }) { script ->
+                                ScriptListItem(
+                                    script = script,
+                                    onToggle = { viewModel.setEnabled(script.id, it) },
+                                    onClick = { onOpenScript(script.id) },
+                                    onLongClick = { actionScript = script },
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun CategoryHeader(
+    category: String,
+    count: Int,
+    expanded: Boolean,
+    onClick: () -> Unit,
+) {
+    val title = category.ifBlank { stringResource(StringKey.othersCategory) }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = count.toString(),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(end = 4.dp),
+        )
+        Icon(
+            imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -122,15 +266,22 @@ private fun EmptyScripts(onImport: () -> Unit, innerPadding: androidx.compose.fo
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ScriptListItem(
     script: Script,
     onToggle: (Boolean) -> Unit,
     onClick: () -> Unit,
+    onLongClick: () -> Unit,
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
-        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 4.dp)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick,
+            ),
     ) {
         ListItem(
             leadingContent = { ScriptCover(iconUrl = script.icon) },

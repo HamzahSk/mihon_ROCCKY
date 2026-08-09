@@ -34,6 +34,7 @@ object EnglishStrings : Strings(
         StringKey.back to "Back",
         StringKey.cancel to "Cancel",
         StringKey.delete to "Delete",
+        StringKey.edit to "Edit",
         StringKey.save to "Save",
         StringKey.active to "Active",
         StringKey.inactive to "Inactive",
@@ -44,6 +45,7 @@ object EnglishStrings : Strings(
         StringKey.noScriptsBody to "Import a userscript to start scraping from the script canvas.",
         StringKey.scriptNotFound to "Script not found",
         StringKey.version to "version",
+        StringKey.othersCategory to "Others",
 
         StringKey.deleteScriptTitle to "Delete script",
         StringKey.deleteScriptBody to "Are you sure you want to delete \"%1\$s\"?",
@@ -133,6 +135,7 @@ object IndonesianStrings : Strings(
         StringKey.back to "Kembali",
         StringKey.cancel to "Batal",
         StringKey.delete to "Hapus",
+        StringKey.edit to "Edit",
         StringKey.save to "Simpan",
         StringKey.active to "Aktif",
         StringKey.inactive to "Nonaktif",
@@ -143,6 +146,7 @@ object IndonesianStrings : Strings(
         StringKey.noScriptsBody to "Impor userscript untuk mulai scraping lewat kanvas skrip.",
         StringKey.scriptNotFound to "Skrip tidak ditemukan",
         StringKey.version to "versi",
+        StringKey.othersCategory to "Lainnya",
 
         StringKey.deleteScriptTitle to "Hapus skrip",
         StringKey.deleteScriptBody to "Yakin ingin menghapus \"%1\$s\"?",
