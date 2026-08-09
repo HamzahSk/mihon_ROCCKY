@@ -71,6 +71,14 @@ enum class StringKey(val key: String) {
     videoSaved("video_saved"),
     downloadFailed("download_failed"),
 
+    // UI templates (Tahap 22)
+    copyJson("copy_json"),
+    jsonCopied("json_copied"),
+    play("play"),
+    pause("pause"),
+    downloadAudio("download_audio"),
+    audioSaved("audio_saved"),
+
     // Browser screen
     addressBar("address_bar"),
     urlPrompt("url_prompt"),

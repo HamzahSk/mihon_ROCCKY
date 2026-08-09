@@ -17,6 +17,7 @@ import org.mozilla.javascript.Context
 import org.mozilla.javascript.ContextFactory
 import org.mozilla.javascript.EvaluatorException
 import org.mozilla.javascript.Function
+import org.mozilla.javascript.JavaScriptException
 import org.mozilla.javascript.NativeJSON
 import org.mozilla.javascript.Scriptable
 import org.mozilla.javascript.ScriptableObject
@@ -200,6 +201,11 @@ class RhinoScriptEngine(
             val docWrapper = Context.javaToJS(environment.document, scope)
             ScriptableObject.putProperty(scope, "document", docWrapper)
         }
+
+        // Tahap 22.1: auto-inject the universal core wrapper (`RoCat`) before user code.
+        // It always exists — render()/safeParseJson()/fetchJson() degrade gracefully when
+        // there is no RoCatUI bridge (e.g. plain executions).
+        cx.evaluateString(scope, RO_CAT_CORE_WRAPPER_JS, "RoCatCore.js", 1, null)
         return scope
     }
 
@@ -307,8 +313,16 @@ private class BridgeFetch(
 
         ScriptableObject.putProperty(obj, "text", SyncValueFn { result.body })
         ScriptableObject.putProperty(obj, "json", SyncValueFn {
-            if (result.body.isBlank()) throw EvaluatorException("Empty response body cannot be parsed as JSON")
-            JsonParser(cx, scope).parseValue(result.body)
+            if (result.body.isBlank()) {
+                throw throwJsError(cx, scope, "Empty response body cannot be parsed as JSON")
+            }
+            try {
+                JsonParser(cx, scope).parseValue(result.body)
+            } catch (e: Exception) {
+                // Rhino's JsonParser throws a *checked* ParseException that the engine
+                // cannot wrap into a JS-catchable error, so convert it to a real JS Error.
+                throw throwJsError(cx, scope, "Invalid JSON response: ${e.message ?: e.javaClass.simpleName}")
+            }
         })
         return obj
     }
@@ -339,6 +353,13 @@ private class SyncValueFn(private val supplier: () -> Any?) : BaseFunction() {
         thisObj: Scriptable,
         args: Array<out Any?>,
     ): Any? = supplier()
+}
+
+/** Throws a plain, JS-catchable `Error` (unlike raw `EvaluatorException`s / checked
+ *  Rhino parser exceptions which would escape a script's `try { } catch { }`). */
+private fun throwJsError(cx: Context, scope: Scriptable, message: String): Nothing {
+    val error = cx.newObject(scope, "Error", arrayOf<Any?>(message))
+    throw JavaScriptException(error, null, 0)
 }
 
 /**
@@ -420,9 +441,49 @@ private class RoCatUiBridge(
         put("decodeBase64", this, Fn { args ->
             runSafeValue("") { ui.decodeBase64(argString(args, 0)) }
         })
+
+        // --- Tahap 22.2: expanded UI template cards (all fault-tolerant) ---
+        put("addJsonLog", this, Fn { args ->
+            runSafe {
+                ui.addJsonLog(
+                    dataJson = argJson(args, 0),
+                    title = argString(args, 1),
+                    allowCopy = argBoolean(args, 2, true),
+                )
+            }
+        })
+        put("addHtmlPreview", this, Fn { args ->
+            runSafe { ui.addHtmlPreview(argString(args, 0), argString(args, 1)) }
+        })
+        put("addAudio", this, Fn { args ->
+            runSafe {
+                ui.addAudio(
+                    url = argString(args, 0),
+                    title = argString(args, 1),
+                    allowDownload = argBoolean(args, 2, true),
+                )
+            }
+        })
+        put("addAlert", this, Fn { args ->
+            runSafe { ui.addAlert(argString(args, 0), argString(args, 1, "info")) }
+        })
+        put("addBadgeGroup", this, Fn { args ->
+            runSafe { ui.addBadgeGroup(argJson(args, 0)) }
+        })
     }
 
     override fun getClassName(): String = "RoCatUiBridge"
+
+    /** Reads the [index]-th JS argument as a JSON string, normalising objects/arrays
+     *  (via [NativeJSON.stringify]) so the Kotlin bridge always receives a string. */
+    private fun argJson(args: Array<out Any?>, index: Int, default: String = ""): String {
+        val value = args.getOrNull(index) ?: return default
+        if (value === Undefined.instance) return default
+        return when (value) {
+            is Scriptable -> NativeJSON.stringify(cx, scope, value, null, null)?.toString() ?: default
+            else -> Context.toString(value)
+        }
+    }
 
     private fun runSafe(block: () -> Unit) {
         try {

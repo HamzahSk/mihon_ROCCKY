@@ -79,6 +79,13 @@ object EnglishStrings : Strings(
         StringKey.videoSaved to "Video saved to the Scrapes folder",
         StringKey.downloadFailed to "Download failed",
 
+        StringKey.copyJson to "Copy JSON",
+        StringKey.jsonCopied to "JSON copied to clipboard",
+        StringKey.play to "Play",
+        StringKey.pause to "Pause",
+        StringKey.downloadAudio to "Download Audio",
+        StringKey.audioSaved to "Audio saved to the Scrapes folder",
+
         StringKey.blankCanvas to "Blank canvas",
         StringKey.blankCanvasBody to "The script did not publish any UI. Canvas-driven scripts define onLaunch() " +
             "and draw with RoCatUI.{addInput,addButton,addGrid,log,...}.",
@@ -196,6 +203,13 @@ object IndonesianStrings : Strings(
         StringKey.imageSaved to "Gambar berhasil disimpan di folder Scrapes",
         StringKey.videoSaved to "Video berhasil disimpan di folder Scrapes",
         StringKey.downloadFailed to "Unduhan gagal",
+
+        StringKey.copyJson to "Salin JSON",
+        StringKey.jsonCopied to "JSON disalin ke clipboard",
+        StringKey.play to "Putar",
+        StringKey.pause to "Jeda",
+        StringKey.downloadAudio to "Unduh Audio",
+        StringKey.audioSaved to "Audio berhasil disimpan di folder Scrapes",
 
         StringKey.blankCanvas to "Kanvas kosong",
         StringKey.blankCanvasBody to "Skrip belum menerbitkan UI apa pun. Skrip berbasis canvas mendefinisikan " +

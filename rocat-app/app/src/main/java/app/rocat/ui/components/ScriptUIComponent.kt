@@ -58,6 +58,41 @@ sealed class ScriptUIComponent {
         val items: List<GridItem>,
         val onClickFunction: String,
     ) : ScriptUIComponent()
+
+    /** A pretty-printed, syntax-highlighted JSON log card (Tahap 22.2). [dataJson]
+     *  is the raw JSON string handed over by the bridge; [allowCopy] toggles the
+     *  "Copy JSON" button (with a Toast confirmation). */
+    data class JsonLog(
+        val dataJson: String,
+        val title: String = "",
+        val allowCopy: Boolean = true,
+    ) : ScriptUIComponent()
+
+    /** A rich-text HTML preview card rendered from [htmlContent] (Tahap 22.2). */
+    data class HtmlPreview(
+        val htmlContent: String,
+        val title: String = "",
+    ) : ScriptUIComponent()
+
+    /** An inline audio player card (Tahap 22.2) with Play/Pause, a seek bar and an
+     *  optional "download to scrape folder" action. */
+    data class Audio(
+        val url: String,
+        val title: String = "",
+        val allowDownload: Boolean = true,
+    ) : ScriptUIComponent()
+
+    /** An alert/banner card (Tahap 22.2). [type] is one of `info`/`warning`/`error`/
+     *  `success`; unknown values fall back to info. */
+    data class Alert(
+        val message: String,
+        val type: String = "info",
+    ) : ScriptUIComponent()
+
+    /** A FlowRow of chips/badges (Tahap 22.2), e.g. genres or episode status. */
+    data class BadgeGroup(
+        val badges: List<String>,
+    ) : ScriptUIComponent()
 }
 
 /**
@@ -96,4 +131,21 @@ fun parseGrid(
     }
     if (items.isEmpty()) return null
     return ScriptUIComponent.Grid(columns.coerceAtLeast(1), items, onClickFunction)
+}
+
+/**
+ * Best-effort parser for the badges JSON array passed to `RoCatUI.addBadgeGroup(...)`.
+ * Returns a [ScriptUIComponent.BadgeGroup] (or null when the payload is not a usable
+ * JSON array of non-blank strings).
+ */
+fun parseBadgeGroup(badgesJson: String): ScriptUIComponent.BadgeGroup? {
+    val elements = try {
+        Json.parseToJsonElement(badgesJson) as? JsonArray ?: return null
+    } catch (e: Exception) {
+        return null
+    }
+    val badges = elements.mapNotNull { (it as? JsonPrimitive)?.content?.trim() }
+        .filter { it.isNotEmpty() }
+    if (badges.isEmpty()) return null
+    return ScriptUIComponent.BadgeGroup(badges)
 }

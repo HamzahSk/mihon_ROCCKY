@@ -24,6 +24,8 @@ dalam mode interpretasi. Dua konsekuensi penting:
 Global yang tersedia di setiap skrip:
 
 - `fetch(url, options)` — HTTP sinkron berbasis OkHttp (Response `.text()`/`.json()`).
+- `RoCat` — wrapper universal bawaan: `render(items)`, `safeParseJson(str, fallback)`,
+  `fetchJson(url, options)` (Tahap 22.1 — selalu tersedia, tak pernah crash).
 - `RoCatUI` — bridge UI Compose (hanya tersedia saat skrip dibuka di **Canvas**).
 - `RoCatDOM` — bridge parsing HTML berbasis Jsoup (pengganti Cheerio).
 - `JSON`, `Math`, `String`, `encodeURIComponent`, dll. — standar JS.
@@ -247,6 +249,117 @@ RoCatUI.log("⏳ Memuat " + n + " episode...");
 if (!res.ok) RoCatUI.log("Gagal: status " + res.status);
 ```
 
+### 2.5 Template Cards (Tahap 22.2)
+
+Lima kartu siap-pakai untuk tipe data umum. Semua **fault-tolerant**: argumen yang
+buruk tidak pernah menghentikan skrip (kartu hanya tidak dirender).
+
+#### `RoCatUI.addJsonLog(dataJson, title, allowCopy)`
+Kartu log JSON **pretty-printed** + tombol "Copy JSON" (Toast konfirmasi).
+
+| Parameter | Tipe | Default | Deskripsi |
+|-----------|------|---------|-----------|
+| `dataJson` | `string` \| `object` \| `array` | — | Data yang ditampilkan; objek/array JS di-serialisasi otomatis. |
+| `title` | `string` | `""` | Judul kartu. |
+| `allowCopy` | `boolean` | `true` | Tampilkan tombol salin. |
+
+```javascript
+RoCatUI.addJsonLog({ title: "X", count: 3 }, "Log", true);
+RoCatUI.addJsonLog(JSON.stringify(hasil), "Data mentah", true);
+```
+
+#### `RoCatUI.addHtmlPreview(htmlContent, title)`
+Pratinjau HTML kaya (tebal/miring/garis bawah/tautan/daftar) yang dirender **inline**
+tanpa WebView. Tautan dibuka di browser sistem.
+
+| Parameter | Tipe | Deskripsi |
+|-----------|------|-----------|
+| `htmlContent` | `string` | HTML sumber (mis. sinopsis dengan `<b>`, `<a href=...>`). |
+| `title` | `string` | Judul kartu (opsional). |
+
+```javascript
+RoCatUI.addHtmlPreview("<b>" + title + "</b><br>" + sinopsis, "Sinopsis");
+```
+
+#### `RoCatUI.addAudio(url, title, allowDownload)`
+Kartu pemutar audio inline (Play/Pause + seek bar) dengan tombol unduh opsional.
+
+| Parameter | Tipe | Default | Deskripsi |
+|-----------|------|---------|-----------|
+| `url` | `string` | — | URL file audio (MP3/M4A/…). |
+| `title` | `string` | `""` | Judul kartu. |
+| `allowDownload` | `boolean` | `true` | Tampilkan tombol "Unduh Audio" ke folder scrape. |
+
+#### `RoCatUI.addAlert(message, type)`
+Banner ber-ikon berwarna untuk status singkat.
+
+| Parameter | Tipe | Default | Deskripsi |
+|-----------|------|---------|-----------|
+| `message` | `string` | — | Pesan yang ditampilkan. |
+| `type` | `string` | `"info"` | `"info"` / `"warning"` / `"error"` / `"success"`. Nilai lain → fallback `info`. |
+
+```javascript
+RoCatUI.addAlert("Hasil pencarian untuk: " + q, "info");
+RoCatUI.addAlert("Halaman tidak mengembalikan kartu anime.", "warning");
+```
+
+#### `RoCatUI.addBadgeGroup(badges)`
+Sederet chip/badge (genre, status episode, dsb.).
+
+| Parameter | Tipe | Deskripsi |
+|-----------|------|-----------|
+| `badges` | `string[]` \| `string` | Array JS ATAU string JSON (`["Ongoing","HD"]`). |
+
+```javascript
+RoCatUI.addBadgeGroup(["Ongoing", "HD", "Action", "Rating 8.5"]);
+RoCatUI.addBadgeGroup(JSON.stringify(genreList));
+```
+
+### 2.6 Simplification API — `RoCat.render(items)` (Tahap 22.1)
+
+Alih-alih memanggil `RoCatUI.clear()` + satu-per-satu `addInput`/`addButton`/…, sebuah
+skrip bisa **menggambar seluruh kanvas dengan satu panggilan** `RoCat.render(...)`.
+Menerima satu descriptor ATAU array descriptor; tiap descriptor adalah objek dengan
+kunci `type` (+ field sesuai tipe). Deskriptor yang salah/null diabaikan tanpa error.
+
+| `type` | Field yang dibaca | Panggilan yang dihasilkan |
+|--------|-------------------|---------------------------|
+| `"clear"` / `"reset"` | — | `RoCatUI.clear()` |
+| `"input"` | `id`, `hint` | `RoCatUI.addInput(id, hint)` |
+| `"button"` | `label`, `fn` (alias `function`/`onClick`) | `RoCatUI.addButton(label, fn)` |
+| `"image"` | `url` (alias `src`), `title`, `download` | `RoCatUI.addImage(url, title, download)` |
+| `"video"` | `url`, `title`, `hls`, `download` | `RoCatUI.addVideo(url, title, hls, download)` |
+| `"audio"` | `url`, `title`, `download` | `RoCatUI.addAudio(url, title, download)` |
+| `"json"` | `data` (alias `json`), `title`, `copy` | `RoCatUI.addJsonLog(data, title, copy)` |
+| `"html"` | `html` (alias `content`), `title` | `RoCatUI.addHtmlPreview(html, title)` |
+| `"alert"` | `message` (alias `text`), `level` | `RoCatUI.addAlert(message, level)` |
+| `"badges"` | `badges` (alias `items`/`list`) | `RoCatUI.addBadgeGroup(badges)` |
+| `"grid"` | `columns`, `items` (alias `entries`), `onClick` (alias `fn`) | `RoCatUI.addGrid(columns, items, onClick)` |
+| `"log"` | `text` (alias `message`) | `RoCatUI.log(text)` |
+
+Contoh — membandingkan gaya lama vs baru:
+
+```javascript
+// Gaya lama: banyak panggilan
+RoCatUI.clear();
+RoCatUI.addInput("query", "Cari...");
+RoCatUI.addButton("Cari", "doSearch");
+RoCatUI.addAlert("Perhatian", "warning");
+
+// Gaya baru: satu panggilan
+RoCat.render([
+    { type: "clear" },
+    { type: "input", id: "query", hint: "Cari..." },
+    { type: "button", label: "Cari", fn: "doSearch" },
+    { type: "alert", message: "Perhatian", level: "warning" },
+    { type: "badges", badges: ["Ongoing", "HD"] },
+    { type: "json", title: "Data", data: { a: 1, b: "x" }, copy: true }
+]);
+```
+
+> `RoCat.render` berjalan meskipun `RoCatUI` tidak tersedia (mis. eksekusi polos di
+> luar Canvas) — panggilan UI hanya dilewati, tidak error.
+
 ---
 
 ## 3. DOM Parsing: global `RoCatDOM`
@@ -364,11 +477,15 @@ fetch(url, { method: "GET", headers: { "X-Custom": "1" } });
 | `.headers` | `object` | Map `name → value` (nilai pertama). |
 | `.error` | `string?` | Pesan error bila request gagal (`null`/undefined). |
 | `.text()` | `string` | Body sebagai string. |
-| `.json()` | any | Parsing body sebagai JSON; **throws** bila body kosong/invalid. |
+| `.json()` | any | Parsing body sebagai JSON; **melempar `Error` JS yang bisa di-`try/catch`** bila body kosong/invalid. |
 
 **Never throws untuk error jaringan**: koneksi gagal / timeout / DNS dilaporkan lewat
 `.error` + `.status === 0`, bukan exception — skrip tidak bisa “gantung” atau crash app.
 Timeout per-call pada klien skrip: connect 10 s, read 10 s, call 30 s.
+
+> `res.json()` pada JSON invalid (Tahap 22.1): kini melempar `Error` JS biasa sehingga
+> `try { res.json() } catch (e) { ... }` bekerja. Untuk parsing yang tak pernah throw
+> gunakan `RoCat.safeParseJson(res.body, fallback)`.
 
 ### 4.2 Stealth & Interceptor (otomatis)
 
@@ -423,6 +540,30 @@ if (uri !== "") RoCatUI.log("Tersimpan: " + uri);
 ```
 
 Parameter `mimeType` default `text/plain`. Nama file dinormalisasi aplikasi.
+
+### 4.4 Wrapper Parsing — `RoCat.safeParseJson` / `RoCat.fetchJson`
+
+#### `RoCat.safeParseJson(str, fallback)`
+Mem-parsing JSON **tanpa pernah melempar**. Return `fallback` (default `null`) bila
+`str` null/undefined/bukan JSON valid.
+
+```javascript
+var item = RoCat.safeParseJson(payloadStr, {});   // payload grid rusak → {}
+var v = RoCat.safeParseJson(res.body, 0);
+```
+
+#### `RoCat.fetchJson(url, options)`
+`fetch()` + parse otomatis: mengembalikan objek JSON bila `res.ok` dan body JSON valid,
+selain itu `null` (HTTP error / body bukan JSON / jaringan gagal). Berguna untuk
+endpoint JSON API.
+
+```javascript
+var data = RoCat.fetchJson(BASE + "/api/detail?id=" + id);
+if (data) { /* pakai data */ } else { RoCatUI.addAlert("Gagal memuat API", "error"); }
+```
+
+> `fetchJson` sengaja mem-parsing lewat `JSON.parse` internal (bukan `res.json()`) agar
+> body yang bukan JSON menjadi `null`, bukan exception.
 
 ---
 
@@ -583,8 +724,10 @@ function parseCards(html) {
 |--------|--------|
 | `RoCatDOM` | `scripting/rhino/.../JsoupBridge.kt` |
 | `RoCatUI` | `scripting/api/.../ScriptUiBridge.kt` + `scripting/rhino/.../RhinoScriptEngine.kt` |
+| `RoCat` (render/safeParseJson/fetchJson) | `scripting/rhino/.../RoCatCoreWrapper.kt` (auto-inject) |
 | `fetch` | `scripting/api/.../network/ScriptFetch.kt` + `BridgeFetch` (Rhino) |
 | Canvas / lifecycle | `app/.../ui/canvas/ScriptCanvasViewModel.kt` (entry `onLaunch`) |
+| Template cards (JSON/HTML/Audio/Alert/Badge) | `app/.../ui/components/JsonLogCard.kt`, `HtmlPreviewCard.kt`, `AudioPreviewCard.kt`, `AlertBannerCard.kt`, `BadgeGroupCard.kt` |
 | Pemutar Media3 / HLS | `app/.../ui/components/RocatVideoPlayer.kt` |
 | Grid | `app/.../ui/components/GridView.kt` + `ScriptUIComponent.parseGrid` |
 | Network stealth / DoH / UA | `core/.../network/NetworkHelper.kt`, interceptor CF & Stealth |

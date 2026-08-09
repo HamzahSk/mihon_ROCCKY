@@ -16,6 +16,7 @@ import app.rocat.scripting.api.ScriptUiBridge
 import app.rocat.scripting.api.model.Script
 import app.rocat.storage.StorageManager
 import app.rocat.ui.components.ScriptUIComponent
+import app.rocat.ui.components.parseBadgeGroup
 import app.rocat.ui.components.parseGrid
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -98,6 +99,23 @@ class ScriptCanvasViewModel(
         }
         override fun addVideo(url: String, title: String, isStreamHls: Boolean, allowDownload: Boolean) = postUi(uiSession) {
             uiComponents.add(ScriptUIComponent.Video(url, title, isStreamHls, allowDownload))
+        }
+        // Tahap 22.2: expanded UI template cards (JSON viewer / HTML preview / audio /
+        // alert / badge group). All tolerant: bad payloads are simply not rendered.
+        override fun addJsonLog(dataJson: String, title: String, allowCopy: Boolean) = postUi(uiSession) {
+            uiComponents.add(ScriptUIComponent.JsonLog(dataJson, title, allowCopy))
+        }
+        override fun addHtmlPreview(htmlContent: String, title: String) = postUi(uiSession) {
+            uiComponents.add(ScriptUIComponent.HtmlPreview(htmlContent, title))
+        }
+        override fun addAudio(url: String, title: String, allowDownload: Boolean) = postUi(uiSession) {
+            uiComponents.add(ScriptUIComponent.Audio(url, title, allowDownload))
+        }
+        override fun addAlert(message: String, type: String) = postUi(uiSession) {
+            uiComponents.add(ScriptUIComponent.Alert(message, type))
+        }
+        override fun addBadgeGroup(badgesJson: String) = postUi(uiSession) {
+            parseBadgeGroup(badgesJson)?.let { uiComponents.add(it) }
         }
         override fun clear() = postUi(uiSession) { uiComponents.clear() }
         override fun addGrid(columns: Int, itemsJsonString: String, onClickFunction: String) = postUi(uiSession) {

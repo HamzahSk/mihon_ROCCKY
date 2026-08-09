@@ -38,8 +38,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.rocat.i18n.StringKey
 import app.rocat.i18n.stringResource
+import app.rocat.ui.components.AlertBannerCard
+import app.rocat.ui.components.AudioPreviewCard
+import app.rocat.ui.components.BadgeGroupCard
 import app.rocat.ui.components.GridComponent
+import app.rocat.ui.components.HtmlPreviewCard
 import app.rocat.ui.components.ImagePreviewCard
+import app.rocat.ui.components.JsonLogCard
 import app.rocat.ui.components.ScriptUIComponent
 import app.rocat.ui.components.VideoPreviewCard
 
@@ -149,6 +154,38 @@ fun ScriptCanvasScreen(
                             },
                             modifier = Modifier.padding(horizontal = 16.dp),
                         )
+
+                        is ScriptUIComponent.JsonLog -> JsonLogCard(
+                            dataJson = component.dataJson,
+                            title = component.title,
+                            allowCopy = component.allowCopy,
+                            copyLabel = stringResource(StringKey.copyJson),
+                            copiedMessage = stringResource(StringKey.jsonCopied),
+                        )
+
+                        is ScriptUIComponent.HtmlPreview -> HtmlPreviewCard(
+                            htmlContent = component.htmlContent,
+                            title = component.title,
+                        )
+
+                        is ScriptUIComponent.Audio -> AudioPreviewCard(
+                            url = component.url,
+                            title = component.title,
+                            allowDownload = component.allowDownload,
+                            folder = viewModel::scrapeFolder,
+                            playLabel = stringResource(StringKey.play),
+                            pauseLabel = stringResource(StringKey.pause),
+                            downloadLabel = stringResource(StringKey.downloadAudio),
+                            successMessage = stringResource(StringKey.audioSaved),
+                            failureMessage = stringResource(StringKey.downloadFailed),
+                        )
+
+                        is ScriptUIComponent.Alert -> AlertBannerCard(
+                            message = component.message,
+                            type = component.type,
+                        )
+
+                        is ScriptUIComponent.BadgeGroup -> BadgeGroupCard(badges = component.badges)
                     }
                     Spacer(Modifier.height(4.dp))
                 }

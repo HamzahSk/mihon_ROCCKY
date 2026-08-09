@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Anichin Scraper
-// @version      2.0.0
+// @version      3.0.0
 // @description  Cari, baca detail, dan streaming HLS (.m3u8) anime dari Anichin via RoCatUI.addVideo
 // @author       RoCat AI
 // @category     Anime
@@ -8,7 +8,15 @@
 // ==/UserScript==
 
 /**
- * Anichin Scraper v2 — skrip canvas RoCat (Tahap 19).
+ * Anichin Scraper v3 — skrip canvas RoCat (Tahap 22).
+ *
+ * Ditulis ulang memakai API universal `RoCat` (wrapper inti yang di-inject otomatis
+ * oleh RhinoScriptEngine) + template UI baru:
+ *   - `RoCat.render([...])`   → menggambar seluruh kanvas dengan satu panggilan.
+ *   - `RoCat.safeParseJson()` → parsing payload yang tidak pernah throw.
+ *   - `RoCatUI.addAlert(...)` → kartu status/info/warning/error.
+ *   - `RoCatUI.addBadgeGroup(...)` → genre & status episode sebagai chip.
+ *   - `RoCatUI.addJsonLog(...)`/`addHtmlPreview(...)`/`addAudio(...)` untuk tipe data lain.
  *
  * Alur: onLaunch (home + pencarian) -> doSearch (grid hasil) -> openDetail
  * (detail seri + daftar episode) -> openEpisode (ekstrak iframe base64,
@@ -26,9 +34,11 @@ var B64_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+
 /** Entry point otomatis — dipanggil canvas setiap kali layar kanvas dibuka. */
 function onLaunch() {
     try {
-        RoCatUI.clear();
-        RoCatUI.addInput("query", "Cari Anime / Donghua (contoh: Perfect World)...");
-        RoCatUI.addButton("🔍 Cari", "doSearch");
+        RoCat.render([
+            { type: "clear" },
+            { type: "input", id: "query", hint: "Cari Anime / Donghua (contoh: Perfect World)..." },
+            { type: "button", label: "🔍 Cari", fn: "doSearch" }
+        ]);
         RoCatUI.log("⏳ Memuat rilisan terbaru dari Anichin...");
 
         var res = fetch(BASE_URL + "/", "GET", {}, null);
@@ -38,10 +48,10 @@ function onLaunch() {
                 RoCatUI.log("✅ " + items.length + " rilisan tersedia. Ketuk salah satu untuk membuka episode.");
                 RoCatUI.addGrid(3, JSON.stringify(items), "openDetail");
             } else {
-                RoCatUI.log("⚠️ Homepage tidak mengembalikan kartu anime. Gunakan pencarian di atas.");
+                RoCatUI.addAlert("Homepage tidak mengembalikan kartu anime. Gunakan pencarian di atas.", "warning");
             }
         } else {
-            RoCatUI.log("⚠️ Gagal memuat homepage (status " + res.status + "). Gunakan pencarian di atas.");
+            RoCatUI.addAlert("Gagal memuat homepage (status " + res.status + "). Gunakan pencarian di atas.", "error");
         }
     } catch (e) {
         RoCatUI.log("❌ Error onLaunch: " + e.message);
@@ -53,25 +63,27 @@ function doSearch(inputs) {
     try {
         var q = readInput(inputs, "query").trim();
         if (q === "") {
-            RoCatUI.log("⚠️ Masukkan kata kunci pencarian terlebih dahulu!");
+            RoCatUI.addAlert("Masukkan kata kunci pencarian terlebih dahulu!", "warning");
             return;
         }
 
-        RoCatUI.clear();
-        RoCatUI.addButton("🏠 Menu Utama", "onLaunch");
-        RoCatUI.addInput("query", "Cari Anime (contoh: Donghua)...");
-        RoCatUI.addButton("🔍 Cari Lagi", "doSearch");
+        RoCat.render([
+            { type: "clear" },
+            { type: "button", label: "🏠 Menu Utama", fn: "onLaunch" },
+            { type: "input", id: "query", hint: "Cari Anime (contoh: Donghua)..." },
+            { type: "button", label: "🔍 Cari Lagi", fn: "doSearch" }
+        ]);
         RoCatUI.log("⏳ Mencari \"" + q + "\"...");
 
         var res = fetch(BASE_URL + "/page/1?s=" + encodeURIComponent(q), "GET", {}, null);
         if (!res.ok) {
-            RoCatUI.log("❌ Gagal mengambil hasil (status " + res.status + ").");
+            RoCatUI.addAlert("Gagal mengambil hasil (status " + res.status + ").", "error");
             return;
         }
 
         var items = parseAnimeCards(res.text());
         if (items.length === 0) {
-            RoCatUI.log("⚠️ Tidak ada hasil untuk \"" + q + "\".");
+            RoCatUI.addAlert("Tidak ada hasil untuk \"" + q + "\".", "info");
             return;
         }
 
@@ -85,14 +97,14 @@ function doSearch(inputs) {
 /** Dipanggil saat item grid (hasil pencarian / home) diklik. */
 function openDetail(payloadStr) {
     try {
-        var item = JSON.parse(payloadStr);
+        var item = RoCat.safeParseJson(payloadStr, {});
         RoCatUI.clear();
         RoCatUI.addButton("🏠 Menu Utama", "onLaunch");
         RoCatUI.log("⏳ Memuat detail \"" + (item.title || "") + "\"...");
 
         var res = fetch(item.url, "GET", {}, null);
         if (!res.ok) {
-            RoCatUI.log("❌ Gagal memuat detail (status " + res.status + ").");
+            RoCatUI.addAlert("Gagal memuat detail (status " + res.status + ").", "error");
             return;
         }
 
@@ -105,6 +117,10 @@ function openDetail(payloadStr) {
         RoCatUI.addButton("🏠 Menu Utama", "onLaunch");
         if (cover !== "") RoCatUI.addImage(cover, title, true);
         RoCatUI.log(title + (synopsis !== "" ? "\n\nSinopsis: " + synopsis.trim() : ""));
+
+        // Genre + status sebagai chip (Tahap 22.2) — hanya bila tersedia di halaman.
+        var badges = parseDetailBadges(root);
+        if (badges.length > 0) RoCatUI.addBadgeGroup(JSON.stringify(badges));
 
         var eps = root.find(".eplister ul li a");
         var epItems = [];
@@ -121,7 +137,7 @@ function openDetail(payloadStr) {
         }
 
         if (epItems.length === 0) {
-            RoCatUI.log("⚠️ Tidak ada daftar episode di halaman ini.");
+            RoCatUI.addAlert("Tidak ada daftar episode di halaman ini.", "info");
             return;
         }
 
@@ -135,14 +151,14 @@ function openDetail(payloadStr) {
 /** Dipanggil saat item daftar episode diklik. */
 function openEpisode(payloadStr) {
     try {
-        var item = JSON.parse(payloadStr);
+        var item = RoCat.safeParseJson(payloadStr, {});
         RoCatUI.clear();
         RoCatUI.addButton("🏠 Menu Utama", "onLaunch");
         RoCatUI.log("⏳ Menyiapkan stream untuk \"" + (item.title || "") + "\"...");
 
         var res = fetch(item.url, "GET", {}, null);
         if (!res.ok) {
-            RoCatUI.log("❌ Gagal memuat halaman episode (status " + res.status + ").");
+            RoCatUI.addAlert("Gagal memuat halaman episode (status " + res.status + ").", "error");
             return;
         }
 
@@ -178,9 +194,9 @@ function openEpisode(payloadStr) {
         }
 
         if (added > 0) {
-            RoCatUI.log("✅ Stream HLS siap! Tekan 'Play Inline' untuk memutar, atau ikon fullscreen untuk layar penuh.");
+            RoCatUI.addAlert("Stream HLS siap! Tekan 'Play Inline' untuk memutar, atau ikon fullscreen untuk layar penuh.", "success");
         } else {
-            RoCatUI.log("⚠️ Tidak ada stream HLS dari server utama. Mirror alternatif:");
+            RoCatUI.addAlert("Tidak ada stream HLS dari server utama. Mirror alternatif:", "warning");
             for (var j = 0; j < mirrors.length; j++) RoCatUI.log("  • " + mirrors[j]);
             RoCatUI.log("💡 Buka mirror di atas lewat tab Browser di aplikasi.");
         }
@@ -217,6 +233,32 @@ function parseAnimeCards(html) {
         out.push({ title: title.trim(), image: cover, url: url });
     }
     return out;
+}
+
+/**
+ * Menyusun chip badge (genre + status/tipe) dari halaman detail Anichin.
+ * Best-effort: selector yang berubah-ubah tidak boleh mematahkan skrip.
+ */
+function parseDetailBadges(root) {
+    var badges = [];
+    try {
+        var genres = root.find(".genxed a");
+        for (var i = 0; i < genres.length; i++) {
+            var g = genres[i].text.trim();
+            if (g !== "") badges.push(g);
+        }
+        var infos = root.find(".tsinfo .imptdt");
+        for (var j = 0; j < infos.length; j++) {
+            var label = infos[j].textOf("i") || infos[j].textOf("span:first-child") || "";
+            var value = infos[j].textOf("div:last-child") || infos[j].textOf(".data") || "";
+            if (!label || !value) continue;
+            if (label.indexOf("Status") !== -1 || label.indexOf("Tipe") !== -1 || label.indexOf("Type") !== -1) {
+                var v = value.trim();
+                if (v !== "") badges.push(label.trim() + ": " + v);
+            }
+        }
+    } catch (e) { /* best-effort */ }
+    return badges;
 }
 
 /** Membangun URL master playlist dari URL iframe anichin.stream. */

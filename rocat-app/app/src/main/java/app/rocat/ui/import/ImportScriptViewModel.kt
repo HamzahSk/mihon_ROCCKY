@@ -278,27 +278,34 @@ class ImportScriptViewModel(
          * defines `onLaunch()` (auto-run by ScriptCanvasScreen) and navigates by calling
          * `RoCatUI.clear()` + redrawing; `RoCatUI.addGrid(3, JSON.stringify(results),
          * "openDetail")` produces the 3-column manga grid.
+         *
+         * Tahap 22: the demo also showcases the universal `RoCat.render(...)` wrapper plus
+         * the new template cards (`addAlert`, `addBadgeGroup`, `addJsonLog`, `addHtmlPreview`).
          */
         val CANVAS_EXAMPLE_SCRIPT = """
             // ==UserScript==
             // @name        Manga Scraper Mock
-            // @version     1.0.0
+            // @version     2.0.0
             // @icon        https://via.placeholder.com/150
             // ==/UserScript==
 
             function onLaunch() {
-                RoCatUI.clear();
-                RoCatUI.addInput("query", "Cari Manga...");
-                RoCatUI.addButton("Search", "doSearch");
+                RoCat.render([
+                    { type: "clear" },
+                    { type: "input", id: "query", hint: "Cari Manga..." },
+                    { type: "button", label: "Search", fn: "doSearch" }
+                ]);
             }
 
             function doSearch(inputs) {
                 var q = inputs.query;
-                if (!q) { RoCatUI.log("Masukkan kata kunci!"); return; }
+                if (!q) { RoCatUI.addAlert("Masukkan kata kunci!", "warning"); return; }
 
-                RoCatUI.clear();
-                RoCatUI.addButton("Back", "onLaunch");
-                RoCatUI.log("Hasil pencarian untuk: " + q);
+                RoCat.render([
+                    { type: "clear" },
+                    { type: "button", label: "Back", fn: "onLaunch" }
+                ]);
+                RoCatUI.addAlert("Hasil pencarian untuk: " + q, "info");
 
                 // Mock Data Grid
                 var results = [
@@ -313,13 +320,15 @@ class ImportScriptViewModel(
             }
 
             function openDetail(itemJsonString) {
-                var item = JSON.parse(itemJsonString);
-                RoCatUI.clear();
-                RoCatUI.addButton("Back to Search", "onLaunch"); // Tombol kembali
-                RoCatUI.thumbnailPreview(item.image);
-                RoCatUI.log("Judul: " + item.title);
-                RoCatUI.log("ID Manga: " + item.id);
-                RoCatUI.addButton("Baca Chapter 1", "readChapter");
+                var item = RoCat.safeParseJson(itemJsonString, {});
+                RoCat.render([
+                    { type: "clear" },
+                    { type: "button", label: "Back to Search", fn: "onLaunch" },
+                    { type: "image", url: item.image, title: item.title, download: true },
+                    { type: "badges", badges: ["Ongoing", "HD", "Action", "Rating 8.5"] },
+                    { type: "json", title: "Data mentah", data: item, copy: true },
+                    { type: "button", label: "Baca Chapter 1", fn: "readChapter" }
+                ]);
             }
 
             function readChapter() {

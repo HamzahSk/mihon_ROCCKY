@@ -70,6 +70,53 @@ interface ScriptUiBridge {
      */
     fun saveFile(fileName: String, content: String, mimeType: String = "text/plain"): String
 
+    // --- Tahap 22.2: expanded UI template cards ---
+
+    /**
+     * Renders a pretty-printed, syntax-highlighted JSON log card (Tahap 22.2).
+     * [dataJson] can be a raw JSON string or (through the Rhino bridge) any
+     * JSON-serialisable object/array — the bridge normalises it to a string. When
+     * [allowCopy] is true the card exposes a "Copy JSON" button with a Toast.
+     */
+    fun addJsonLog(dataJson: String, title: String = "", allowCopy: Boolean = true) {
+        // Default no-op keeps every existing implementation / unit-test recorder valid.
+    }
+
+    /**
+     * Renders a rich-text HTML preview card (Tahap 22.2). The content is converted
+     * with `android.text.Html.fromHtml` so bold/italic/links/lists render inline
+     * without a heavy WebView. Tapping a link opens it in the system browser.
+     */
+    fun addHtmlPreview(htmlContent: String, title: String = "") {
+        // Default no-op.
+    }
+
+    /**
+     * Renders an inline audio player card (Tahap 22.2) built on Media3/ExoPlayer with
+     * Play/Pause, a seekable progress bar, and (when [allowDownload]) a "download to
+     * scrape folder" button wired to the SAF pipeline.
+     */
+    fun addAudio(url: String, title: String = "", allowDownload: Boolean = true) {
+        // Default no-op.
+    }
+
+    /**
+     * Renders an alert/banner card (Tahap 22.2). [type] is one of `"info"`,
+     * `"warning"`, `"error"` or `"success"` (anything else falls back to info).
+     * Unknown / null types are tolerated by the bridge.
+     */
+    fun addAlert(message: String, type: String = "info") {
+        // Default no-op.
+    }
+
+    /**
+     * Renders a FlowRow of chips/badges (Tahap 22.2). [badgesJson] is a JSON array of
+     * strings; the Rhino bridge also accepts a native JS array and serialises it.
+     */
+    fun addBadgeGroup(badgesJson: String) {
+        // Default no-op.
+    }
+
     /**
      * Native Base64 → UTF-8 decode (Tahap 20.1). Scripts call this through
      * `RoCatUI.decodeBase64(str)` instead of re-implementing a decoder in JavaScript,
