@@ -55,7 +55,6 @@ import app.rocat.i18n.stringResource
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onBack: () -> Unit,
     viewModel: SettingsViewModel = viewModel(factory = AppViewModelFactory),
 ) {
     val state by viewModel.settingsState.collectAsState()
@@ -96,11 +95,6 @@ fun SettingsScreen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(StringKey.settingsTitle)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings[StringKey.back])
-                    }
-                },
             )
         },
     ) { innerPadding ->
@@ -121,26 +115,34 @@ fun SettingsScreen(
 
             SectionHeader(strings[StringKey.storage])
             Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
-                ListItem(
-                    leadingContent = { Icon(Icons.Filled.Storage, contentDescription = null) },
-                    headlineContent = {
-                        Column {
-                            Text(strings[StringKey.storageStatus], style = MaterialTheme.typography.titleSmall)
-                            Text(
-                                text = state.storageName.ifBlank {
-                                    strings[if (state.storageConfigured) StringKey.storageConfigured else StringKey.storageNotConfigured]
-                                },
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    },
-                    trailingContent = {
-                        OutlinedButton(onClick = { folderLauncher.launch(null) }) {
-                            Text(strings[StringKey.changeStorage])
-                        }
-                    },
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth().padding(16.dp)
+                ) {
+                    // Ikon di kiri
+                    Icon(Icons.Filled.Storage, contentDescription = null)
+                    
+                    // Area Teks (menggunakan weight agar mengambil sisa ruang dan tidak tergencet)
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        Text(strings[StringKey.storageStatus], style = MaterialTheme.typography.titleSmall)
+                        Text(
+                            text = state.storageName.ifBlank {
+                                strings[if (state.storageConfigured) StringKey.storageConfigured else StringKey.storageNotConfigured]
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+
+                    // Tombol di kanan
+                    OutlinedButton(onClick = { folderLauncher.launch(null) }) {
+                        Text(strings[StringKey.changeStorage])
+                    }
+                }
             }
 
             HorizontalDivider(Modifier.padding(vertical = 8.dp))

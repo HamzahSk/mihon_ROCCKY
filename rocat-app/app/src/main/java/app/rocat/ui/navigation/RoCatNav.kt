@@ -160,7 +160,7 @@ private fun RoCatAppNav() {
                 is Screen.Detail -> ScriptDetailScreen(scriptId = current.scriptId, onBack = ::goBack)
                 is Screen.Import -> ImportScriptScreen(onBack = ::goBack)
                 is Screen.Playground -> PlaygroundScreen(onBack = ::goBack)
-                is Screen.Settings -> SettingsScreen(onBack = ::goBack)
+                is Screen.Settings -> SettingsScreen()
                 is Screen.Canvas -> ScriptCanvasScreen(scriptId = current.scriptId, onBack = ::goBack)
             }
         }
