@@ -90,7 +90,7 @@ class ImportScriptViewModel(
          * A Rhino-compatible sample (no async/await, no imports) that uses the
          * built-in [app.rocat.scripting.rhino.RhinoScriptEngine] `fetch` bridge and
          * the `RoCatDOM` DOM bridge (Jsoup) instead of Cheerio. Exposes both
-         * `search(query)` and `detail(url)` for the playground's Test Execution.
+         * `search(query)` and `detail(url)` entry points.
          */
         val EXAMPLE_SCRIPT = """
             // ==UserScript==

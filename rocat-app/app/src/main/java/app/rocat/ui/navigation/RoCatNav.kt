@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Extension
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -28,10 +28,10 @@ import app.rocat.i18n.I18nProvider
 import app.rocat.i18n.StringKey
 import app.rocat.i18n.stringResource
 import app.rocat.storage.StorageManager
+import app.rocat.ui.browser.BrowserScreen
 import app.rocat.ui.canvas.ScriptCanvasScreen
 import app.rocat.ui.detail.ScriptDetailScreen
 import app.rocat.ui.import.ImportScriptScreen
-import app.rocat.ui.playground.PlaygroundScreen
 import app.rocat.ui.scripts.ScriptsScreen
 import app.rocat.ui.settings.SettingsScreen
 import app.rocat.ui.settings.StorageSetupScreen
@@ -41,7 +41,7 @@ sealed interface Screen {
     data object Scripts : Screen
     data class Detail(val scriptId: String) : Screen
     data object Import : Screen
-    data object Playground : Screen
+    data object Browser : Screen
     /** The script-driven blank canvas (the script draws its own UI via `RoCatUI`). */
     data class Canvas(val scriptId: String) : Screen
     data object Settings : Screen
@@ -49,7 +49,7 @@ sealed interface Screen {
 
 private const val KEY_SCRIPTS = "scripts"
 private const val KEY_IMPORT = "import"
-private const val KEY_PLAYGROUND = "playground"
+private const val KEY_BROWSER = "browser"
 private const val KEY_SETTINGS = "settings"
 private const val KEY_DETAIL_PREFIX = "detail:"
 private const val KEY_CANVAS_PREFIX = "canvas:"
@@ -57,7 +57,7 @@ private const val KEY_CANVAS_PREFIX = "canvas:"
 private fun encode(screen: Screen): String = when (screen) {
     is Screen.Scripts -> KEY_SCRIPTS
     is Screen.Import -> KEY_IMPORT
-    is Screen.Playground -> KEY_PLAYGROUND
+    is Screen.Browser -> KEY_BROWSER
     is Screen.Settings -> KEY_SETTINGS
     is Screen.Detail -> KEY_DETAIL_PREFIX + screen.scriptId
     is Screen.Canvas -> KEY_CANVAS_PREFIX + screen.scriptId
@@ -66,7 +66,7 @@ private fun encode(screen: Screen): String = when (screen) {
 private fun decode(key: String): Screen = when {
     key == KEY_SCRIPTS -> Screen.Scripts
     key == KEY_IMPORT -> Screen.Import
-    key == KEY_PLAYGROUND -> Screen.Playground
+    key == KEY_BROWSER -> Screen.Browser
     key == KEY_SETTINGS -> Screen.Settings
     key.startsWith(KEY_DETAIL_PREFIX) -> Screen.Detail(key.removePrefix(KEY_DETAIL_PREFIX))
     key.startsWith(KEY_CANVAS_PREFIX) -> Screen.Canvas(key.removePrefix(KEY_CANVAS_PREFIX))
@@ -127,7 +127,7 @@ private fun RoCatAppNav() {
 
     Scaffold(
         bottomBar = {
-            if (current is Screen.Scripts || current is Screen.Playground || current is Screen.Settings) {
+            if (current is Screen.Scripts || current is Screen.Browser || current is Screen.Settings) {
                 NavigationBar {
                     NavigationBarItem(
                         selected = current is Screen.Scripts,
@@ -136,10 +136,10 @@ private fun RoCatAppNav() {
                         label = { Text(stringResource(StringKey.scripts)) },
                     )
                     NavigationBarItem(
-                        selected = current is Screen.Playground,
-                        onClick = { navigate(Screen.Playground) },
-                        icon = { Icon(Icons.Filled.PlayArrow, contentDescription = null) },
-                        label = { Text(stringResource(StringKey.playground)) },
+                        selected = current is Screen.Browser,
+                        onClick = { navigate(Screen.Browser) },
+                        icon = { Icon(Icons.Filled.Public, contentDescription = null) },
+                        label = { Text(stringResource(StringKey.browser)) },
                     )
                     NavigationBarItem(
                         selected = current is Screen.Settings,
@@ -159,7 +159,7 @@ private fun RoCatAppNav() {
                 )
                 is Screen.Detail -> ScriptDetailScreen(scriptId = current.scriptId, onBack = ::goBack)
                 is Screen.Import -> ImportScriptScreen(onBack = ::goBack)
-                is Screen.Playground -> PlaygroundScreen(onBack = ::goBack)
+                is Screen.Browser -> BrowserScreen()
                 is Screen.Settings -> SettingsScreen()
                 is Screen.Canvas -> ScriptCanvasScreen(scriptId = current.scriptId, onBack = ::goBack)
             }

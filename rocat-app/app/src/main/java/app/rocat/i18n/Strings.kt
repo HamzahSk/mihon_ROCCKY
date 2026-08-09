@@ -28,7 +28,7 @@ object EnglishStrings : Strings(
     language = AppLanguage.ENGLISH,
     map = mapOf(
         StringKey.scripts to "Scripts",
-        StringKey.playground to "Playground",
+        StringKey.browser to "Browser",
         StringKey.settings to "Settings",
 
         StringKey.back to "Back",
@@ -41,7 +41,7 @@ object EnglishStrings : Strings(
 
         StringKey.addScript to "Add script",
         StringKey.noScriptsTitle to "No scripts installed",
-        StringKey.noScriptsBody to "Import a userscript to start scraping. Go to the Playground tab to test it.",
+        StringKey.noScriptsBody to "Import a userscript to start scraping from the script canvas.",
         StringKey.scriptNotFound to "Script not found",
         StringKey.version to "version",
 
@@ -67,29 +67,24 @@ object EnglishStrings : Strings(
         StringKey.scriptSource to "Script source",
         StringKey.importSource to "Import source",
 
-        StringKey.selectScript to "Select a script",
-        StringKey.noEnabledScripts to "No enabled scripts. Enable or add a script first.",
-        StringKey.scriptDrivenUi to "Script-Driven UI",
-        StringKey.scriptDrivenUiBody to "The script builds this tab with RoCatUI.* calls (addInput, addButton, previews, log).",
-        StringKey.buildUi to "Build UI",
         StringKey.running to "Running…",
         StringKey.output to "Output",
-        StringKey.console to "Console",
-        StringKey.copyJson to "Copy JSON",
-        StringKey.copyText to "Copy Text",
-        StringKey.json to "JSON",
-        StringKey.jsonCopied to "JSON copied to clipboard",
-        StringKey.textCopied to "Text copied to clipboard",
         StringKey.videoPreview to "Video preview",
         StringKey.playVideo to "Play Video",
         StringKey.noVideoPlayer to "No video player available",
-        StringKey.mediaOutputVideo to "Media output (video)",
 
         StringKey.blankCanvas to "Blank canvas",
         StringKey.blankCanvasBody to "The script did not publish any UI. Canvas-driven scripts define onLaunch() " +
             "and draw with RoCatUI.{addInput,addButton,addGrid,log,...}.",
         StringKey.rerunOnLaunch to "Re-run onLaunch()",
         StringKey.rebuildCanvas to "Rebuild canvas",
+
+        StringKey.addressBar to "Address",
+        StringKey.urlPrompt to "Type a URL or search",
+        StringKey.go to "Go",
+        StringKey.refresh to "Refresh",
+        StringKey.stop to "Stop",
+        StringKey.forward to "Forward",
 
         StringKey.settingsTitle to "Settings",
         StringKey.language to "Language",
@@ -132,7 +127,7 @@ object IndonesianStrings : Strings(
     language = AppLanguage.INDONESIAN,
     map = mapOf(
         StringKey.scripts to "Skrip",
-        StringKey.playground to "Playground",
+        StringKey.browser to "Browser",
         StringKey.settings to "Pengaturan",
 
         StringKey.back to "Kembali",
@@ -145,7 +140,7 @@ object IndonesianStrings : Strings(
 
         StringKey.addScript to "Tambah skrip",
         StringKey.noScriptsTitle to "Belum ada skrip terpasang",
-        StringKey.noScriptsBody to "Impor userscript untuk mulai scraping. Kunjungi tab Playground untuk mencobanya.",
+        StringKey.noScriptsBody to "Impor userscript untuk mulai scraping lewat kanvas skrip.",
         StringKey.scriptNotFound to "Skrip tidak ditemukan",
         StringKey.version to "versi",
 
@@ -171,29 +166,24 @@ object IndonesianStrings : Strings(
         StringKey.scriptSource to "Sumber skrip",
         StringKey.importSource to "Impor sumber",
 
-        StringKey.selectScript to "Pilih skrip",
-        StringKey.noEnabledScripts to "Tidak ada skrip aktif. Aktifkan atau tambahkan skrip terlebih dahulu.",
-        StringKey.scriptDrivenUi to "UI Berbasis Skrip",
-        StringKey.scriptDrivenUiBody to "Skrip membangun tab ini dengan panggilan RoCatUI.* (addInput, addButton, previews, log).",
-        StringKey.buildUi to "Bangun UI",
         StringKey.running to "Menjalankan…",
         StringKey.output to "Keluaran",
-        StringKey.console to "Konsol",
-        StringKey.copyJson to "Salin JSON",
-        StringKey.copyText to "Salin Teks",
-        StringKey.json to "JSON",
-        StringKey.jsonCopied to "JSON disalin ke clipboard",
-        StringKey.textCopied to "Teks disalin ke clipboard",
         StringKey.videoPreview to "Pratinjau video",
         StringKey.playVideo to "Putar Video",
         StringKey.noVideoPlayer to "Tidak ada pemutar video",
-        StringKey.mediaOutputVideo to "Keluaran media (video)",
 
         StringKey.blankCanvas to "Kanvas kosong",
         StringKey.blankCanvasBody to "Skrip belum menerbitkan UI apa pun. Skrip berbasis canvas mendefinisikan " +
             "onLaunch() dan menggambar dengan RoCatUI.{addInput,addButton,addGrid,log,...}.",
         StringKey.rerunOnLaunch to "Jalankan ulang onLaunch()",
         StringKey.rebuildCanvas to "Bangun ulang kanvas",
+
+        StringKey.addressBar to "Alamat",
+        StringKey.urlPrompt to "Ketik URL atau kata kunci pencarian",
+        StringKey.go to "Buka",
+        StringKey.refresh to "Muat ulang",
+        StringKey.stop to "Berhenti",
+        StringKey.forward to "Maju",
 
         StringKey.settingsTitle to "Pengaturan",
         StringKey.language to "Bahasa",

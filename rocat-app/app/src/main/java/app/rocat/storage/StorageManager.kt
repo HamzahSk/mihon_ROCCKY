@@ -8,6 +8,7 @@ import app.rocat.settings.SettingsRepository
 import coil3.SingletonImageLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.OutputStream
 
 /**
  * Owns the app's Storage Access Framework integration and the scrape folder layout.
@@ -70,6 +71,57 @@ class StorageManager(
         val scrapes = root.findFile(SCRAPES_DIR) ?: root.createDirectory(SCRAPES_DIR) ?: return null
         return scrapes.findFile(name) ?: scrapes.createDirectory(name)
     }
+
+    /**
+     * Writes [content] as a new file named [fileName] inside the scrape [folder].
+     *
+     * Tahap 16.1: the old flow only created the sub-folder ([createScrapeFolder]) and never
+     * wrote anything into it. This helper completes the pipeline: it (re)uses [folder] via
+     * [DocumentFile.createFile] and streams the bytes through
+     * `contentResolver.openOutputStream` so the file genuinely lands on device storage.
+     *
+     * @return the content [Uri] of the written file, or null when storage is not
+     *   configured / the write failed.
+     */
+    suspend fun saveFileToScrapeFolder(
+        folder: DocumentFile?,
+        fileName: String,
+        mimeType: String,
+        content: ByteArray,
+    ): Uri? = withContext(Dispatchers.IO) {
+        if (folder == null) return@withContext null
+        val safeName = sanitizeFileName(fileName).takeIf { it.isNotBlank() } ?: return@withContext null
+        val target = folder.findFile(safeName) ?: folder.createFile(mimeType, safeName) ?: return@withContext null
+        runCatching {
+            openOutputStream(target.uri)?.use { out -> out.write(content) }
+                ?: return@withContext null
+            target.uri
+        }.getOrNull()
+    }
+
+    /** Convenience overload writing a UTF-8 [String] as plain text. */
+    suspend fun saveFileToScrapeFolder(
+        folder: DocumentFile?,
+        fileName: String,
+        content: String,
+        mimeType: String = "text/plain",
+    ): Uri? = saveFileToScrapeFolder(
+        folder = folder,
+        fileName = fileName,
+        mimeType = mimeType,
+        content = content.toByteArray(Charsets.UTF_8),
+    )
+
+    /** Opens (or creates) an [OutputStream] for [uri] through the SAF content provider. */
+    private fun openOutputStream(uri: Uri): OutputStream? {
+        val resolver = context.contentResolver
+        val stream = runCatching { resolver.openOutputStream(uri, "wt") }.getOrNull()
+        return stream ?: runCatching { resolver.openOutputStream(uri) }.getOrNull()
+    }
+
+    /** Strips path separators / control chars so the name is a valid document file name. */
+    private fun sanitizeFileName(name: String): String =
+        name.trim().replace(Regex("[/\\\\:*?\"<>|]"), "_").take(120)
 
     /**
      * Empties the Coil image cache (memory + disk) and every file under `context.cacheDir`.

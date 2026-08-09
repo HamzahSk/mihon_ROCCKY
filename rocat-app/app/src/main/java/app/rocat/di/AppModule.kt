@@ -21,7 +21,6 @@ import app.rocat.i18n.I18nProvider
 import app.rocat.settings.SettingsRepository
 import app.rocat.storage.StorageManager
 import app.rocat.ui.import.ImportScriptViewModel
-import app.rocat.ui.playground.PlaygroundViewModel
 import app.rocat.ui.settings.SettingsViewModel
 import app.rocat.ui.scripts.ScriptsViewModel
 
@@ -76,7 +75,6 @@ class AppModule(val app: Application) : InjektModule {
         // no-arg constructors and crashes for these constructor-injected ViewModels).
         registrar.addSingletonFactory { ScriptsViewModel() }
         registrar.addSingletonFactory { ImportScriptViewModel() }
-        registrar.addSingletonFactory { PlaygroundViewModel() }
         registrar.addSingletonFactory { SettingsViewModel() }
         registrar.addSingleton(AppViewModelFactory)
     }

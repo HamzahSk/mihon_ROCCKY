@@ -40,4 +40,15 @@ interface ScriptUiBridge {
 
     /** Appends [text] to the script log area. */
     fun log(text: String)
+
+    /**
+     * Persists a scrape result. Implementations write [content] as a new file named
+     * [fileName] inside the current scrape folder (e.g. via the StorageManager). This is
+     * the Tahap 16.1 pipeline: scripts call `RoCatUI.save()` and the app genuinely writes
+     * the bytes to device storage through the SAF content resolver.
+     *
+     * @return the content [android.net.Uri] string of the written file, or an empty
+     *   string when the write failed.
+     */
+    fun saveFile(fileName: String, content: String, mimeType: String = "text/plain"): String
 }

@@ -387,6 +387,15 @@ private class RoCatUiBridge(
             runSafe { ui.addGrid(argInt(args, 0), argString(args, 1), argString(args, 2)) }
         })
         put("log", this, Fn { args -> runSafe { ui.log(argString(args, 0)) } })
+        put("save", this, Fn { args ->
+            runSafe {
+                ui.saveFile(
+                    fileName = argString(args, 0),
+                    content = argString(args, 1),
+                    mimeType = argString(args, 2, "text/plain"),
+                )
+            }
+        })
     }
 
     override fun getClassName(): String = "RoCatUiBridge"

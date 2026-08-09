@@ -15,16 +15,17 @@ import app.rocat.scripting.api.ScriptResult
 import app.rocat.scripting.api.ScriptUiBridge
 import app.rocat.scripting.api.model.Script
 import app.rocat.storage.StorageManager
-import app.rocat.ui.playground.ScriptUIComponent
-import app.rocat.ui.playground.parseGrid
+import app.rocat.ui.components.ScriptUIComponent
+import app.rocat.ui.components.parseGrid
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.flow.update
 
 /**
  * The engine behind the [ScriptCanvasScreen]: a per-script, mihon-like "extension tab".
  *
- * Unlike the shared playground picker, this screen owns exactly one script. When it loads
+ * Unlike the removed shared Playground picker, this screen owns exactly one script. When it loads
  * (and again on every script source change) it clears the canvas and invokes the script's
  * `onLaunch()` function, letting the script draw its own initial UI through the global
  * `RoCatUI` object. From then on every tap/branch is script-driven:
@@ -98,6 +99,22 @@ class ScriptCanvasViewModel(
         }
         override fun log(text: String) = postUi(uiSession) {
             uiComponents.add(ScriptUIComponent.LogText(text))
+        }
+        override fun saveFile(fileName: String, content: String, mimeType: String): String {
+            // Tahap 16.1: synchronously stream the bytes into the per-script scrape folder
+            // via StorageManager, so files really land on device storage. Safe to block the
+            // Rhino IO thread here; the actual write happens on the same dispatcher.
+            val folder = scrapeFolder()
+            return runBlocking {
+                runCatching {
+                    storageManager.saveFileToScrapeFolder(
+                        folder = folder,
+                        fileName = fileName,
+                        mimeType = mimeType,
+                        content = content.toByteArray(Charsets.UTF_8),
+                    )
+                }.getOrNull()?.toString().orEmpty()
+            }
         }
     }
 

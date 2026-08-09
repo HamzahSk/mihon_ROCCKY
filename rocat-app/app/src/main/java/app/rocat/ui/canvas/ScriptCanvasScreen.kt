@@ -46,13 +46,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.rocat.i18n.StringKey
 import app.rocat.i18n.stringResource
-import app.rocat.ui.playground.GridComponent
-import app.rocat.ui.playground.ScriptUIComponent
+import app.rocat.ui.components.GridComponent
+import app.rocat.ui.components.ScriptUIComponent
 import coil3.compose.AsyncImage
 
 /**
  * The script "blank canvas" screen (mihon-like extension tab). Instead of a fixed
- * playground/picker, the screen is empty except for a TopAppBar titled with the script's
+ * picker, the screen is empty except for a TopAppBar titled with the script's
  * metadata `@name`. The script owns the page: [ScriptCanvasViewModel] calls `onLaunch()`
  * automatically, and the script draws inputs, buttons, previews, a 3-column grid, or
  * redraws the whole page (Search -> Grid -> Detail) through `RoCatUI`.

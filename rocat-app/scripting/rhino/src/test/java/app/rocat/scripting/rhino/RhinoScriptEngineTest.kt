@@ -289,6 +289,10 @@ class RhinoScriptEngineTest {
             calls.add("grid:$columns:$onClickFunction:$itemsJsonString")
         }
         override fun log(text: String) { calls.add("log:$text") }
+        override fun saveFile(fileName: String, content: String, mimeType: String): String {
+            calls.add("save:$fileName:$mimeType")
+            return fileName
+        }
     }
 
     @Test
@@ -364,6 +368,26 @@ class RhinoScriptEngineTest {
         assertTrue(result is ScriptResult.Success)
         assertEquals("", (result as ScriptResult.Success).value)
         assertEquals(listOf("video:https://example.com/clip.mp4"), ui.calls)
+    }
+
+    @Test
+    fun `rocatui forwards saveFile calls with a default mime type`() = runBlocking {
+        val ui = RecordingUiBridge()
+        val uiEnvironment = DefaultScriptEnvironment(
+            fetchImpl = { _, _, _, _ -> FetchResult(200, emptyMap(), "") },
+            ui = ui,
+        )
+        val source = """
+            function onSave() {
+                var uri = RoCatUI.save("result.json", '{"ok": true}');
+                return uri;
+            }
+        """.trimIndent()
+
+        val result = engine.invokeNamedFunction(script(source), uiEnvironment, "onSave", emptyMap())
+
+        assertTrue(result is ScriptResult.Success)
+        assertEquals(listOf("save:result.json:text/plain"), ui.calls)
     }
 
     // --- Tahap 13: Full Script-Driven Canvas & Grid System ---

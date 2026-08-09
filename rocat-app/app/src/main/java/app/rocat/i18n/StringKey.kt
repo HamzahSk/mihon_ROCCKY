@@ -9,7 +9,7 @@ package app.rocat.i18n
 enum class StringKey(val key: String) {
     // Navigation
     scripts("nav_scripts"),
-    playground("nav_playground"),
+    browser("nav_browser"),
     settings("nav_settings"),
 
     // Common
@@ -52,30 +52,24 @@ enum class StringKey(val key: String) {
     scriptSource("script_source"),
     importSource("import_source"),
 
-    // Playground
-    selectScript("select_script"),
-    noEnabledScripts("no_enabled_scripts"),
-    scriptDrivenUi("script_driven_ui"),
-    scriptDrivenUiBody("script_driven_ui_body"),
-    buildUi("build_ui"),
-    running("running"),
-    output("output"),
-    console("console"),
-    copyJson("copy_json"),
-    copyText("copy_text"),
-    json("json"),
-    jsonCopied("json_copied"),
-    textCopied("text_copied"),
-    videoPreview("video_preview"),
-    playVideo("play_video"),
-    noVideoPlayer("no_video_player"),
-    mediaOutputVideo("media_output_video"),
-
     // Canvas screen
     blankCanvas("blank_canvas"),
     blankCanvasBody("blank_canvas_body"),
     rerunOnLaunch("rerun_on_launch"),
     rebuildCanvas("rebuild_canvas"),
+    running("running"),
+    output("output"),
+    videoPreview("video_preview"),
+    playVideo("play_video"),
+    noVideoPlayer("no_video_player"),
+
+    // Browser screen
+    addressBar("address_bar"),
+    urlPrompt("url_prompt"),
+    go("go"),
+    refresh("refresh"),
+    stop("stop"),
+    forward("forward"),
 
     // Settings screen
     settingsTitle("settings_title"),
