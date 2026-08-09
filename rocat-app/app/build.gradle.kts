@@ -132,6 +132,11 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
 
+    // Tahap 18.3: AndroidX Media3 (ExoPlayer + HLS streaming + PlayerView UI).
+    implementation(libs.media3.exoplayer)
+    implementation(libs.media3.exoplayer.hls)
+    implementation(libs.media3.ui)
+
     // Tahap 15.3: Room database (KSP annotation processing)
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)

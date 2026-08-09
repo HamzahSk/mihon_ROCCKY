@@ -61,9 +61,15 @@ enum class StringKey(val key: String) {
     rebuildCanvas("rebuild_canvas"),
     running("running"),
     output("output"),
-    videoPreview("video_preview"),
-    playVideo("play_video"),
-    noVideoPlayer("no_video_player"),
+
+    // Media previews (Tahap 18)
+    download("download"),
+    downloadVideo("download_video"),
+    playInline("play_inline"),
+    closePlayer("close_player"),
+    imageSaved("image_saved"),
+    videoSaved("video_saved"),
+    downloadFailed("download_failed"),
 
     // Browser screen
     addressBar("address_bar"),

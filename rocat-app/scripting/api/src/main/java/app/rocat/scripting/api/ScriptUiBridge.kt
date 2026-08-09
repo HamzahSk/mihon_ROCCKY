@@ -26,6 +26,24 @@ interface ScriptUiBridge {
     /** Renders a card/button that opens the video at [url] via `Intent.ACTION_VIEW`. */
     fun videoPreview(url: String)
 
+    /**
+     * Renders an image preview card (Tahap 18.1). [title] is shown above the image and
+     * [allowDownload] toggles the "save to scrape folder" button on the card.
+     */
+    fun addImage(url: String, title: String = "", allowDownload: Boolean = true)
+
+    /**
+     * Renders a video preview card (Tahap 18.2/18.3) with an inline Media3 (ExoPlayer)
+     * player and a download button. Set [isStreamHls] to `true` for `.m3u8` streams so
+     * the player configures an HLS media source.
+     */
+    fun addVideo(
+        url: String,
+        title: String = "",
+        isStreamHls: Boolean = false,
+        allowDownload: Boolean = true,
+    )
+
     /** Clears every currently rendered component. */
     fun clear()
 

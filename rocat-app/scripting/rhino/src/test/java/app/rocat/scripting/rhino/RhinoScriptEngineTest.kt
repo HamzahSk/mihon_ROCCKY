@@ -284,6 +284,12 @@ class RhinoScriptEngineTest {
         override fun addButton(label: String, functionName: String) { calls.add("button:$label:$functionName") }
         override fun thumbnailPreview(url: String) { calls.add("thumbnail:$url") }
         override fun videoPreview(url: String) { calls.add("video:$url") }
+        override fun addImage(url: String, title: String, allowDownload: Boolean) {
+            calls.add("image:$url:$title:$allowDownload")
+        }
+        override fun addVideo(url: String, title: String, isStreamHls: Boolean, allowDownload: Boolean) {
+            calls.add("videoCard:$url:$title:$isStreamHls:$allowDownload")
+        }
         override fun clear() { calls.add("clear") }
         override fun addGrid(columns: Int, itemsJsonString: String, onClickFunction: String) {
             calls.add("grid:$columns:$onClickFunction:$itemsJsonString")
@@ -388,6 +394,60 @@ class RhinoScriptEngineTest {
 
         assertTrue(result is ScriptResult.Success)
         assertEquals(listOf("save:result.json:text/plain"), ui.calls)
+    }
+
+    // --- Tahap 18: Media template cards (addImage / addVideo) ---
+
+    @Test
+    fun `rocatui renders an image card with title and download toggle`() = runBlocking {
+        val ui = RecordingUiBridge()
+        val uiEnvironment = DefaultScriptEnvironment(
+            fetchImpl = { _, _, _, _ -> FetchResult(200, emptyMap(), "") },
+            ui = ui,
+        )
+        val source = """
+            function buildUI() {
+                RoCatUI.addImage("https://example.com/photo.jpg", "Sunset", true);
+                RoCatUI.addImage("https://example.com/hidden.jpg", "Locked", false);
+            }
+        """.trimIndent()
+
+        val result = engine.invokeNamedFunction(script(source), uiEnvironment, "buildUI", emptyMap())
+
+        assertTrue(result is ScriptResult.Success)
+        assertEquals(
+            listOf(
+                "image:https://example.com/photo.jpg:Sunset:true",
+                "image:https://example.com/hidden.jpg:Locked:false",
+            ),
+            ui.calls,
+        )
+    }
+
+    @Test
+    fun `rocatui renders an hls video card with download toggle`() = runBlocking {
+        val ui = RecordingUiBridge()
+        val uiEnvironment = DefaultScriptEnvironment(
+            fetchImpl = { _, _, _, _ -> FetchResult(200, emptyMap(), "") },
+            ui = ui,
+        )
+        val source = """
+            function buildUI() {
+                RoCatUI.addVideo("https://example.com/stream/master.m3u8", "Live", true, true);
+                RoCatUI.addVideo("https://example.com/clip.mp4", "Clip");
+            }
+        """.trimIndent()
+
+        val result = engine.invokeNamedFunction(script(source), uiEnvironment, "buildUI", emptyMap())
+
+        assertTrue(result is ScriptResult.Success)
+        assertEquals(
+            listOf(
+                "videoCard:https://example.com/stream/master.m3u8:Live:true:true",
+                "videoCard:https://example.com/clip.mp4:Clip:false:true",
+            ),
+            ui.calls,
+        )
     }
 
     // --- Tahap 13: Full Script-Driven Canvas & Grid System ---

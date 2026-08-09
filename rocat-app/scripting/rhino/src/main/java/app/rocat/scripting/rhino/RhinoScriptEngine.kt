@@ -382,6 +382,25 @@ private class RoCatUiBridge(
         put("addButton", this, Fn { args -> runSafe { ui.addButton(argString(args, 0), argString(args, 1)) } })
         put("thumbnailPreview", this, Fn { args -> runSafe { ui.thumbnailPreview(argString(args, 0)) } })
         put("videoPreview", this, Fn { args -> runSafe { ui.videoPreview(argString(args, 0)) } })
+        put("addImage", this, Fn { args ->
+            runSafe {
+                ui.addImage(
+                    url = argString(args, 0),
+                    title = argString(args, 1),
+                    allowDownload = argBoolean(args, 2, true),
+                )
+            }
+        })
+        put("addVideo", this, Fn { args ->
+            runSafe {
+                ui.addVideo(
+                    url = argString(args, 0),
+                    title = argString(args, 1),
+                    isStreamHls = argBoolean(args, 2),
+                    allowDownload = argBoolean(args, 3, true),
+                )
+            }
+        })
         put("clear", this, Fn { runSafe { ui.clear() } })
         put("addGrid", this, Fn { args ->
             runSafe { ui.addGrid(argInt(args, 0), argString(args, 1), argString(args, 2)) }
@@ -469,6 +488,17 @@ private fun argInt(args: Array<out Any?>, index: Int, default: Int = 0): Int {
         is Number -> value.toInt()
         is CharSequence -> value.toString().trim().toIntOrNull() ?: default
         else -> runCatching { Context.toNumber(value).toInt() }.getOrDefault(default)
+    }
+}
+
+/** Reads the [index]-th JS argument as a Boolean, or [default] when absent/undefined. */
+private fun argBoolean(args: Array<out Any?>, index: Int, default: Boolean = false): Boolean {
+    val value = args.getOrNull(index) ?: return default
+    if (value === Undefined.instance) return default
+    return when (value) {
+        is Boolean -> value
+        is CharSequence -> value.toString().trim().equals("true", ignoreCase = true)
+        else -> runCatching { Context.toBoolean(value) }.getOrDefault(default)
     }
 }
 

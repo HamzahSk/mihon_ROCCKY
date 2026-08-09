@@ -26,14 +26,22 @@ sealed class ScriptUIComponent {
         val functionName: String,
     ) : ScriptUIComponent()
 
-    /** An image preview rendered with Coil. */
-    data class Thumbnail(
+    /** An image preview rendered with Coil (Tahap 18.1: optional title + download). */
+    data class Image(
         val url: String,
+        val title: String = "",
+        val allowDownload: Boolean = true,
     ) : ScriptUIComponent()
 
-    /** A video card/button that opens [url] with the system video player. */
+    /**
+     * A video preview card (Tahap 18.2/18.3): plays [url] inline with the in-app
+     * Media3 player (HLS when [isStreamHls]) and can download the file.
+     */
     data class Video(
         val url: String,
+        val title: String = "",
+        val isStreamHls: Boolean = false,
+        val allowDownload: Boolean = true,
     ) : ScriptUIComponent()
 
     /** A single line appended to the script's log area. */

@@ -71,9 +71,13 @@ object EnglishStrings : Strings(
 
         StringKey.running to "Running…",
         StringKey.output to "Output",
-        StringKey.videoPreview to "Video preview",
-        StringKey.playVideo to "Play Video",
-        StringKey.noVideoPlayer to "No video player available",
+        StringKey.download to "Download",
+        StringKey.downloadVideo to "Download Video",
+        StringKey.playInline to "Play Inline",
+        StringKey.closePlayer to "Close Player",
+        StringKey.imageSaved to "Image saved to the Scrapes folder",
+        StringKey.videoSaved to "Video saved to the Scrapes folder",
+        StringKey.downloadFailed to "Download failed",
 
         StringKey.blankCanvas to "Blank canvas",
         StringKey.blankCanvasBody to "The script did not publish any UI. Canvas-driven scripts define onLaunch() " +
@@ -172,9 +176,13 @@ object IndonesianStrings : Strings(
 
         StringKey.running to "Menjalankan…",
         StringKey.output to "Keluaran",
-        StringKey.videoPreview to "Pratinjau video",
-        StringKey.playVideo to "Putar Video",
-        StringKey.noVideoPlayer to "Tidak ada pemutar video",
+        StringKey.download to "Unduh",
+        StringKey.downloadVideo to "Unduh Video",
+        StringKey.playInline to "Putar Inline",
+        StringKey.closePlayer to "Tutup Pemutar",
+        StringKey.imageSaved to "Gambar berhasil disimpan di folder Scrapes",
+        StringKey.videoSaved to "Video berhasil disimpan di folder Scrapes",
+        StringKey.downloadFailed to "Unduhan gagal",
 
         StringKey.blankCanvas to "Kanvas kosong",
         StringKey.blankCanvasBody to "Skrip belum menerbitkan UI apa pun. Skrip berbasis canvas mendefinisikan " +

@@ -1,8 +1,5 @@
 package app.rocat.ui.canvas
 
-import android.content.Intent
-import android.net.Uri
-import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,14 +8,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -27,7 +22,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -39,16 +33,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.rocat.i18n.StringKey
 import app.rocat.i18n.stringResource
 import app.rocat.ui.components.GridComponent
+import app.rocat.ui.components.ImagePreviewCard
 import app.rocat.ui.components.ScriptUIComponent
-import coil3.compose.AsyncImage
+import app.rocat.ui.components.VideoPreviewCard
 
 /**
  * The script "blank canvas" screen (mihon-like extension tab). Instead of a fixed
@@ -125,9 +118,27 @@ fun ScriptCanvasScreen(
                             onClick = { viewModel.onScriptButton(component.functionName) },
                         )
 
-                        is ScriptUIComponent.Thumbnail -> ThumbnailComponent(url = component.url)
+                        is ScriptUIComponent.Image -> ImagePreviewCard(
+                            url = component.url,
+                            title = component.title,
+                            allowDownload = component.allowDownload,
+                            folder = viewModel::scrapeFolder,
+                            successMessage = stringResource(StringKey.imageSaved),
+                            failureMessage = stringResource(StringKey.downloadFailed),
+                        )
 
-                        is ScriptUIComponent.Video -> VideoComponent(url = component.url)
+                        is ScriptUIComponent.Video -> VideoPreviewCard(
+                            url = component.url,
+                            title = component.title,
+                            isStreamHls = component.isStreamHls,
+                            allowDownload = component.allowDownload,
+                            folder = viewModel::scrapeFolder,
+                            playInlineLabel = stringResource(StringKey.playInline),
+                            closePlayerLabel = stringResource(StringKey.closePlayer),
+                            downloadLabel = stringResource(StringKey.downloadVideo),
+                            successMessage = stringResource(StringKey.videoSaved),
+                            failureMessage = stringResource(StringKey.downloadFailed),
+                        )
 
                         is ScriptUIComponent.LogText -> LogComponent(text = component.text)
 
@@ -202,55 +213,6 @@ private fun ButtonComponent(
             Spacer(Modifier.width(8.dp))
         }
         Text(label)
-    }
-}
-
-@Composable
-private fun ThumbnailComponent(url: String) {
-    ElevatedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-        AsyncImage(
-            model = url,
-            contentDescription = "Script thumbnail preview",
-            contentScale = ContentScale.Fit,
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = 300.dp)
-                .padding(8.dp),
-        )
-    }
-}
-
-@Composable
-private fun VideoComponent(url: String) {
-    val context = LocalContext.current
-    val noVideoPlayer = stringResource(StringKey.noVideoPlayer)
-    ElevatedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(
-                stringResource(StringKey.videoPreview),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(8.dp))
-            OutlinedButton(
-                onClick = {
-                    runCatching {
-                        context.startActivity(
-                            Intent(Intent.ACTION_VIEW).setDataAndType(Uri.parse(url), "video/*"),
-                        )
-                    }.onFailure {
-                        Toast.makeText(context, noVideoPlayer, Toast.LENGTH_SHORT).show()
-                    }
-                },
-            ) {
-                Icon(Icons.Filled.PlayArrow, contentDescription = null)
-                Spacer(Modifier.width(6.dp))
-                Text(stringResource(StringKey.playVideo))
-            }
-        }
     }
 }
 

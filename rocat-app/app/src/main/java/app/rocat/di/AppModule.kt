@@ -18,6 +18,7 @@ import app.rocat.domain.script.ScriptRepository
 import app.rocat.domain.script.SetScriptEnabled
 import app.rocat.domain.script.UpsertScript
 import app.rocat.i18n.I18nProvider
+import app.rocat.media.MediaDownloader
 import app.rocat.settings.SettingsRepository
 import app.rocat.storage.StorageManager
 import app.rocat.ui.import.ImportScriptViewModel
@@ -62,7 +63,11 @@ class AppModule(val app: Application) : InjektModule {
         registrar.addSingleton(settingsRepository)
 
         registrar.addSingleton(I18nProvider(settingsRepository))
-        registrar.addSingleton(StorageManager(app, settingsRepository))
+        val storageManager = StorageManager(app, settingsRepository)
+        registrar.addSingleton(storageManager)
+
+        // Tahap 18.1: media downloader for ImagePreviewCard / VideoPreviewCard saves.
+        registrar.addSingleton(MediaDownloader(networkHelper, storageManager))
 
         // Tahap 15.3: Room database singleton + DAOs.
         val database = Room.databaseBuilder(app, AppDatabase::class.java, DATABASE_NAME).build()

@@ -88,10 +88,16 @@ class ScriptCanvasViewModel(
             uiComponents.add(ScriptUIComponent.Button(label, functionName))
         }
         override fun thumbnailPreview(url: String) = postUi(uiSession) {
-            uiComponents.add(ScriptUIComponent.Thumbnail(url))
+            uiComponents.add(ScriptUIComponent.Image(url))
         }
         override fun videoPreview(url: String) = postUi(uiSession) {
             uiComponents.add(ScriptUIComponent.Video(url))
+        }
+        override fun addImage(url: String, title: String, allowDownload: Boolean) = postUi(uiSession) {
+            uiComponents.add(ScriptUIComponent.Image(url, title, allowDownload))
+        }
+        override fun addVideo(url: String, title: String, isStreamHls: Boolean, allowDownload: Boolean) = postUi(uiSession) {
+            uiComponents.add(ScriptUIComponent.Video(url, title, isStreamHls, allowDownload))
         }
         override fun clear() = postUi(uiSession) { uiComponents.clear() }
         override fun addGrid(columns: Int, itemsJsonString: String, onClickFunction: String) = postUi(uiSession) {
