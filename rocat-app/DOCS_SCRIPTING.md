@@ -87,25 +87,36 @@ Skrip dijalankan di **Canvas** (kanvas per-skrip). Alur hidupnya:
 5. Skrip tanpa `onLaunch()` tidak *canvas-driven* — tidak terjadi apa-apa di kanvas
    (tidak error). Skrip seperti itu bisa dijalankan lewat entry point `main()` (jika ada).
 
-Contoh pola navigasi (Search → Grid → Detail):
+Contoh pola navigasi (Search → Grid → Detail) — **gaya baru memakai `RoCat.render`**
+(lihat §2.6): satu panggilan menggambar seluruh kanvas alih-alih banyak `RoCatUI.*`:
 
 ```javascript
 function onLaunch() {
-    RoCatUI.clear();
-    RoCatUI.addInput("query", "Cari anime...");
-    RoCatUI.addButton("Cari", "doSearch");
+    RoCat.render([
+        { type: "clear" },
+        { type: "input", id: "query", hint: "Cari anime..." },
+        { type: "button", label: "Cari", fn: "doSearch" },
+        { type: "alert", message: "Menampilkan rilisan terbaru", level: "info" }
+    ]);
+    // ... fetch home + RoCatUI.addGrid(3, JSON.stringify(items), "openDetail")
 }
 
 function doSearch(inputs) {
-    // inputs.query -> teks yang diketik user
-    RoCatUI.clear();
-    RoCatUI.addButton("← Kembali", "onLaunch");
+    // inputs.query -> teks yang diketik user; payload tak-pernah-crash:
+    var q = (inputs && inputs.query || "").trim();
+    RoCat.render([
+        { type: "clear" },
+        { type: "button", label: "← Kembali", fn: "onLaunch" },
+        { type: "input", id: "query", hint: "Cari anime..." },
+        { type: "button", label: "Cari Lagi", fn: "doSearch" }
+    ]);
     // ... fetch + parse ...
     RoCatUI.addGrid(3, JSON.stringify(results), "openDetail");
 }
 
 function openDetail(itemJsonString) {
-    var item = JSON.parse(itemJsonString); // objek asli item grid
+    var item = RoCat.safeParseJson(itemJsonString, {}); // payload rusak -> {}
+    if (!item || !item.url) { RoCatUI.addAlert("Item tidak valid.", "error"); return; }
     RoCatUI.clear();
     RoCatUI.addButton("← Kembali", "onLaunch");
     // buka halaman detail item...
@@ -569,14 +580,14 @@ if (data) { /* pakai data */ } else { RoCatUI.addAlert("Gagal memuat API", "erro
 
 ## 5. Contoh Skrip Lengkap (Boilerplate)
 
-Contoh fiktif yang menggabungkan semua API: metadata, `onLaunch`, formulir pencarian,
-`fetch`, grid, detail, dan pemutaran video HLS.
+Contoh fiktif yang menggabungkan semua API — **versi Tahap 22/23** memakai
+`RoCat.render`, `RoCat.safeParseJson`, `addAlert`, `addBadgeGroup` dan pemutar HLS:
 
 ```javascript
 // ==UserScript==
 // @name         Rakun Anime Scraper (Contoh)
-// @version      1.0.0
-// @description  Boilerplate: onLaunch -> pencarian -> grid detail -> streaming HLS.
+// @version      2.0.0
+// @description  Boilerplate: onLaunch (RoCat.render) -> pencarian -> grid detail -> streaming HLS.
 // @author       RoCat AI
 // @category     Anime
 // @icon         https://example.com/icon.png
@@ -584,27 +595,28 @@ Contoh fiktif yang menggabungkan semua API: metadata, `onLaunch`, formulir penca
 // ==/UserScript==
 
 var BASE = "https://contoh.anime";
-var UA   = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Mobile Safari/537.36";
 
 // --- Lifecycle: dipanggil otomatis saat kanvas dibuka ---
 function onLaunch() {
     try {
-        RoCatUI.clear();
-        RoCatUI.addInput("keyword", "Cari anime / donghua...");
-        RoCatUI.addButton("Search", "doSearch");
-        RoCatUI.log("⏳ Memuat rilisan terbaru...");
+        RoCat.render([
+            { type: "clear" },
+            { type: "input", id: "keyword", hint: "Cari anime / donghua..." },
+            { type: "button", label: "Search", fn: "doSearch" },
+            { type: "badges", badges: ["Ongoing", "HD"] }
+        ]);
 
         var res = fetch(BASE + "/", "GET", {}, null);
         if (res.ok) {
             var items = parseCards(res.text());
             if (items.length > 0) {
-                RoCatUI.log("Ditemukan " + items.length + " judul. Ketuk untuk detail.");
+                RoCatUI.log("✅ Ditemukan " + items.length + " judul. Ketuk untuk detail.");
                 RoCatUI.addGrid(3, JSON.stringify(items), "openDetail");
             } else {
-                RoCatUI.log("Tidak ada kartu di home — gunakan pencarian di atas.");
+                RoCatUI.addAlert("Tidak ada kartu di home — gunakan pencarian di atas.", "warning");
             }
         } else {
-            RoCatUI.log("⚠ Gagal memuat home (" + res.status + ")— gunakan pencarian.");
+            RoCatUI.addAlert("Gagal memuat home (" + res.status + ").", "error");
         }
     } catch (e) {
         RoCatUI.log("❌ onLaunch: " + e.message);
@@ -615,17 +627,21 @@ function onLaunch() {
 function doSearch(inputs) {
     try {
         var q = (inputs && inputs.keyword || "").trim();
-        if (q === "") { RoCatUI.log("⚠ Masukkan kata kunci."); return; }
+        if (q === "") { RoCatUI.addAlert("Masukkan kata kunci.", "warning"); return; }
 
-        RoCatUI.clear();
-        RoCatUI.addButton("🏠 Home", "onLaunch");
-        RoCatUI.log("⏳ Mencari \"" + q + "\"...");
+        RoCat.render([
+            { type: "clear" },
+            { type: "button", label: "🏠 Home", fn: "onLaunch" },
+            { type: "input", id: "keyword", hint: "Cari anime / donghua..." },
+            { type: "button", label: "Cari Lagi", fn: "doSearch" },
+            { type: "alert", message: "Mencari \"" + q + "\"...", level: "info" }
+        ]);
 
         var res = fetch(BASE + "/search?q=" + encodeURIComponent(q), "GET", {}, null);
-        if (!res.ok) { RoCatUI.log("❌ Pencarian gagal (" + res.status + ")."); return; }
+        if (!res.ok) { RoCatUI.addAlert("Pencarian gagal (" + res.status + ").", "error"); return; }
 
         var items = parseCards(res.text());
-        RoCatUI.log("✓ " + items.length + " hasil.");
+        if (items.length === 0) { RoCatUI.addAlert("Tidak ada hasil untuk \"" + q + "\".", "info"); return; }
         RoCatUI.addGrid(2, JSON.stringify(items), "openDetail");
     } catch (e) {
         RoCatUI.log("❌ doSearch: " + e.message);
@@ -635,16 +651,19 @@ function doSearch(inputs) {
 // --- Dipanggil saat tile grid diketuk — payload JSON string ---
 function openDetail(payload) {
     try {
-        var item = JSON.parse(payload);
+        var item = RoCat.safeParseJson(payload, {});  // payload rusak -> {} (tak pernah throw)
+        if (!item || !item.url) { RoCatUI.addAlert("Item grid tidak valid.", "error"); return; }
         RoCatUI.clear();
         RoCatUI.addButton("🏠 Home", "onLaunch");
-        RoCatUI.log("⏳ Detail: " + item.title);
 
         var res = fetch(item.url, "GET", {}, null);
-        if (!res.ok) { RoCatUI.log("❌ Detail gagal (" + res.status + ")."); return; }
+        if (!res.ok) { RoCatUI.addAlert("Detail gagal (" + res.status + ").", "error"); return; }
 
         var doc = RoCatDOM.parse(res.text());
         RoCatUI.addImage(doc.attrOf(".cover img", "src") || item.image, item.title, true);
+
+        var genres = doc.textsOf(".genre-tags a");
+        if (genres.length > 0) RoCatUI.addBadgeGroup(JSON.stringify(genres)); // chip genre
         RoCatUI.log(doc.textOf(".sinopsis") || "No synopsis.");
 
         var eps = doc.find(".episode-list a");
@@ -653,7 +672,7 @@ function openDetail(payload) {
             var u = eps[i].attr("href");
             if (u) { epList.push({ title: "Episode " + (i + 1), image: "", url: u }); }
         }
-        if (epList.length === 0) { RoCatUI.log("⚠ Tidak ada episode."); return; }
+        if (epList.length === 0) { RoCatUI.addAlert("Tidak ada episode.", "info"); return; }
         RoCatUI.addGrid(3, JSON.stringify(epList), "playEpisode");
     } catch (e) {
         RoCatUI.log("❌ openDetail: " + e.message);
@@ -663,7 +682,8 @@ function openDetail(payload) {
 // ---▶ Dipanggil saat episode diketuk — panggil pemutar HLS native ---
 function playEpisode(payload) {
     try {
-        var ep = JSON.parse(payload);
+        var ep = RoCat.safeParseJson(payload, {});
+        if (!ep || !ep.url) { RoCatUI.addAlert("Episode tidak valid.", "error"); return; }
         RoCatUI.clear();
         RoCatUI.addButton("🏠 Home", "onLaunch");
         RoCatUI.log("⏳ Menyiapkan stream: " + ep.title);
@@ -673,7 +693,7 @@ function playEpisode(payload) {
 
         // isStreamHls = true => ExoPlayer memakai HlsMediaSource.
         RoCatUI.addVideo(hlsUrl, ep.title, true, true);
-        RoCatUI.log("🎬 Putar inline dengan ExoPlayer native (fullscreen tersedia).");
+        RoCatUI.addAlert("Stream siap! Tekan 'Play Inline' untuk memutar.", "success");
     } catch (e) {
         RoCatUI.log("❌ playEpisode: " + e.message);
     }
@@ -702,19 +722,26 @@ function parseCards(html) {
 
 ## 6. Praktik Terbaik & Batasan
 
-1. **Selalu bungkus dalam `try/catch`** dan bicara via `RoCatUI.log`. Error tidak
-   menggagalkan app, tapi pengguna akan tahu sebab.
+1. **Selalu bungkus dalam `try/catch`** dan bicara via `RoCatUI.log`/`addAlert`. Error
+   tidak menggagalkan app, tapi pengguna akan tahu sebab.
 2. **Satu kanvas dimulai dari `onLaunch()`** — jangan lakukan fetch berat di luar
    fungsi (misal langsung saat load). Interaksi apa pun diawali oleh JavaScript.
-3. **Navigasi = `RoCatUI.clear()` + gambar ulang** (pola stack manual: simpan state
-   di variabel global skrip bila perlu).
-4. **Biasakan memilah varian HLS**: untuk stream seperti `anichin.stream`, fetch master
+3. **Navigasi = gambar ulang**. Gaya baru: `RoCat.render([{type:"clear"}, ...])` menggambar
+   ulang seluruh kanvas dalam satu panggilan (pola stack manual: simpan state di variabel
+   global skrip bila perlu).
+4. **Parsing payload JSON wajib `RoCat.safeParseJson(str, {})`**, bukan `JSON.parse`
+   langsung — payload grid yang rusak tidak boleh menghentikan skrip.
+5. **Biasakan memilah varian HLS**: untuk stream seperti `anichin.stream`, fetch master
    `.m3u8`, seleksi varian ber-resolusi, dan kirim URL varian `isStreamHls=true` agar
-   ExoPlayer tidak gagal mem-parse master yang ada catatan `#EXT-X-STREAM-INF` tanpa URI.
-5. **Data besar** (Base64 blob, file scrape) → utamakan `RoCatUI.decodeBase64` dan
+   ExoPlayer tidak gagal mem-parse master yang berisi `#EXT-X-STREAM-INF` tanpa URI.
+6. **Konten `<script>` (html5player, JSON-LD) adalah CDATA**: `text()` Jsoup mengembalikan
+   string kosong (`script.text` → `""`, `textOf(...)` tak pernah cocok). Baca **`innerHtml`**
+   wrapper RoCatDOM (isi kode JS mentah) dan, bila perlu, seleksi dulu dengan
+   `script:containsData(...)` yang didukung `RoCatDOM.find/select`.
+7. **Data besar** (Base64 blob, file scrape) → utamakan `RoCatUI.decodeBase64` dan
    `RoCatUI.save` (native, sinkron, dikendalikan).
-6. **Jangan andalkan `console.log` tanpa Rhino console** di luar Canvas: gunakan
-   `RoCatUI.log` untuk umpan balik visual.
+8. **Jangan andalkan `console.log` tanpa Rhino console** di luar Canvas: gunakan
+   `RoCatUI.log` untuk umpan balik visual dan `addJsonLog` untuk data struktur.
 
 ---
 
@@ -733,7 +760,11 @@ function parseCards(html) {
 | Network stealth / DoH / UA | `core/.../network/NetworkHelper.kt`, interceptor CF & Stealth |
 | Metadata Parser | `domain/.../script/ScriptMetadataParser.kt` |
 
-> Skrip nyata yang memakai seluruh API ini: `scrape_anichin.js` di root repo —
-> gunakan sebagai referensi kerja untuk pola `onLaunch` → `doSearch` → `openDetail`
-> → `openEpisode` + penanganan HLS sungguhan (decode base64 → master `.m3u8` →
-> pilih varian → `RoCatUI.addVideo(..., true, true)`).
+> Skrip nyata yang memakai seluruh API ini: `scrape_anichin.js` dan
+> `fixed_testscrape.js` (perbaikan draf `testscrape.txt`) di root repo — gunakan
+> sebagai referensi kerja:
+> `onLaunch`/`doSearch`/`openDetail` memakai `RoCat.render([...])`, payload dengan
+> `RoCat.safeParseJson`, status dengan `addAlert`, genre dengan `addBadgeGroup`,
+> debug stream dengan `addJsonLog`, dan penanganan HLS sungguhan (decode base64/
+> ekstraksi `html5player` via `innerHtml` → master `.m3u8` → pilih varian →
+> `RoCatUI.addVideo(..., true, true)`).
