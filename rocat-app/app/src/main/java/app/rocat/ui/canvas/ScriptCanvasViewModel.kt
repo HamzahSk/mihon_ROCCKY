@@ -12,6 +12,7 @@ import app.rocat.data.script.ScriptManager
 import app.rocat.domain.script.ExecuteScript
 import app.rocat.domain.script.GetScripts
 import app.rocat.scripting.api.ScriptResult
+import app.rocat.scripting.api.ScriptBrowserBridge
 import app.rocat.scripting.api.ScriptUiBridge
 import app.rocat.scripting.api.model.Script
 import app.rocat.storage.StorageManager
@@ -46,6 +47,7 @@ class ScriptCanvasViewModel(
     private val getScripts: GetScripts = Injekt.get(),
     private val scriptManager: ScriptManager = Injekt.get(),
     private val storageManager: StorageManager = Injekt.get(),
+    private val browserBridge: ScriptBrowserBridge = Injekt.get(),
 ) : StateViewModel<ScriptCanvasViewModel.State>(State()) {
 
     data class State(
@@ -163,12 +165,19 @@ class ScriptCanvasViewModel(
     /** The engine/environment pair used for every script-driven invocation. Built fresh
      *  per call: [ScriptManager] rebuilds the underlying engine when the user changes the
      *  network settings (custom User-Agent / DoH DNS, Tahap 20), so the scraper always
-     *  uses the latest configuration. */
+     *  uses the latest configuration. The [browserBridge] is attached so scripts can use
+     *  the `RoCatPage` headless-WebView global (Tahap 23, dual-mode scraping). */
     private val uiExecuteScript: ExecuteScript
         get() = ExecuteScript(
             engine = scriptManager.engine(),
-            environment = scriptManager.createEnvironment(uiBridge),
+            environment = scriptManager.createEnvironment(uiBridge, browserBridge),
         )
+
+    override fun onCleared() {
+        super.onCleared()
+        // Release the headless WebView so a finished canvas never leaks a live renderer.
+        browserBridge.close()
+    }
 
     init {
         viewModelScope.launch {

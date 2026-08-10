@@ -1,21 +1,34 @@
 // ==UserScript==
 // @name         XVideos Scraper
-// @version      3.0.0
+// @version      3.1.0
 // @description  Cari, baca detail, dan streaming video dari xvideos via RoCatUI.addVideo
+//               dengan dual-mode scraping: Mode Statis (fetch + RoCatDOM) + Mode
+//               Interaktif (RoCatPage / headless WebView) untuk halaman yang butuh JS.
 // @author       RoCat AI
 // @category     Anime
 // @icon         https://www.xvideos.com/favicon.ico
 // ==/UserScript==
 
 /**
- * XVideos Scraper v3 (fixed_testscrape.js) — skrip canvas RoCat (Tahap 23).
+ * XVideos Scraper v3.1 (fixed_testscrape.js) — skrip canvas RoCat (Tahap 23).
  *
- * Perbaikan dari draf `testscrape.txt` agar memakai API Tahap 22 yang lebih bersih:
+ * Demonstrasi arsitektur DUAL-MODE scraping engine:
+ *
+ *   Mode Statis (ringan, default):
+ *     `fetch()` + `RoCatDOM` untuk pencarian/home/detail — cepat & hemat daya.
+ *
+ *   Mode Interaktif (headless WebView, fallback):
+ *     `RoCatPage` saat HTML statis TIDAK memuat player (anti-bot / JS-generated) —
+ *     buka halaman di WebView tersembunyi, tunggu selector, eksekusi JS untuk
+ *     mengekstrak html5player, lalu `close()`.
+ *
+ * API Tahap 22/23 yang dipakai:
  *   - `RoCat.render([...])`          → menggambar seluruh kanvas dengan satu panggilan.
  *   - `RoCat.safeParseJson(str, {})` → parsing payload grid yang tidak pernah throw.
  *   - `RoCatUI.addAlert(...)`        → banner info/warning/error untuk status.
  *   - `RoCatUI.addBadgeGroup(...)`   → genre/status sebagai chip.
  *   - `RoCatUI.addJsonLog(...)`      → debug hasil ekstraksi stream.
+ *   - `RoCatPage.open/type/click/waitForSelector/evaluate/getHtml/close` (Tahap 23).
  *
  * Alur: onLaunch (home + pencarian) -> doSearch (grid hasil) -> openDetail
  * (detail video) -> openVideo (ekstrak URL dari script html5player, pilih
@@ -155,15 +168,29 @@ function openVideo(payloadStr) {
 
         var doc = RoCatDOM.parse(res.text());
         var script = extractPlayerScript(doc);
-        if (script === "") {
-            RoCatUI.addAlert("Tidak ditemukan script html5player di halaman video.", "warning");
-            return;
-        }
 
-        // Ekstrak URL video dari script html5player.
-        var low = extractVideoUrl(script, "setVideoUrlLow");
-        var high = extractVideoUrl(script, "setVideoUrlHigh");
-        var hls = extractVideoUrl(script, "setVideoHLS");
+        // --- Dual-mode stream extraction (Tahap 23) ---
+        var low = "";
+        var high = "";
+        var hls = "";
+        if (script !== "") {
+            // Mode Statis: HTML statis memuat script html5player → ekstrak langsung.
+            low = extractVideoUrl(script, "setVideoUrlLow");
+            high = extractVideoUrl(script, "setVideoUrlHigh");
+            hls = extractVideoUrl(script, "setVideoHLS");
+        } else {
+            // Mode Interaktif: player di-generate via JS (anti-bot/iframe) sehingga
+            // fetch() + Jsoup tidak bisa melihatnya. Render halaman di headless WebView,
+            // tunggu <script>, lalu ekstrak lewat evaluate().
+            RoCatUI.addAlert("Script html5player tidak ada di HTML statis — merender halaman via WebView...", "warning");
+            var live = extractViaHeadless(item.url);
+            if (live && (live.low || live.high || live.hls)) {
+                low = live.low;
+                high = live.high;
+                hls = live.hls;
+                RoCatUI.addJsonLog(live, "Hasil Mode Interaktif (RoCatPage)", true);
+            }
+        }
 
         var videos = [];
         if (low !== "" && low !== "undefined") videos.push({ url: low, quality: "Low" });
@@ -236,6 +263,49 @@ function extractPlayerScript(doc) {
         }
     }
     return "";
+}
+
+/**
+ * Mode Interaktif (Tahap 23): buka halaman video di headless WebView (`RoCatPage`),
+ * tunggu <script> muncul, lalu eksekusi JS untuk mengekstrak URL player html5player
+ * dari DOM yang sudah di-render — mengalahkan anti-bot / konten JS-generated yang
+ * tidak terlihat oleh fetch() + Jsoup. WebView selalu ditutup di `finally`.
+ */
+function extractViaHeadless(url) {
+    if (typeof RoCatPage === "undefined") return null;
+    try {
+        if (!RoCatPage.open(url, 20000)) {
+            RoCatUI.addAlert("Mode Interaktif: gagal membuka halaman (timeout).", "warning");
+            return null;
+        }
+        RoCatPage.waitForSelector("script", 8000);
+
+        var js = "(function(){ " +
+            "var out = { low: \"\", high: \"\", hls: \"\" }; " +
+            "var scripts = document.querySelectorAll(\"script\"); " +
+            "for (var i = 0; i < scripts.length; i++) { " +
+            "  var t = scripts[i].textContent || \"\"; " +
+            "  var m; " +
+            "  if (!out.low && (m = t.match(/setVideoUrlLow\\(['\"]([^'\"]*)['\"]\\)/))) out.low = m[1]; " +
+            "  if (!out.high && (m = t.match(/setVideoUrlHigh\\(['\"]([^'\"]*)['\"]\\)/))) out.high = m[1]; " +
+            "  if (!out.hls && (m = t.match(/setVideoHLS\\(['\"]([^'\"]*)['\"]\\)/))) out.hls = m[1]; " +
+            "} " +
+            "return out; " +
+            "})()";
+
+        var data = RoCatPage.evaluate(js);
+        if (!data || typeof data !== "object") {
+            RoCatUI.addAlert("Mode Interaktif: JS tidak mengembalikan data player.", "warning");
+            return null;
+        }
+        RoCatUI.addAlert("Mode Interaktif: halaman dirender WebView & player berhasil diekstrak.", "info");
+        return { low: data.low || "", high: data.high || "", hls: data.hls || "" };
+    } catch (e) {
+        RoCatUI.addAlert("Mode Interaktif gagal: " + e.message, "error");
+        return null;
+    } finally {
+        RoCatPage.close();
+    }
 }
 
 /** Ekstrak URL sumber dari pemanggilan html5player, mis. setVideoHLS("..."). */

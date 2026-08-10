@@ -28,6 +28,17 @@ interface ScriptEnvironment {
      */
     val ui: ScriptUiBridge?
         get() = null
+
+    /**
+     * Optional headless-browser bridge exposed to the script as the global `RoCatPage`
+     * (Tahap 23: dual-mode scraping). When non-null the engine installs the
+     * `RoCatPage.*` functions (`open`/`type`/`click`/`waitForSelector`/`evaluate`/
+     * `getHtml`/`close`) so scripts can switch from static `fetch()` + `RoCatDOM`
+     * scraping to interactive WebView automation in the same flow. `null` for plain
+     * executions or when the host has no browser available.
+     */
+    val browser: ScriptBrowserBridge?
+        get() = null
 }
 
 /**

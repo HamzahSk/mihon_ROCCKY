@@ -1,6 +1,7 @@
 package app.rocat.scripting.rhino
 
 import app.rocat.scripting.api.FetchResult
+import app.rocat.scripting.api.ScriptBrowserBridge
 import app.rocat.scripting.api.ScriptResult
 import app.rocat.scripting.api.ScriptUiBridge
 import app.rocat.scripting.api.model.DefaultScriptEnvironment
@@ -268,5 +269,76 @@ class FixedTestscrapeScraperTest {
         assertTrue("doSearch with empty query must not fail: $empty", empty is ScriptResult.Success)
         assertTrue(ui.calls.any { it.startsWith("alert:warning:") })
         assertEquals("no grid may be rendered for an empty search", true, ui.calls.none { it.startsWith("grid:") })
+    }
+
+    @Test
+    fun `openVideo falls back to headless RoCatPage when html5player is js generated`() = runBlocking {
+        // A detail page whose player is injected by JavaScript — invisible to fetch()+Jsoup.
+        val noPlayerHtml = """
+            <html><head>
+              <meta property="og:title" content="JS Player Clip">
+            </head><body>
+              <h2 class="page-title">JS Player Clip</h2>
+              <div id="player"></div>
+              <script type="text/javascript">// player di-generate via JS</script>
+            </body></html>
+        """.trimIndent()
+        val interceptor = Interceptor { chain ->
+            Response.Builder()
+                .request(chain.request())
+                .protocol(Protocol.HTTP_1_1)
+                .code(200)
+                .message("OK")
+                .body(noPlayerHtml.toResponseBody("text/html; charset=utf-8".toMediaType()))
+                .build()
+        }
+        val engine = RhinoScriptEngine(OkHttpClient.Builder().addInterceptor(interceptor).build())
+        val ui = UiRecorder()
+        val browser = object : ScriptBrowserBridge {
+            var closed = false
+            override fun open(url: String, timeoutMs: Long): Boolean {
+                assertTrue("must open the video page", url.contains("xvideos.com/video9"))
+                return true
+            }
+            override fun type(selector: String, text: String): Boolean = true
+            override fun click(selector: String): Boolean = true
+            override fun waitForSelector(selector: String, timeoutMs: Long): Boolean = true
+            override fun evaluate(script: String): String = when {
+                script.contains("setVideoUrlLow") ->
+                    """{"low":"https://cdn.xvideos.test/low.mp4","high":"https://cdn.xvideos.test/high.mp4","hls":"https://cdn.xvideos.test/hls/master.m3u8"}"""
+                else -> "null"
+            }
+            override fun getHtml(): String = noPlayerHtml
+            override fun close() { closed = true }
+        }
+        val env = DefaultScriptEnvironment(
+            fetchImpl = { _, _, _, _ -> FetchResult(200, emptyMap(), "") },
+            ui = ui,
+            browser = browser,
+        )
+        val s = script()
+        val videoJson = """{"url":"https://www.xvideos.com/video9/js-player/","title":"JS Player Clip"}"""
+        val video = engine.invokeFunction(s, env, "openVideo", listOf(videoJson))
+        assertTrue("openVideo failed: $video", video is ScriptResult.Success)
+
+        // The script must have gone interactive (warning banner) and extracted via JS.
+        assertTrue(
+            "expected an interactive-mode banner, got ${ui.calls.filter { it.startsWith("alert:") }}",
+            ui.calls.any { it.startsWith("alert:warning:") && it.contains("WebView") },
+        )
+        assertTrue(
+            "expected a headless-result jsonLog card",
+            ui.calls.any { it.startsWith("jsonLog:") && it.contains("Mode Interaktif") },
+        )
+
+        // HLS master came from the headless extraction (static HTML had no player).
+        val videoCall = ui.calls.firstOrNull { it.startsWith("videoCard:") }
+        assertNotNull("expected an HLS video card via headless extraction", videoCall)
+        assertTrue(
+            "expected headless master.m3u8, got $videoCall",
+            videoCall!!.startsWith("videoCard:https://cdn.xvideos.test/hls/master.m3u8:"),
+        )
+        assertTrue("must pass isStreamHls=true + allowDownload=true", videoCall.endsWith(":true:true"))
+        assertTrue("the headless WebView must be released", browser.closed)
     }
 }

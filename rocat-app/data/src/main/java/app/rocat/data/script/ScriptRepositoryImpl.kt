@@ -4,6 +4,7 @@ import app.rocat.core.common.network.NetworkHelper
 import app.rocat.core.common.util.JsonUtil
 import app.rocat.domain.script.ScriptRepository
 import app.rocat.scripting.api.FetchResult
+import app.rocat.scripting.api.ScriptBrowserBridge
 import app.rocat.scripting.api.ScriptEngine
 import app.rocat.scripting.api.ScriptEnvironment
 import app.rocat.scripting.api.ScriptUiBridge
@@ -151,12 +152,16 @@ class ScriptManager(
     /**
      * Builds a fresh environment wired to the same network stack but exposing [ui] as
      * the script's global `RoCatUI` object, letting a script drive a dynamic Compose
-     * UI (used by the canvas/playground).
+     * UI (used by the canvas/playground). When [browser] is provided it is exposed as
+     * the script's global `RoCatPage` (Tahap 23: dual-mode scraping), letting a script
+     * switch from static `fetch()` scraping to interactive headless-WebView automation.
      */
-    fun createEnvironment(ui: ScriptUiBridge? = null): ScriptEnvironment = DefaultScriptEnvironment(
-        fetchImpl = fetchImplOrThrow(),
-        ui = ui,
-    )
+    fun createEnvironment(ui: ScriptUiBridge? = null, browser: ScriptBrowserBridge? = null): ScriptEnvironment =
+        DefaultScriptEnvironment(
+            fetchImpl = fetchImplOrThrow(),
+            ui = ui,
+            browser = browser,
+        )
 
     private fun fetchImplOrThrow(): suspend (String, String, Map<String, String>, String?) -> FetchResult {
         refresh()

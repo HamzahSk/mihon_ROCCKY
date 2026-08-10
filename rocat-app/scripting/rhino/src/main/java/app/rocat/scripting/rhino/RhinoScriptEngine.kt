@@ -202,6 +202,15 @@ class RhinoScriptEngine(
             ScriptableObject.putProperty(scope, "document", docWrapper)
         }
 
+        // Tahap 23: expose the headless-browser bridge as the global `RoCatPage`.
+        // Registered only when the host supplies a ScriptBrowserBridge so plain
+        // executions (and unit tests without a browser) simply see `typeof RoCatPage
+        // === "undefined"`.
+        val browserBridge = environment.browser
+        if (browserBridge != null) {
+            ScriptableObject.putProperty(scope, "RoCatPage", RoCatPageBridge(cx, scope, browserBridge))
+        }
+
         // Tahap 22.1: auto-inject the universal core wrapper (`RoCat`) before user code.
         // It always exists — render()/safeParseJson()/fetchJson() degrade gracefully when
         // there is no RoCatUI bridge (e.g. plain executions).
