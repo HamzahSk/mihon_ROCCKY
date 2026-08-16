@@ -43,12 +43,12 @@ jobs:
               apiKey: HCNSEC_API_KEY
               api: openai-completions
               models:
-                - id: auto
-                  name: Proxy Auto Model
+                - id: MiniMax-M3
+                  name: Proxy MiniMax-M3 Model
           EOF
           
           # --- JALANKAN OMP ---
-          omp --model hcnsec_proxy/auto -p "$(cat prompt.txt)" || true
+          omp --model hcnsec_proxy/MiniMax-M3 -p "$(cat prompt.txt)" || true
 
       - name: Collect Changed and New Files
         run: |
