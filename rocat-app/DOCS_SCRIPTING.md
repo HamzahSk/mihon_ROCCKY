@@ -166,7 +166,7 @@ function onExtract(inputs) {
 
 ### 2.2 Media & Pratinjau
 
-#### `RoCatUI.addImage(url, title, allowDownload)`
+#### `RoCatUI.addImage(url, title, allowDownload, headers)`
 Menampilkan kartu pratinjau gambar (dimuat dengan Coil).
 
 | Parameter | Tipe | Default | Deskripsi |
@@ -174,6 +174,7 @@ Menampilkan kartu pratinjau gambar (dimuat dengan Coil).
 | `url` | `string` | — | URL gambar. |
 | `title` | `string` | `""` | Judul tampil di atas gambar. |
 | `allowDownload` | `boolean` | `true` | `true` → tampilkan tombol "simpan ke folder scrape". |
+| `headers` | `object` \| `string` | `{}` | **Tahap 24.1** — HTTP header tambahan (objek `{ "Referer": "https://…" }` atau JSON string). Dikirim saat memuat gambar AND saat mengunduhnya. |
 
 Contoh penutup sampul di halaman detail:
 
@@ -182,7 +183,7 @@ RoCatUI.addImage(coverUrl, title, true);   // dengan tombol download
 RoCatUI.addImage(coverUrl, title, false);  // tanpa download
 ```
 
-#### `RoCatUI.addVideo(url, title, isStreamHls, allowDownload)`
+#### `RoCatUI.addVideo(url, title, isStreamHls, allowDownload, headers)`
 Menampilkan kartu video dengan **pemutar inline Media3/ExoPlayer native** + tombol
 download dan toggle full screen.
 
@@ -192,6 +193,7 @@ download dan toggle full screen.
 | `title` | `string` | `""` | Judul di kartu. |
 | `isStreamHls` | `boolean` | `false` | `true` → dikonfigurasi sebagai **HLS media source**. |
 | `allowDownload` | `boolean` | `true` | Tampilkan/sembunyikan tombol unduh. |
+| `headers` | `object` \| `string` | `{}` | **Tahap 24.1** — HTTP header tambahan untuk streaming HLS (dipakai pada request playlist + segment) dan unduhan. |
 
 **Penting — HLS otomatis memakai ExoPlayer native.** Pemutar memilih
 `HlsMediaSource` bila `isStreamHls === true` **atau** URL mengandung `.m3u8`
@@ -210,7 +212,22 @@ Peninggalan **backward-compatibility** — tetap tersedia dan berfungsi:
 - `videoPreview(url)` → mode lama yang membuka video lewat `Intent.ACTION_VIEW`
   (keluar ke pemutar luar). **Disarankan beralih ke `addVideo`** yang memutar inline.
 
-### 2.3 Layout — `RoCatUI.addGrid(columns, itemsJson, onClickFunction)`
+> **Otomatis `Referer` (Tahap 24.1).** Header yang Anda berikan menang mutlak. Namun
+> bila `headers` **tidak** memuat `Referer`, aplikasi mengisinya secara otomatis dari
+> origin URL media; jika ada pattern `@match`/`@include` pada metadata skrip, origin
+> `@match` dipakai lebih dulu (fallback ke origin URL media). Ini mencukupi untuk
+> hotlink-protection umum tanpa Anda perlu menulis `Referer` manual. Contoh kasus
+> video `html5player` yang butuh `Referer` situs asal:
+
+```javascript
+RoCatUI.addVideo(
+    "https://anichin.stream/play/abc123",
+    "EP 1", true, true,
+    { "Referer": "https://anichin.stream/" }   // wajib bila server memverifikasi asal
+);
+```
+
+### 2.3 Layout — `RoCatUI.addGrid(columns, itemsJson, onClickFunction, headers)`
 
 Membuat grid media ala Mihon.
 
@@ -219,6 +236,7 @@ Membuat grid media ala Mihon.
 | `columns` | `number` | Jumlah kolom (di-clamp `1..8`). |
 | `itemsJson` | `string` | **JSON array** objek (lihat format di bawah). |
 | `onClickFunction` | `string` | Nama fungsi yang dipanggil saat tile diketuk, dengan **payload JSON string** item tsb. |
+| `headers` | `object` \| `string` | **Tahap 24.1** — HTTP header tambahan yang diterapkan pada **tiap cover** grid (opsional). |
 
 **Format JSON**: array dari objek; tiap objek minimal membawa `title` dan `image`
 (URL). Sifat tambahan lain (`id`, `url`, `episode`, dsb.) **dipertahankan** lalu
@@ -292,7 +310,7 @@ tanpa WebView. Tautan dibuka di browser sistem.
 RoCatUI.addHtmlPreview("<b>" + title + "</b><br>" + sinopsis, "Sinopsis");
 ```
 
-#### `RoCatUI.addAudio(url, title, allowDownload)`
+#### `RoCatUI.addAudio(url, title, allowDownload, headers)`
 Kartu pemutar audio inline (Play/Pause + seek bar) dengan tombol unduh opsional.
 
 | Parameter | Tipe | Default | Deskripsi |
@@ -300,6 +318,7 @@ Kartu pemutar audio inline (Play/Pause + seek bar) dengan tombol unduh opsional.
 | `url` | `string` | — | URL file audio (MP3/M4A/…). |
 | `title` | `string` | `""` | Judul kartu. |
 | `allowDownload` | `boolean` | `true` | Tampilkan tombol "Unduh Audio" ke folder scrape. |
+| `headers` | `object` \| `string` | `{}` | **Tahap 24.1** — HTTP header tambahan untuk streaming audio dan unduhan. |
 
 #### `RoCatUI.addAlert(message, type)`
 Banner ber-ikon berwarna untuk status singkat.
@@ -338,14 +357,14 @@ kunci `type` (+ field sesuai tipe). Deskriptor yang salah/null diabaikan tanpa e
 | `"clear"` / `"reset"` | — | `RoCatUI.clear()` |
 | `"input"` | `id`, `hint` | `RoCatUI.addInput(id, hint)` |
 | `"button"` | `label`, `fn` (alias `function`/`onClick`) | `RoCatUI.addButton(label, fn)` |
-| `"image"` | `url` (alias `src`), `title`, `download` | `RoCatUI.addImage(url, title, download)` |
-| `"video"` | `url`, `title`, `hls`, `download` | `RoCatUI.addVideo(url, title, hls, download)` |
-| `"audio"` | `url`, `title`, `download` | `RoCatUI.addAudio(url, title, download)` |
+| `"image"` | `url` (alias `src`), `title`, `download`, `headers` | `RoCatUI.addImage(url, title, download, headers)` |
+| `"video"` | `url`, `title`, `hls`, `download`, `headers` | `RoCatUI.addVideo(url, title, hls, download, headers)` |
+| `"audio"` | `url`, `title`, `download`, `headers` | `RoCatUI.addAudio(url, title, download, headers)` |
 | `"json"` | `data` (alias `json`), `title`, `copy` | `RoCatUI.addJsonLog(data, title, copy)` |
 | `"html"` | `html` (alias `content`), `title` | `RoCatUI.addHtmlPreview(html, title)` |
 | `"alert"` | `message` (alias `text`), `level` | `RoCatUI.addAlert(message, level)` |
 | `"badges"` | `badges` (alias `items`/`list`) | `RoCatUI.addBadgeGroup(badges)` |
-| `"grid"` | `columns`, `items` (alias `entries`), `onClick` (alias `fn`) | `RoCatUI.addGrid(columns, items, onClick)` |
+| `"grid"` | `columns`, `items` (alias `entries`), `onClick` (alias `fn`), `headers` | `RoCatUI.addGrid(columns, items, onClick, headers)` |
 | `"log"` | `text` (alias `message`) | `RoCatUI.log(text)` |
 
 Contoh — membandingkan gaya lama vs baru:
@@ -660,8 +679,8 @@ function openDetail(payload) {
         if (!res.ok) { RoCatUI.addAlert("Detail gagal (" + res.status + ").", "error"); return; }
 
         var doc = RoCatDOM.parse(res.text());
+        // header (Tahap 24.1) opsional; tanpa "Referer" diisi otomatis dari @match.
         RoCatUI.addImage(doc.attrOf(".cover img", "src") || item.image, item.title, true);
-
         var genres = doc.textsOf(".genre-tags a");
         if (genres.length > 0) RoCatUI.addBadgeGroup(JSON.stringify(genres)); // chip genre
         RoCatUI.log(doc.textOf(".sinopsis") || "No synopsis.");
@@ -692,7 +711,9 @@ function playEpisode(payload) {
         var hlsUrl = "https://cdn.contoh.anime/hls/ep" + (ep.url || "").replace(/\D+/g, "") + ".m3u8";
 
         // isStreamHls = true => ExoPlayer memakai HlsMediaSource.
-        RoCatUI.addVideo(hlsUrl, ep.title, true, true);
+        // headers opsional (Tahap 24.1): wajib saat server memverifikasi asal (mis.
+        // html5player); tanpa "Referer" aplikasi mengisinya otomatis dari @match/URL.
+        RoCatUI.addVideo(hlsUrl, ep.title, true, true, { "Referer": BASE + "/" });
         RoCatUI.addAlert("Stream siap! Tekan 'Play Inline' untuk memutar.", "success");
     } catch (e) {
         RoCatUI.log("❌ playEpisode: " + e.message);

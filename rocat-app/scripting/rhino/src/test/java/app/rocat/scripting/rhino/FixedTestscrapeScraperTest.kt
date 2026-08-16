@@ -55,15 +55,15 @@ class FixedTestscrapeScraperTest {
         override fun addButton(label: String, functionName: String) { calls += "button:$label:$functionName" }
         override fun thumbnailPreview(url: String) { calls += "thumb:$url" }
         override fun videoPreview(url: String) { calls += "video:$url" }
-        override fun addImage(url: String, title: String, allowDownload: Boolean) {
-            calls += "image:$url:$title:$allowDownload"
+        override fun addImage(url: String, title: String, allowDownload: Boolean, headers: Map<String, String>) {
+            calls += "image:$url:$title:$allowDownload:${headers.toSortedMap()}"
         }
-        override fun addVideo(url: String, title: String, isStreamHls: Boolean, allowDownload: Boolean) {
-            calls += "videoCard:$url:$title:$isStreamHls:$allowDownload"
+        override fun addVideo(url: String, title: String, isStreamHls: Boolean, allowDownload: Boolean, headers: Map<String, String>) {
+            calls += "videoCard:$url:$title:$isStreamHls:$allowDownload:${headers.toSortedMap()}"
         }
         override fun clear() { calls += "clear" }
-        override fun addGrid(columns: Int, itemsJsonString: String, onClickFunction: String) {
-            calls += "grid:$columns:$onClickFunction:$itemsJsonString"
+        override fun addGrid(columns: Int, itemsJsonString: String, onClickFunction: String, headers: Map<String, String>) {
+            calls += "grid:$columns:$onClickFunction:$itemsJsonString:${headers.toSortedMap()}"
         }
         override fun log(text: String) { calls += "log:$text" }
         override fun saveFile(fileName: String, content: String, mimeType: String): String {
@@ -76,8 +76,8 @@ class FixedTestscrapeScraperTest {
         override fun addHtmlPreview(htmlContent: String, title: String) {
             calls += "html:$title:$htmlContent"
         }
-        override fun addAudio(url: String, title: String, allowDownload: Boolean) {
-            calls += "audio:$url:$title:$allowDownload"
+        override fun addAudio(url: String, title: String, allowDownload: Boolean, headers: Map<String, String>) {
+            calls += "audio:$url:$title:$allowDownload:${headers.toSortedMap()}"
         }
         override fun addAlert(message: String, type: String) {
             calls += "alert:$type:$message"
@@ -238,7 +238,7 @@ class FixedTestscrapeScraperTest {
             "expected best VALID variant (720p), got $videoCall",
             videoCall!!.startsWith("videoCard:https://cdn.xvideos.test/hls/720.m3u8:"),
         )
-        assertTrue("must pass isStreamHls=true + allowDownload=true", videoCall.endsWith(":true:true"))
+        assertTrue("must pass isStreamHls=true + allowDownload=true", videoCall.endsWith(":true:true:{}"))
         // Debug JSON card must list every source the script extracted.
         val jsonLog = ui.calls.firstOrNull { it.startsWith("jsonLog:") }
         assertNotNull("expected a jsonLog debug card", jsonLog)
@@ -338,7 +338,7 @@ class FixedTestscrapeScraperTest {
             "expected headless master.m3u8, got $videoCall",
             videoCall!!.startsWith("videoCard:https://cdn.xvideos.test/hls/master.m3u8:"),
         )
-        assertTrue("must pass isStreamHls=true + allowDownload=true", videoCall.endsWith(":true:true"))
+        assertTrue("must pass isStreamHls=true + allowDownload=true", videoCall.endsWith(":true:true:{}"))
         assertTrue("the headless WebView must be released", browser.closed)
     }
 }

@@ -284,15 +284,15 @@ class RhinoScriptEngineTest {
         override fun addButton(label: String, functionName: String) { calls.add("button:$label:$functionName") }
         override fun thumbnailPreview(url: String) { calls.add("thumbnail:$url") }
         override fun videoPreview(url: String) { calls.add("video:$url") }
-        override fun addImage(url: String, title: String, allowDownload: Boolean) {
-            calls.add("image:$url:$title:$allowDownload")
+        override fun addImage(url: String, title: String, allowDownload: Boolean, headers: Map<String, String>) {
+            calls.add("image:$url:$title:$allowDownload:${headers.toSortedMap()}")
         }
-        override fun addVideo(url: String, title: String, isStreamHls: Boolean, allowDownload: Boolean) {
-            calls.add("videoCard:$url:$title:$isStreamHls:$allowDownload")
+        override fun addVideo(url: String, title: String, isStreamHls: Boolean, allowDownload: Boolean, headers: Map<String, String>) {
+            calls.add("videoCard:$url:$title:$isStreamHls:$allowDownload:${headers.toSortedMap()}")
         }
         override fun clear() { calls.add("clear") }
-        override fun addGrid(columns: Int, itemsJsonString: String, onClickFunction: String) {
-            calls.add("grid:$columns:$onClickFunction:$itemsJsonString")
+        override fun addGrid(columns: Int, itemsJsonString: String, onClickFunction: String, headers: Map<String, String>) {
+            calls.add("grid:$columns:$onClickFunction:$itemsJsonString:${headers.toSortedMap()}")
         }
         override fun log(text: String) { calls.add("log:$text") }
         override fun saveFile(fileName: String, content: String, mimeType: String): String {
@@ -417,8 +417,8 @@ class RhinoScriptEngineTest {
         assertTrue(result is ScriptResult.Success)
         assertEquals(
             listOf(
-                "image:https://example.com/photo.jpg:Sunset:true",
-                "image:https://example.com/hidden.jpg:Locked:false",
+                "image:https://example.com/photo.jpg:Sunset:true:{}",
+                "image:https://example.com/hidden.jpg:Locked:false:{}",
             ),
             ui.calls,
         )
@@ -443,8 +443,8 @@ class RhinoScriptEngineTest {
         assertTrue(result is ScriptResult.Success)
         assertEquals(
             listOf(
-                "videoCard:https://example.com/stream/master.m3u8:Live:true:true",
-                "videoCard:https://example.com/clip.mp4:Clip:false:true",
+                "videoCard:https://example.com/stream/master.m3u8:Live:true:true:{}",
+                "videoCard:https://example.com/clip.mp4:Clip:false:true:{}",
             ),
             ui.calls,
         )

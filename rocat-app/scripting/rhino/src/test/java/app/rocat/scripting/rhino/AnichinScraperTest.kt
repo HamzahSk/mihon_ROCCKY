@@ -53,15 +53,15 @@ class AnichinScraperTest {
         override fun addButton(label: String, functionName: String) { calls += "button:$label:$functionName" }
         override fun thumbnailPreview(url: String) { calls += "thumb:$url" }
         override fun videoPreview(url: String) { calls += "video:$url" }
-        override fun addImage(url: String, title: String, allowDownload: Boolean) {
-            calls += "image:$url:$title:$allowDownload"
+        override fun addImage(url: String, title: String, allowDownload: Boolean, headers: Map<String, String>) {
+            calls += "image:$url:$title:$allowDownload:${headers.toSortedMap()}"
         }
-        override fun addVideo(url: String, title: String, isStreamHls: Boolean, allowDownload: Boolean) {
-            calls += "videoCard:$url:$title:$isStreamHls:$allowDownload"
+        override fun addVideo(url: String, title: String, isStreamHls: Boolean, allowDownload: Boolean, headers: Map<String, String>) {
+            calls += "videoCard:$url:$title:$isStreamHls:$allowDownload:${headers.toSortedMap()}"
         }
         override fun clear() { calls += "clear" }
-        override fun addGrid(columns: Int, itemsJsonString: String, onClickFunction: String) {
-            calls += "grid:$columns:$onClickFunction:$itemsJsonString"
+        override fun addGrid(columns: Int, itemsJsonString: String, onClickFunction: String, headers: Map<String, String>) {
+            calls += "grid:$columns:$onClickFunction:$itemsJsonString:${headers.toSortedMap()}"
         }
         override fun log(text: String) { calls += "log:$text" }
         override fun saveFile(fileName: String, content: String, mimeType: String): String {
@@ -242,7 +242,7 @@ class AnichinScraperTest {
             "expected best variant (720p), got $videoCall",
             videoCall!!.startsWith("videoCard:https://cdn.example/720.m3u8:"),
         )
-        assertTrue("must pass isStreamHls=true + allowDownload=true", videoCall.endsWith(":true:true"))
+        assertTrue("must pass isStreamHls=true + allowDownload=true", videoCall.endsWith(":true:true:{}"))
         assertTrue("title must include episode + server", videoCall.contains("Perfect World - Ep 281"))
         assertTrue("title must include server name", videoCall.contains("Premium 1"))
         // The non-HLS OK.ru mirror must only be listed in the log, never rendered as a card.

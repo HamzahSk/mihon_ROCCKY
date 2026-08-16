@@ -25,7 +25,9 @@ import java.util.Locale
 
     /**
      * Streams the resource at [url] into [folder] as [fileName] with MIME [mimeType].
-     * [onProgress] is invoked with a 0..1 fraction as chunks arrive.
+     * [headers] (Tahap 24.1) are extra HTTP headers (e.g. a `Referer`) added to the
+     * download request so hotlink-protected hosts serve the file. [onProgress] is
+     * invoked with a 0..1 fraction as chunks arrive.
      *
      * @return the content [android.net.Uri] string of the written file, or null when the
      *   download failed / storage is unavailable.
@@ -35,10 +37,11 @@ import java.util.Locale
         folder: DocumentFile?,
         fileName: String,
         mimeType: String = "application/octet-stream",
+        headers: Map<String, String> = emptyMap(),
         onProgress: (Float) -> Unit = {},
     ): String? = withContext(Dispatchers.IO) {
         if (folder == null) return@withContext null
-        val bytes = fetchBytes(url, onProgress) ?: return@withContext null
+        val bytes = fetchBytes(url, headers, onProgress) ?: return@withContext null
         storageManager.saveFileToScrapeFolder(
             folder = folder,
             fileName = fileName,
@@ -55,15 +58,18 @@ import java.util.Locale
         url: String,
         folder: DocumentFile?,
         mimeType: String = "application/octet-stream",
+        headers: Map<String, String> = emptyMap(),
         onProgress: (Float) -> Unit = {},
     ): String? {
         val fileName = inferFileName(url, mimeType)
-        return download(url, folder, fileName, mimeType, onProgress)
+        return download(url, folder, fileName, mimeType, headers, onProgress)
     }
 
     /** Streams the whole body of [url] into memory, reporting download progress. */
-    private fun fetchBytes(url: String, onProgress: (Float) -> Unit): ByteArray? = runCatching {
-        val request = Request.Builder().url(url).build()
+    private fun fetchBytes(url: String, headers: Map<String, String>, onProgress: (Float) -> Unit): ByteArray? = runCatching {
+        val request = Request.Builder().url(url).apply {
+            headers.forEach { (name, value) -> addHeader(name, value) }
+        }.build()
         networkHelper.client().newCall(request).execute().use { response ->
             if (!response.isSuccessful) return@runCatching null
             val body = response.body ?: return@runCatching null

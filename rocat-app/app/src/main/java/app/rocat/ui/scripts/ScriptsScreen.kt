@@ -1,9 +1,12 @@
 package app.rocat.ui.scripts
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,9 +42,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -52,6 +59,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -195,6 +203,8 @@ fun ScriptsScreen(
                                     onToggle = { viewModel.setEnabled(script.id, it) },
                                     onClick = { onOpenScript(script.id) },
                                     onLongClick = { actionScript = script },
+                                    onEdit = { onEditScript(script.id) },
+                                    onDelete = { deleteTarget = script },
                                 )
                             }
                         }
@@ -273,52 +283,108 @@ private fun ScriptListItem(
     onToggle: (Boolean) -> Unit,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
 ) {
-    Card(
+    val interactionSource = remember { MutableInteractionSource() }
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            when (value) {
+                SwipeToDismissBoxValue.EndToStart -> {
+                    onDelete()
+                    false
+                }
+                SwipeToDismissBoxValue.StartToEnd -> {
+                    onEdit()
+                    false
+                }
+                else -> true
+            }
+        },
+    )
+    SwipeToDismissBox(
+        state = dismissState,
+        backgroundContent = {
+            val direction = dismissState.dismissDirection
+            val bg by animateColorAsState(
+                targetValue = when (direction) {
+                    SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.errorContainer
+                    SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.secondaryContainer
+                    else -> Color.Transparent
+                },
+                label = "swipeBackground",
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(bg, RoundedCornerShape(16.dp)),
+                contentAlignment = when (direction) {
+                    SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
+                    SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+                    else -> Alignment.CenterEnd
+                },
+            ) {
+                if (direction == SwipeToDismissBoxValue.EndToStart) {
+                    Icon(Icons.Filled.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.onErrorContainer)
+                } else if (direction == SwipeToDismissBoxValue.StartToEnd) {
+                    Icon(Icons.Filled.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
+                }
+            }
+        },
+        enableDismissFromStartToEnd = true,
+        enableDismissFromEndToStart = true,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 4.dp)
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = onLongClick,
-            ),
+            .padding(horizontal = 12.dp, vertical = 4.dp),
     ) {
-        ListItem(
-            leadingContent = { ScriptCover(iconUrl = script.icon) },
-            headlineContent = {
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = script.name,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false),
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = "v${script.version}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .combinedClickable(
+                    interactionSource = interactionSource,
+                    indication = ripple(),
+                    onClick = onClick,
+                    onLongClick = onLongClick,
+                ),
+        ) {
+            ListItem(
+                leadingContent = { ScriptCover(iconUrl = script.icon) },
+                headlineContent = {
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = script.name,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false),
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = "v${script.version}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        StatusChip(enabled = script.enabled)
                     }
-                    Spacer(Modifier.height(6.dp))
-                    StatusChip(enabled = script.enabled)
-                }
-            },
-            supportingContent = {
-                Text(
-                    text = script.description.ifBlank { script.author.ifBlank { stringResource(StringKey.noDescription) } },
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            },
-            trailingContent = {
-                Switch(checked = script.enabled, onCheckedChange = onToggle)
-            },
-        )
+                },
+                supportingContent = {
+                    Text(
+                        text = script.description.ifBlank { script.author.ifBlank { stringResource(StringKey.noDescription) } },
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
+                trailingContent = {
+                    Switch(checked = script.enabled, onCheckedChange = onToggle)
+                },
+            )
+        }
     }
 }
 
@@ -350,15 +416,27 @@ private fun ScriptCover(iconUrl: String) {
 
 @Composable
 private fun StatusChip(enabled: Boolean) {
-    val bg = if (enabled) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
-    val fg = if (enabled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-    Text(
-        text = stringResource(if (enabled) StringKey.active else StringKey.inactive),
-        style = MaterialTheme.typography.labelSmall,
-        color = fg,
-        modifier = Modifier
-            .clip(RoundedCornerShape(50))
-            .background(bg)
-            .padding(horizontal = 8.dp, vertical = 3.dp),
+    val bg by animateColorAsState(
+        targetValue = if (enabled) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+        label = "statusBackground",
     )
+    val fg by animateColorAsState(
+        targetValue = if (enabled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+        label = "statusForeground",
+    )
+    AnimatedContent(
+        targetState = enabled,
+        label = "statusLabel",
+        contentAlignment = Alignment.CenterStart,
+    ) { isEnabled ->
+        Text(
+            text = stringResource(if (isEnabled) StringKey.active else StringKey.inactive),
+            style = MaterialTheme.typography.labelSmall,
+            color = fg,
+            modifier = Modifier
+                .clip(RoundedCornerShape(50))
+                .background(bg)
+                .padding(horizontal = 8.dp, vertical = 3.dp),
+        )
+    }
 }

@@ -29,19 +29,35 @@ interface ScriptUiBridge {
     /**
      * Renders an image preview card (Tahap 18.1). [title] is shown above the image and
      * [allowDownload] toggles the "save to scrape folder" button on the card.
+     *
+     * [headers] (Tahap 24.1) are extra HTTP headers sent while loading the image with
+     * Coil and while downloading it. Many image hosts block hotlinking without a
+     * `Referer`; scripts can pass one explicitly. When the map does not contain a
+     * `Referer` the engine fills it in automatically (origin of [url] or the script's
+     * metadata `@match` base URL).
      */
-    fun addImage(url: String, title: String = "", allowDownload: Boolean = true)
+    fun addImage(
+        url: String,
+        title: String = "",
+        allowDownload: Boolean = true,
+        headers: Map<String, String> = emptyMap(),
+    )
 
     /**
      * Renders a video preview card (Tahap 18.2/18.3) with an inline Media3 (ExoPlayer)
      * player and a download button. Set [isStreamHls] to `true` for `.m3u8` streams so
      * the player configures an HLS media source.
+     *
+     * [headers] (Tahap 24.1) are sent by ExoPlayer for the playlist and every media
+     * segment (via `DefaultHttpDataSource.Factory.setDefaultRequestProperties`) and by
+     * the downloader. HLS providers frequently return HTTP 403 without a `Referer`.
      */
     fun addVideo(
         url: String,
         title: String = "",
         isStreamHls: Boolean = false,
         allowDownload: Boolean = true,
+        headers: Map<String, String> = emptyMap(),
     )
 
     /** Clears every currently rendered component. */
@@ -54,7 +70,12 @@ interface ScriptUiBridge {
      * JSON payload as a string argument — the script can then "navigate" by calling
      * [clear] and redrawing the detail UI.
      */
-    fun addGrid(columns: Int, itemsJsonString: String, onClickFunction: String)
+    fun addGrid(
+        columns: Int,
+        itemsJsonString: String,
+        onClickFunction: String,
+        headers: Map<String, String> = emptyMap(),
+    )
 
     /** Appends [text] to the script log area. */
     fun log(text: String)
@@ -96,7 +117,12 @@ interface ScriptUiBridge {
      * Play/Pause, a seekable progress bar, and (when [allowDownload]) a "download to
      * scrape folder" button wired to the SAF pipeline.
      */
-    fun addAudio(url: String, title: String = "", allowDownload: Boolean = true) {
+    fun addAudio(
+        url: String,
+        title: String = "",
+        allowDownload: Boolean = true,
+        headers: Map<String, String> = emptyMap(),
+    ) {
         // Default no-op.
     }
 

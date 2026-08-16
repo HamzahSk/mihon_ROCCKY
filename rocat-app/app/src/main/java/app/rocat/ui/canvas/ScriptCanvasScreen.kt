@@ -1,5 +1,10 @@
 package app.rocat.ui.canvas
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -55,7 +60,7 @@ import app.rocat.ui.components.VideoPreviewCard
  * automatically, and the script draws inputs, buttons, previews, a 3-column grid, or
  * redraws the whole page (Search -> Grid -> Detail) through `RoCatUI`.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ScriptCanvasScreen(
     scriptId: String,
@@ -106,88 +111,104 @@ fun ScriptCanvasScreen(
             ) {
                 if (components.isEmpty() && state.output.isEmpty() && !state.executing) {
                     item(key = "hint") {
-                        CanvasEmptyHint(onRefresh = viewModel::rebuildCanvas)
+                        AnimatedVisibility(
+                            visible = components.isEmpty() && state.output.isEmpty() && !state.executing,
+                            enter = fadeIn(),
+                            exit = fadeOut(),
+                        ) {
+                            CanvasEmptyHint(onRefresh = viewModel::rebuildCanvas)
+                        }
                     }
                 }
 
                 itemsIndexed(components, key = { index, _ -> index }) { _, component ->
-                    when (component) {
-                        is ScriptUIComponent.Input -> InputComponent(
-                            component = component,
-                            onValueChange = viewModel::updateInputValue,
-                        )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .animateItem()
+                            .animateContentSize(),
+                    ) {
+                        when (component) {
+                            is ScriptUIComponent.Input -> InputComponent(
+                                component = component,
+                                onValueChange = viewModel::updateInputValue,
+                            )
 
-                        is ScriptUIComponent.Button -> ButtonComponent(
-                            label = component.label,
-                            enabled = !state.executing,
-                            onClick = { viewModel.onScriptButton(component.functionName) },
-                        )
+                            is ScriptUIComponent.Button -> ButtonComponent(
+                                label = component.label,
+                                enabled = !state.executing,
+                                onClick = { viewModel.onScriptButton(component.functionName) },
+                            )
 
-                        is ScriptUIComponent.Image -> ImagePreviewCard(
-                            url = component.url,
-                            title = component.title,
-                            allowDownload = component.allowDownload,
-                            folder = viewModel::scrapeFolder,
-                            successMessage = stringResource(StringKey.imageSaved),
-                            failureMessage = stringResource(StringKey.downloadFailed),
-                        )
+                            is ScriptUIComponent.Image -> ImagePreviewCard(
+                                url = component.url,
+                                title = component.title,
+                                allowDownload = component.allowDownload,
+                                headers = component.headers,
+                                folder = viewModel::scrapeFolder,
+                                successMessage = stringResource(StringKey.imageSaved),
+                                failureMessage = stringResource(StringKey.downloadFailed),
+                            )
 
-                        is ScriptUIComponent.Video -> VideoPreviewCard(
-                            url = component.url,
-                            title = component.title,
-                            isStreamHls = component.isStreamHls,
-                            allowDownload = component.allowDownload,
-                            folder = viewModel::scrapeFolder,
-                            playInlineLabel = stringResource(StringKey.playInline),
-                            closePlayerLabel = stringResource(StringKey.closePlayer),
-                            downloadLabel = stringResource(StringKey.downloadVideo),
-                            successMessage = stringResource(StringKey.videoSaved),
-                            failureMessage = stringResource(StringKey.downloadFailed),
-                        )
+                            is ScriptUIComponent.Video -> VideoPreviewCard(
+                                url = component.url,
+                                title = component.title,
+                                isStreamHls = component.isStreamHls,
+                                allowDownload = component.allowDownload,
+                                headers = component.headers,
+                                folder = viewModel::scrapeFolder,
+                                playInlineLabel = stringResource(StringKey.playInline),
+                                closePlayerLabel = stringResource(StringKey.closePlayer),
+                                downloadLabel = stringResource(StringKey.downloadVideo),
+                                successMessage = stringResource(StringKey.videoSaved),
+                                failureMessage = stringResource(StringKey.downloadFailed),
+                            )
 
-                        is ScriptUIComponent.LogText -> LogComponent(text = component.text)
+                            is ScriptUIComponent.LogText -> LogComponent(text = component.text)
 
-                        is ScriptUIComponent.Grid -> GridComponent(
-                            grid = component,
-                            onItemClick = { item ->
-                                viewModel.onGridItemClick(component.onClickFunction, item.rawJsonPayload)
-                            },
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                        )
+                            is ScriptUIComponent.Grid -> GridComponent(
+                                grid = component,
+                                onItemClick = { item ->
+                                    viewModel.onGridItemClick(component.onClickFunction, item.rawJsonPayload)
+                                },
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                            )
 
-                        is ScriptUIComponent.JsonLog -> JsonLogCard(
-                            dataJson = component.dataJson,
-                            title = component.title,
-                            allowCopy = component.allowCopy,
-                            copyLabel = stringResource(StringKey.copyJson),
-                            copiedMessage = stringResource(StringKey.jsonCopied),
-                        )
+                            is ScriptUIComponent.JsonLog -> JsonLogCard(
+                                dataJson = component.dataJson,
+                                title = component.title,
+                                allowCopy = component.allowCopy,
+                                copyLabel = stringResource(StringKey.copyJson),
+                                copiedMessage = stringResource(StringKey.jsonCopied),
+                            )
 
-                        is ScriptUIComponent.HtmlPreview -> HtmlPreviewCard(
-                            htmlContent = component.htmlContent,
-                            title = component.title,
-                        )
+                            is ScriptUIComponent.HtmlPreview -> HtmlPreviewCard(
+                                htmlContent = component.htmlContent,
+                                title = component.title,
+                            )
 
-                        is ScriptUIComponent.Audio -> AudioPreviewCard(
-                            url = component.url,
-                            title = component.title,
-                            allowDownload = component.allowDownload,
-                            folder = viewModel::scrapeFolder,
-                            playLabel = stringResource(StringKey.play),
-                            pauseLabel = stringResource(StringKey.pause),
-                            downloadLabel = stringResource(StringKey.downloadAudio),
-                            successMessage = stringResource(StringKey.audioSaved),
-                            failureMessage = stringResource(StringKey.downloadFailed),
-                        )
+                            is ScriptUIComponent.Audio -> AudioPreviewCard(
+                                url = component.url,
+                                title = component.title,
+                                allowDownload = component.allowDownload,
+                                headers = component.headers,
+                                folder = viewModel::scrapeFolder,
+                                playLabel = stringResource(StringKey.play),
+                                pauseLabel = stringResource(StringKey.pause),
+                                downloadLabel = stringResource(StringKey.downloadAudio),
+                                successMessage = stringResource(StringKey.audioSaved),
+                                failureMessage = stringResource(StringKey.downloadFailed),
+                            )
 
-                        is ScriptUIComponent.Alert -> AlertBannerCard(
-                            message = component.message,
-                            type = component.type,
-                        )
+                            is ScriptUIComponent.Alert -> AlertBannerCard(
+                                message = component.message,
+                                type = component.type,
+                            )
 
-                        is ScriptUIComponent.BadgeGroup -> BadgeGroupCard(badges = component.badges)
+                            is ScriptUIComponent.BadgeGroup -> BadgeGroupCard(badges = component.badges)
+                        }
+                        Spacer(Modifier.height(4.dp))
                     }
-                    Spacer(Modifier.height(4.dp))
                 }
 
                 if (state.executing || state.output.isNotEmpty()) {

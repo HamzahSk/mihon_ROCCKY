@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -98,7 +97,7 @@ fun JsonLogCard(
         highlightJson(pretty, keyColor, valueColor, numberColor)
     }
 
-    ElevatedCard(modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+    ScriptCanvasCard(modifier = modifier) {
         Column(modifier = Modifier.fillMaxWidth()) {
             if (title.isNotBlank()) {
                 Text(

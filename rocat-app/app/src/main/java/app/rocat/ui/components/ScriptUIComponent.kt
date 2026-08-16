@@ -31,6 +31,7 @@ sealed class ScriptUIComponent {
         val url: String,
         val title: String = "",
         val allowDownload: Boolean = true,
+        val headers: Map<String, String> = emptyMap(),
     ) : ScriptUIComponent()
 
     /**
@@ -42,6 +43,7 @@ sealed class ScriptUIComponent {
         val title: String = "",
         val isStreamHls: Boolean = false,
         val allowDownload: Boolean = true,
+        val headers: Map<String, String> = emptyMap(),
     ) : ScriptUIComponent()
 
     /** A single line appended to the script's log area. */
@@ -52,11 +54,14 @@ sealed class ScriptUIComponent {
     /**
      * A responsive media grid (mihon-style search results). Tapping a tile re-invokes
      * the script's [onClickFunction] passing the item's raw JSON payload as a string.
+     * [headers] (Tahap 24.1) are sent when loading every tile thumbnail with Coil so
+     * hotlink-protected covers load correctly.
      */
     data class Grid(
         val columns: Int,
         val items: List<GridItem>,
         val onClickFunction: String,
+        val headers: Map<String, String> = emptyMap(),
     ) : ScriptUIComponent()
 
     /** A pretty-printed, syntax-highlighted JSON log card (Tahap 22.2). [dataJson]
@@ -75,11 +80,13 @@ sealed class ScriptUIComponent {
     ) : ScriptUIComponent()
 
     /** An inline audio player card (Tahap 22.2) with Play/Pause, a seek bar and an
-     *  optional "download to scrape folder" action. */
+     *  optional "download to scrape folder" action. [headers] (Tahap 24.1) are sent by
+     *  the ExoPlayer data source when fetching the audio stream. */
     data class Audio(
         val url: String,
         val title: String = "",
         val allowDownload: Boolean = true,
+        val headers: Map<String, String> = emptyMap(),
     ) : ScriptUIComponent()
 
     /** An alert/banner card (Tahap 22.2). [type] is one of `info`/`warning`/`error`/
@@ -99,11 +106,13 @@ sealed class ScriptUIComponent {
  * A single tile inside a [ScriptUIComponent.Grid]. [title] and [imageUrl] are the two
  * shared fields every grid item is expected to carry; [rawJsonPayload] keeps the full
  * original JSON object (including any extra custom fields) to hand back to the script.
+ * [headers] (Tahap 24.1) are the resolved headers used when Coil loads [imageUrl].
  */
 data class GridItem(
     val title: String,
     val imageUrl: String,
     val rawJsonPayload: String,
+    val headers: Map<String, String> = emptyMap(),
 )
 
 /**
@@ -115,6 +124,7 @@ fun parseGrid(
     columns: Int,
     itemsJson: String,
     onClickFunction: String,
+    headers: Map<String, String> = emptyMap(),
 ): ScriptUIComponent.Grid? {
     val elements = try {
         Json.parseToJsonElement(itemsJson) as? JsonArray ?: return null
@@ -127,10 +137,11 @@ fun parseGrid(
             title = (obj["title"] as? JsonPrimitive)?.content.orEmpty(),
             imageUrl = (obj["image"] as? JsonPrimitive)?.content?.trim().orEmpty(),
             rawJsonPayload = element.toString(),
+            headers = headers,
         )
     }
     if (items.isEmpty()) return null
-    return ScriptUIComponent.Grid(columns.coerceAtLeast(1), items, onClickFunction)
+    return ScriptUIComponent.Grid(columns.coerceAtLeast(1), items, onClickFunction, headers)
 }
 
 /**

@@ -3,6 +3,8 @@ package app.rocat.scripting.rhino
 import app.rocat.scripting.api.FetchResult
 import app.rocat.scripting.api.ScriptResult
 import app.rocat.scripting.api.ScriptUiBridge
+import app.rocat.scripting.api.baseUrlFromMatches
+import app.rocat.scripting.api.effectiveMediaHeaders
 import app.rocat.scripting.api.model.DefaultScriptEnvironment
 import app.rocat.scripting.api.model.Script
 import kotlinx.coroutines.runBlocking
@@ -55,15 +57,15 @@ class RoCatScriptTemplateTest {
         override fun addButton(label: String, functionName: String) { calls += "button:$label:$functionName" }
         override fun thumbnailPreview(url: String) { calls += "thumb:$url" }
         override fun videoPreview(url: String) { calls += "video:$url" }
-        override fun addImage(url: String, title: String, allowDownload: Boolean) {
-            calls += "image:$url:$title:$allowDownload"
+        override fun addImage(url: String, title: String, allowDownload: Boolean, headers: Map<String, String>) {
+            calls += "image:$url:$title:$allowDownload:${headers.toSortedMap()}"
         }
-        override fun addVideo(url: String, title: String, isStreamHls: Boolean, allowDownload: Boolean) {
-            calls += "videoCard:$url:$title:$isStreamHls:$allowDownload"
+        override fun addVideo(url: String, title: String, isStreamHls: Boolean, allowDownload: Boolean, headers: Map<String, String>) {
+            calls += "videoCard:$url:$title:$isStreamHls:$allowDownload:${headers.toSortedMap()}"
         }
         override fun clear() { calls += "clear" }
-        override fun addGrid(columns: Int, itemsJsonString: String, onClickFunction: String) {
-            calls += "grid:$columns:$onClickFunction:$itemsJsonString"
+        override fun addGrid(columns: Int, itemsJsonString: String, onClickFunction: String, headers: Map<String, String>) {
+            calls += "grid:$columns:$onClickFunction:$itemsJsonString:${headers.toSortedMap()}"
         }
         override fun log(text: String) { calls += "log:$text" }
         override fun saveFile(fileName: String, content: String, mimeType: String): String {
@@ -76,8 +78,8 @@ class RoCatScriptTemplateTest {
         override fun addHtmlPreview(htmlContent: String, title: String) {
             calls += "html:$title:$htmlContent"
         }
-        override fun addAudio(url: String, title: String, allowDownload: Boolean) {
-            calls += "audio:$url:$title:$allowDownload"
+        override fun addAudio(url: String, title: String, allowDownload: Boolean, headers: Map<String, String>) {
+            calls += "audio:$url:$title:$allowDownload:${headers.toSortedMap()}"
         }
         override fun addAlert(message: String, type: String) {
             calls += "alert:$type:$message"
@@ -148,7 +150,7 @@ class RoCatScriptTemplateTest {
         assertEquals(
             listOf(
                 "alert:info:Tunggu",
-                "image:https://x/img.jpg:Cover:false",
+                "image:https://x/img.jpg:Cover:false:{}",
                 "log:selesai",
             ),
             ui.calls,
@@ -309,10 +311,127 @@ class RoCatScriptTemplateTest {
         assertEquals(
             listOf(
                 "html:Judul:<b>Bold</b> text",
-                "audio:https://example.com/track.mp3:Lagu:true",
-                "audio:https://example.com/voice.m4a::true",
+                "audio:https://example.com/track.mp3:Lagu:true:{}",
+                "audio:https://example.com/voice.m4a::true:{}",
             ),
             ui.calls,
         )
+    }
+
+    // --- Tahap 24.1: HTTP header injection (Referer) for media requests ---
+
+    @Test
+    fun `bridge forwards an explicit headers object to addImage and addVideo`() = runBlocking {
+        val ui = Recorder()
+        val env = uiEnvironment(ui)
+        val source = """
+            function build() {
+                RoCatUI.addImage("https://cdn.site/x/cover.jpg", "Cover", true, { "Referer": "https://site.example/" });
+                RoCatUI.addVideo(
+                    "https://cdn.site/x/master.m3u8",
+                    "EP 1",
+                    true,
+                    true,
+                    { "Referer": "https://anichin.cafe/" }
+                );
+                RoCatUI.addAudio("https://cdn.site/x/track.mp3", "Lagu", true, { "X-Token": "abc" });
+            }
+        """.trimIndent()
+
+        val result = engine.invokeNamedFunction(script(source), env, "build", emptyMap())
+        assertTrue("build failed: $result", result is ScriptResult.Success)
+        assertEquals(
+            listOf(
+                """image:https://cdn.site/x/cover.jpg:Cover:true:{Referer=https://site.example/}""",
+                """videoCard:https://cdn.site/x/master.m3u8:EP 1:true:true:{Referer=https://anichin.cafe/}""",
+                """audio:https://cdn.site/x/track.mp3:Lagu:true:{X-Token=abc}""",
+            ),
+            ui.calls,
+        )
+    }
+
+    @Test
+    fun `bridge tolerates a json-string headers argument`() = runBlocking {
+        val ui = Recorder()
+        val env = uiEnvironment(ui)
+        val source = """
+            function build() {
+                RoCatUI.addImage(
+                    "https://cdn.site/x/cover.jpg",
+                    "Cover",
+                    true,
+                    '{"Referer": "https://site.example/", "X-Api": "v1"}'
+                );
+            }
+        """.trimIndent()
+
+        val result = engine.invokeNamedFunction(script(source), env, "build", emptyMap())
+        assertTrue("build failed: $result", result is ScriptResult.Success)
+        assertEquals(
+            listOf(
+                """image:https://cdn.site/x/cover.jpg:Cover:true:{Referer=https://site.example/, X-Api=v1}""",
+            ),
+            ui.calls,
+        )
+    }
+
+    @Test
+    fun `rocat render passes the headers attribute on image and video descriptors`() = runBlocking {
+        val ui = Recorder()
+        val env = uiEnvironment(ui)
+        val source = """
+            function build() {
+                RoCat.render([
+                    { type: "image", url: "https://cdn.site/x/cover.jpg", title: "Cover",
+                      headers: { "Referer": "https://site.example/" } },
+                    { type: "video", url: "https://cdn.site/x/master.m3u8", title: "EP", hls: true,
+                      headers: { "Referer": "https://anichin.cafe/" } }
+                ]);
+            }
+        """.trimIndent()
+
+        val result = engine.invokeNamedFunction(script(source), env, "build", emptyMap())
+        assertTrue("build failed: $result", result is ScriptResult.Success)
+        assertEquals(
+            listOf(
+                """image:https://cdn.site/x/cover.jpg:Cover:true:{Referer=https://site.example/}""",
+                """videoCard:https://cdn.site/x/master.m3u8:EP:true:true:{Referer=https://anichin.cafe/}""",
+            ),
+            ui.calls,
+        )
+    }
+
+    // --- Tahap 24.1: auto-fallback Referer resolution (pure helpers) ---
+
+    @Test
+    fun `effective headers keep script headers and auto-fill a missing referer`() {
+        assertEquals(
+            mapOf("Referer" to "https://site.example/"),
+            effectiveMediaHeaders("https://cdn.site/x/a.jpg", mapOf("Referer" to "https://site.example/")),
+        )
+        // No headers at all → referer = media URL origin.
+        assertEquals(
+            mapOf("Referer" to "https://cdn.site"),
+            effectiveMediaHeaders("https://cdn.site/x/a.jpg"),
+        )
+        // Script metadata base URL wins over the media origin.
+        assertEquals(
+            mapOf("Referer" to "https://anichin.cafe"),
+            effectiveMediaHeaders("https://cdn.other.stream/hls/a.m3u8", emptyMap(), "https://anichin.cafe/*"),
+        )
+        // Extra headers are preserved alongside the auto referer.
+        val merged = effectiveMediaHeaders("https://cdn.site/x/a.jpg", mapOf("X-Token" to "v1"))
+        assertEquals(mapOf("Referer" to "https://cdn.site", "X-Token" to "v1"), merged)
+        // Invalid URL → no referer is invented.
+        assertEquals(emptyMap<String, String>(), effectiveMediaHeaders("not-a-url"))
+    }
+
+    @Test
+    fun `base url derives a clean origin from match patterns`() {
+        assertEquals("https://example.com", baseUrlFromMatches(listOf("https://example.com/*")))
+        assertEquals("https://example.org", baseUrlFromMatches(listOf("https://*.example.org/*")))
+        assertEquals("https://example.net", baseUrlFromMatches(listOf("https://example.net/ignored")))
+        assertEquals("http://example.net", baseUrlFromMatches(listOf("http://example.net/ignored")))
+        assertEquals(null, baseUrlFromMatches(listOf("*example.com*", "file:///x")))
     }
 }

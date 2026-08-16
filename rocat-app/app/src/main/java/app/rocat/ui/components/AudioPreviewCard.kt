@@ -34,7 +34,9 @@ import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
+import app.rocat.core.common.network.NetworkHelper
 import kotlinx.coroutines.delay
 import java.util.Locale
 
@@ -43,12 +45,14 @@ import java.util.Locale
  * Compact controls: Play/Pause, a seekable progress bar with time labels, and (when
  * [allowDownload]) a **Download Audio** button that saves the file into the active
  * scrape folder via [MediaDownloader] + [app.rocat.storage.StorageManager].
+ * [headers] (Tahap 24.1) are sent with the ExoPlayer data source requests.
  */
 @Composable
 fun AudioPreviewCard(
     url: String,
     title: String = "",
     allowDownload: Boolean = true,
+    headers: Map<String, String> = emptyMap(),
     folder: () -> DocumentFile?,
     playLabel: String,
     pauseLabel: String,
@@ -60,8 +64,12 @@ fun AudioPreviewCard(
     val context = LocalContext.current
     val downloader = rememberMediaDownloaderState()
 
-    val player = remember(url) {
+    val player = remember(url, headers) {
         ExoPlayer.Builder(context).build().apply {
+            val dataSourceFactory = DefaultHttpDataSource.Factory()
+                .setAllowCrossProtocolRedirects(true)
+                .setUserAgent(NetworkHelper.DEFAULT_USER_AGENT)
+                .apply { if (headers.isNotEmpty()) setDefaultRequestProperties(headers) }
             setMediaItem(MediaItem.fromUri(url))
             prepare()
         }
@@ -147,6 +155,7 @@ fun AudioPreviewCard(
                             folder = folder(),
                             fileName = fileNameFromUrl(url, fallback = "audio"),
                             mimeType = audioMimeFor(url),
+                            headers = headers,
                             successMessage = successMessage,
                             failureMessage = failureMessage,
                         )

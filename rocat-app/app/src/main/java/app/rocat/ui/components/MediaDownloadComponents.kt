@@ -53,6 +53,7 @@ class MediaDownloaderState(
         folder: DocumentFile?,
         fileName: String,
         mimeType: String,
+        headers: Map<String, String> = emptyMap(),
         successMessage: String,
         failureMessage: String,
     ) {
@@ -60,7 +61,7 @@ class MediaDownloaderState(
         val downloader = Injekt.get<MediaDownloader>()
         scope.launch {
             status = DownloadStatus.Downloading(0f)
-            val uri = downloader.download(url, folder, fileName, mimeType) { progress ->
+            val uri = downloader.download(url, folder, fileName, mimeType, headers) { progress ->
                 status = DownloadStatus.Downloading(progress)
             }
             status = if (uri != null) DownloadStatus.Done else DownloadStatus.Failed

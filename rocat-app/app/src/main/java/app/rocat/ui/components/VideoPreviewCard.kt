@@ -45,6 +45,7 @@ fun VideoPreviewCard(
     title: String = "",
     isStreamHls: Boolean = false,
     allowDownload: Boolean = true,
+    headers: Map<String, String> = emptyMap(),
     folder: () -> DocumentFile?,
     playInlineLabel: String,
     closePlayerLabel: String,
@@ -62,6 +63,7 @@ fun VideoPreviewCard(
                 RocatVideoPlayer(
                     url = url,
                     isHls = isStreamHls,
+                    headers = headers,
                     modifier = Modifier.padding(top = 8.dp),
                 )
             } else {
@@ -99,6 +101,7 @@ fun VideoPreviewCard(
                                 folder = folder(),
                                 fileName = fileNameFromUrl(url, fallback = "video"),
                                 mimeType = videoMimeFor(url, isStreamHls),
+                                headers = headers,
                                 successMessage = successMessage,
                                 failureMessage = failureMessage,
                             )

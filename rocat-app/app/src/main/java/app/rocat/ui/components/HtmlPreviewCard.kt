@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -67,7 +66,7 @@ fun HtmlPreviewCard(
         spannedToAnnotated(spanned, linkStyle, linkInteraction)
     }
 
-    ElevatedCard(modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+    ScriptCanvasCard(modifier = modifier) {
         Column(modifier = Modifier.fillMaxWidth()) {
             if (title.isNotBlank()) {
                 Text(

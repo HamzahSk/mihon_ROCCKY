@@ -10,8 +10,6 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -64,12 +62,10 @@ fun AlertBannerCard(
         AlertType.Success -> MaterialTheme.colorScheme.onPrimaryContainer
     }
 
-    ElevatedCard(
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = containerColor,
-            contentColor = contentColor,
-        ),
-        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp),
+    ScriptCanvasCard(
+        modifier = modifier,
+        containerColor = containerColor,
+        contentColor = contentColor,
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

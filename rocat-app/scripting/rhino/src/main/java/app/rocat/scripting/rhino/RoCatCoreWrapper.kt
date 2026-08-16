@@ -6,8 +6,10 @@ package app.rocat.scripting.rhino
  * the ergonomic global `RoCat` object:
  *
  * - `RoCat.render(items)` — accepts a single UI descriptor or an array of them and
- *   dispatches each to the matching `RoCatUI.add*` call, so scripts can draw a whole
- *   canvas with one statement instead of ten.
+*  dispatches each to the matching `RoCatUI.add*` call, so scripts can draw a whole
+ *  canvas with one statement instead of ten. `image`/`video`/`audio` descriptors accept
+ *  a `headers` object (Tahap 24.1) that is forwarded to the native loader (Coil /
+ *  ExoPlayer) — e.g. `{ type:"video", url:"…", hls:true, headers:{"Referer":"https://…"} }`.
  * - `RoCat.safeParseJson(str, fallback)` — never throws; returns [fallback] (default
  *   `null`) when the input is `null`/`undefined`/not valid JSON.
  * - `RoCat.fetchJson(url, options)` — `fetch()` wrapper that returns the parsed JSON
@@ -82,15 +84,15 @@ var RoCat = (function () {
                 return;
             }
             if (type === "image") {
-                RoCatUI.addImage(pick(item, "url", "") || pick(item, "src", ""), pick(item, "title", ""), pickBool(item, "download", true));
+                RoCatUI.addImage(pick(item, "url", "") || pick(item, "src", ""), pick(item, "title", ""), pickBool(item, "download", true), pick(item, "headers", null));
                 return;
             }
             if (type === "video") {
-                RoCatUI.addVideo(pick(item, "url", ""), pick(item, "title", ""), pickBool(item, "hls", false), pickBool(item, "download", true));
+                RoCatUI.addVideo(pick(item, "url", ""), pick(item, "title", ""), pickBool(item, "hls", false), pickBool(item, "download", true), pick(item, "headers", null));
                 return;
             }
             if (type === "audio") {
-                RoCatUI.addAudio(pick(item, "url", ""), pick(item, "title", ""), pickBool(item, "download", true));
+                RoCatUI.addAudio(pick(item, "url", ""), pick(item, "title", ""), pickBool(item, "download", true), pick(item, "headers", null));
                 return;
             }
             if (type === "json") {

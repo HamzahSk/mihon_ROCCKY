@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -26,7 +25,7 @@ fun BadgeGroupCard(
 ) {
     if (badges.isEmpty()) return
 
-    ElevatedCard(modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+    ScriptCanvasCard(modifier = modifier) {
         FlowRow(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),

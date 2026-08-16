@@ -14,6 +14,8 @@ import app.rocat.domain.script.GetScripts
 import app.rocat.scripting.api.ScriptResult
 import app.rocat.scripting.api.ScriptBrowserBridge
 import app.rocat.scripting.api.ScriptUiBridge
+import app.rocat.scripting.api.baseUrlFromMatches
+import app.rocat.scripting.api.effectiveMediaHeaders
 import app.rocat.scripting.api.model.Script
 import app.rocat.storage.StorageManager
 import app.rocat.ui.components.ScriptUIComponent
@@ -85,22 +87,34 @@ class ScriptCanvasViewModel(
         return current
     }
 
+    /**
+     * Resolves the effective HTTP headers for a media URL (Tahap 24.1): headers supplied
+     * by the script win; a missing `Referer` is auto-filled from the script metadata
+     * `@match`/`@include` base URL (or the media URL's own origin as a last resort).
+     */
+    private fun resolveHeaders(headers: Map<String, String>, url: String): Map<String, String> =
+        effectiveMediaHeaders(url, headers, scriptBaseUrl())
+
+    /** Best-effort origin of the first `@match`/`@include` pattern of the running script. */
+    private fun scriptBaseUrl(): String? =
+        state.value.script?.matches?.let { baseUrlFromMatches(it) }
+
     private val uiBridge = object : ScriptUiBridge {
         override fun addInput(id: String, hint: String) = postUi(uiSession) { addOrReplaceInput(id, hint) }
         override fun addButton(label: String, functionName: String) = postUi(uiSession) {
             uiComponents.add(ScriptUIComponent.Button(label, functionName))
         }
         override fun thumbnailPreview(url: String) = postUi(uiSession) {
-            uiComponents.add(ScriptUIComponent.Image(url))
+            uiComponents.add(ScriptUIComponent.Image(url, "", true, resolveHeaders(emptyMap(), url)))
         }
         override fun videoPreview(url: String) = postUi(uiSession) {
-            uiComponents.add(ScriptUIComponent.Video(url))
+            uiComponents.add(ScriptUIComponent.Video(url, "", false, true, resolveHeaders(emptyMap(), url)))
         }
-        override fun addImage(url: String, title: String, allowDownload: Boolean) = postUi(uiSession) {
-            uiComponents.add(ScriptUIComponent.Image(url, title, allowDownload))
+        override fun addImage(url: String, title: String, allowDownload: Boolean, headers: Map<String, String>) = postUi(uiSession) {
+            uiComponents.add(ScriptUIComponent.Image(url, title, allowDownload, resolveHeaders(headers, url)))
         }
-        override fun addVideo(url: String, title: String, isStreamHls: Boolean, allowDownload: Boolean) = postUi(uiSession) {
-            uiComponents.add(ScriptUIComponent.Video(url, title, isStreamHls, allowDownload))
+        override fun addVideo(url: String, title: String, isStreamHls: Boolean, allowDownload: Boolean, headers: Map<String, String>) = postUi(uiSession) {
+            uiComponents.add(ScriptUIComponent.Video(url, title, isStreamHls, allowDownload, resolveHeaders(headers, url)))
         }
         // Tahap 22.2: expanded UI template cards (JSON viewer / HTML preview / audio /
         // alert / badge group). All tolerant: bad payloads are simply not rendered.
@@ -110,8 +124,8 @@ class ScriptCanvasViewModel(
         override fun addHtmlPreview(htmlContent: String, title: String) = postUi(uiSession) {
             uiComponents.add(ScriptUIComponent.HtmlPreview(htmlContent, title))
         }
-        override fun addAudio(url: String, title: String, allowDownload: Boolean) = postUi(uiSession) {
-            uiComponents.add(ScriptUIComponent.Audio(url, title, allowDownload))
+        override fun addAudio(url: String, title: String, allowDownload: Boolean, headers: Map<String, String>) = postUi(uiSession) {
+            uiComponents.add(ScriptUIComponent.Audio(url, title, allowDownload, resolveHeaders(headers, url)))
         }
         override fun addAlert(message: String, type: String) = postUi(uiSession) {
             uiComponents.add(ScriptUIComponent.Alert(message, type))
@@ -120,8 +134,16 @@ class ScriptCanvasViewModel(
             parseBadgeGroup(badgesJson)?.let { uiComponents.add(it) }
         }
         override fun clear() = postUi(uiSession) { uiComponents.clear() }
-        override fun addGrid(columns: Int, itemsJsonString: String, onClickFunction: String) = postUi(uiSession) {
-            parseGrid(columns, itemsJsonString, onClickFunction)?.let { uiComponents.add(it) }
+        override fun addGrid(columns: Int, itemsJsonString: String, onClickFunction: String, headers: Map<String, String>) = postUi(uiSession) {
+            parseGrid(columns, itemsJsonString, onClickFunction, headers)?.let { grid ->
+                uiComponents.add(
+                    grid.copy(
+                        items = grid.items.map { item ->
+                            item.copy(headers = resolveHeaders(headers, item.imageUrl))
+                        },
+                    ),
+                )
+            }
         }
         override fun log(text: String) = postUi(uiSession) {
             uiComponents.add(ScriptUIComponent.LogText(text))

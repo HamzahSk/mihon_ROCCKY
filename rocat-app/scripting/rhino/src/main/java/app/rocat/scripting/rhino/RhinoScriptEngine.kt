@@ -11,6 +11,10 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 import okhttp3.OkHttpClient
 import org.mozilla.javascript.BaseFunction
 import org.mozilla.javascript.Context
@@ -418,6 +422,7 @@ private class RoCatUiBridge(
                     url = argString(args, 0),
                     title = argString(args, 1),
                     allowDownload = argBoolean(args, 2, true),
+                    headers = argHeaders(args, 3),
                 )
             }
         })
@@ -428,12 +433,15 @@ private class RoCatUiBridge(
                     title = argString(args, 1),
                     isStreamHls = argBoolean(args, 2),
                     allowDownload = argBoolean(args, 3, true),
+                    headers = argHeaders(args, 4),
                 )
             }
         })
         put("clear", this, Fn { runSafe { ui.clear() } })
         put("addGrid", this, Fn { args ->
-            runSafe { ui.addGrid(argInt(args, 0), argString(args, 1), argString(args, 2)) }
+            runSafe {
+                ui.addGrid(argInt(args, 0), argString(args, 1), argString(args, 2), argHeaders(args, 3))
+            }
         })
         put("log", this, Fn { args -> runSafe { ui.log(argString(args, 0)) } })
         put("save", this, Fn { args ->
@@ -470,6 +478,7 @@ private class RoCatUiBridge(
                     url = argString(args, 0),
                     title = argString(args, 1),
                     allowDownload = argBoolean(args, 2, true),
+                    headers = argHeaders(args, 3),
                 )
             }
         })
@@ -491,6 +500,27 @@ private class RoCatUiBridge(
         return when (value) {
             is Scriptable -> NativeJSON.stringify(cx, scope, value, null, null)?.toString() ?: default
             else -> Context.toString(value)
+        }
+    }
+
+    /**
+     * Reads the [index]-th JS argument as a `Map<String, String>` of HTTP headers
+     * (Tahap 24.1). Accepts a plain JS object (`{ "Referer": "https://…" }`), a
+     * JSON string, or nothing (`null`/`undefined` → empty map). Non-string values are
+     * coerced with `Context.toString`. Failures never throw.
+     */
+    private fun argHeaders(args: Array<out Any?>, index: Int): Map<String, String> {
+        val json = argJson(args, index)
+        if (json.isBlank()) return emptyMap()
+        return try {
+            val element = Json.parseToJsonElement(json)
+            val obj = element as? JsonObject ?: return emptyMap()
+            obj.mapNotNull { (name, value) ->
+                val content = (value as? JsonPrimitive)?.contentOrNull ?: return@mapNotNull null
+                name to content
+            }.toMap()
+        } catch (_: Exception) {
+            emptyMap()
         }
     }
 

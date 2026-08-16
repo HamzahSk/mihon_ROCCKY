@@ -53,11 +53,16 @@ import java.util.Locale
  * (immersive mode) and shows the video in a dedicated full-screen dialog that also
  * handles Back / exit via [DialogWindowProvider]. The same [ExoPlayer] instance is
  * shared between inline and full-screen so playback never resets when toggling.
+ *
+ * [headers] (Tahap 24.1) are applied to every network request via
+ * `DefaultHttpDataSource.Factory.setDefaultRequestProperties`, so a `Referer` (or any
+ * custom header) is sent when fetching `.m3u8` playlists and `.ts` segments alike.
  */
 @Composable
 fun RocatVideoPlayer(
     url: String,
     isHls: Boolean = false,
+    headers: Map<String, String> = emptyMap(),
     modifier: Modifier = Modifier,
     autoPlay: Boolean = true,
 ) {
@@ -65,12 +70,13 @@ fun RocatVideoPlayer(
     val activity = remember(context) { context.findActivity() }
     var isFullScreen by remember { mutableStateOf(false) }
 
-    val exoPlayer = remember(url) {
+    val exoPlayer = remember(url, headers) {
         ExoPlayer.Builder(context).build().apply {
             playWhenReady = autoPlay
             val dataSourceFactory = DefaultHttpDataSource.Factory()
                 .setAllowCrossProtocolRedirects(true)
                 .setUserAgent(NetworkHelper.DEFAULT_USER_AGENT)
+                .apply { if (headers.isNotEmpty()) setDefaultRequestProperties(headers) }
             val mediaItem = MediaItem.fromUri(url)
             val mediaSource = if (isHls || isHlsUrl(url)) {
                 HlsMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
