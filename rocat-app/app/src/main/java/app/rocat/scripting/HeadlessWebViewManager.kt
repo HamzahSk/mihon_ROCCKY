@@ -2,13 +2,21 @@ package app.rocat.scripting
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
 import android.os.Handler
 import android.os.Looper
+import android.view.View
+import android.webkit.CookieManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import app.rocat.core.common.util.WebViewUtil
+import org.json.JSONArray
+import org.json.JSONObject
 import org.json.JSONTokener
+import java.io.File
+import java.io.FileOutputStream
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
@@ -160,6 +168,197 @@ class HeadlessWebViewManager(private val appContext: Context) {
         }
     }
 
+    // =====================================================================
+    // Tahap 25 — General-purpose automation commands (Playwright-like subset)
+    // =====================================================================
+
+    /** Pauses the calling (script) thread for [ms] ms — no main-thread hop needed. */
+    fun sleep(ms: Long): Boolean = try {
+        Thread.sleep(ms.coerceAtLeast(0))
+        true
+    } catch (_: InterruptedException) {
+        false
+    }
+
+    /** Current page URL (via the live DOM), or `""` when no page is open. */
+    fun url(): String {
+        val raw = evaluateJs("location.href", DEFAULT_EVAL_TIMEOUT_MS) ?: return ""
+        return unquoteJson(raw)
+    }
+
+    /** Current page title (via the live DOM), or `""` when no page is open. */
+    fun title(): String {
+        val raw = evaluateJs("document.title", DEFAULT_EVAL_TIMEOUT_MS) ?: return ""
+        return unquoteJson(raw)
+    }
+
+    /** Navigates the WebView back one history entry. */
+    fun goBack(): Boolean = navigate { it.goBack() }
+
+    /** Navigates the WebView forward one history entry. */
+    fun goForward(): Boolean = navigate { it.goForward() }
+
+    /** Reloads the current page. */
+    fun reload(): Boolean = navigate { it.reload() }
+
+    /** Stops the current page load. */
+    fun stop(): Boolean = navigate { it.stopLoading() }
+
+    /**
+     * Polls `document.readyState` until it reaches the target for [state] or
+     * [timeoutMs] elapses. `"load"`/`"complete"` target `complete`;
+     * `"domcontentloaded"`/`"interactive"` target `interactive`.
+     */
+    fun waitForLoad(state: String, timeoutMs: Long): Boolean {
+        val target = when (state.trim().lowercase()) {
+            "domcontentloaded", "interactive" -> "interactive"
+            else -> "complete"
+        }
+        val probe = "(document.readyState === ${jsQuote(target)})"
+        val deadline = System.currentTimeMillis() + timeoutMs
+        while (true) {
+            if (evaluateJs(probe, DEFAULT_EVAL_TIMEOUT_MS) == "true") return true
+            if (System.currentTimeMillis() >= deadline) return false
+            try {
+                Thread.sleep(POLL_INTERVAL_MS)
+            } catch (_: InterruptedException) {
+                return false
+            }
+        }
+    }
+
+    /**
+     * Draws the rendered page into a bitmap and writes it as a PNG to [path] (when
+     * absolute / non-blank) or a timestamped file under the app cache. Returns the
+     * absolute path of the written file, or `""` on any failure.
+     */
+    fun screenshot(path: String, quality: Int): String {
+        val wv = webView ?: return ""
+        val latch = CountDownLatch(1)
+        val ref = AtomicReference<Bitmap?>()
+        onMain {
+            try {
+                if (wv.width <= 0 || wv.height <= 0) {
+                    // A never-attached WebView has zero size — give it the default
+                    // viewport so drawing produces a real, full-page image.
+                    wv.measure(
+                        View.MeasureSpec.makeMeasureSpec(DEFAULT_VIEWPORT_WIDTH, View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(DEFAULT_VIEWPORT_HEIGHT, View.MeasureSpec.EXACTLY),
+                    )
+                    wv.layout(0, 0, wv.measuredWidth, wv.measuredHeight)
+                }
+                val bitmap = Bitmap.createBitmap(wv.width, wv.height, Bitmap.Config.ARGB_8888)
+                wv.draw(Canvas(bitmap))
+                ref.set(bitmap)
+            } catch (_: Throwable) {
+                ref.set(null)
+            }
+            latch.countDown()
+        }
+        if (!latch.await(DEFAULT_EVAL_TIMEOUT_MS, TimeUnit.MILLISECONDS)) return ""
+        val bitmap = ref.get() ?: return ""
+        return try {
+            val dir = File(appContext.cacheDir, SCREENSHOT_DIR).apply { mkdirs() }
+            val file = if (path.isNotBlank()) {
+                File(path).apply { parentFile?.mkdirs() }
+            } else {
+                File(dir, "shot_${System.currentTimeMillis()}.png")
+            }
+            FileOutputStream(file).use { out -> bitmap.compress(Bitmap.CompressFormat.PNG, quality, out) }
+            bitmap.recycle()
+            file.absolutePath
+        } catch (_: Throwable) {
+            ""
+        }
+    }
+
+    /** Cookies of the current page as a JSON array string, synced with OkHttp's jar. */
+    fun getCookies(): String {
+        val pageUrl = url()
+        if (pageUrl.isEmpty()) return "[]"
+        val cookieHeader = CookieManager.getInstance().getCookie(pageUrl) ?: return "[]"
+        val host = runCatching { java.net.URI(pageUrl).host }.getOrNull() ?: ""
+        val array = JSONArray()
+        cookieHeader.split(";").forEach { part ->
+            val separator = part.indexOf('=')
+            if (separator > 0) {
+                val name = part.substring(0, separator).trim()
+                val value = part.substring(separator + 1).trim()
+                val entry = JSONObject()
+                    .put("name", name)
+                    .put("value", value)
+                    .put("domain", host)
+                    .put("path", "/")
+                    .put("url", pageUrl)
+                array.put(entry)
+            }
+        }
+        return array.toString()
+    }
+
+    /**
+     * Sets a cookie from its JSON representation. Accepts either a full object
+     * `{ "name", "value", "url"?, "domain"?, "path"? }` or a raw `"name=value"` string.
+     * Without an explicit [JSONObject.url] the current page URL is used.
+     */
+    fun setCookie(cookieJson: String): Boolean {
+        if (cookieJson.isBlank()) return false
+        val cookie = try {
+            val obj = JSONObject(cookieJson)
+            val name = obj.optString("name")
+            val value = obj.optString("value")
+            if (name.isBlank()) return false
+            val url = obj.optString("url").ifBlank { url() }
+            val cookieString = buildString {
+                append(name).append('=').append(value)
+                append("; path=").append(obj.optString("path", "/"))
+                val domain = obj.optString("domain")
+                if (domain.isNotBlank()) append("; domain=").append(domain)
+            }
+            url to cookieString
+        } catch (_: Exception) {
+            // Raw "name=value" form falls back to the current page.
+            val url = url()
+            if (url.isBlank()) return false
+            url to cookieJson
+        }
+        if (cookie.first.isBlank()) return false
+        return try {
+            CookieManager.getInstance().setCookie(cookie.first, cookie.second)
+            CookieManager.getInstance().flush()
+            true
+        } catch (_: Throwable) {
+            false
+        }
+    }
+
+    /** Clears every WebView cookie (shared with OkHttp via AndroidCookieJar). */
+    fun clearCookies(): Boolean = try {
+        CookieManager.getInstance().removeAllCookies(null)
+        CookieManager.getInstance().flush()
+        true
+    } catch (_: Throwable) {
+        false
+    }
+
+    /** Runs [action] (navigation) on the main thread and returns whether it applied. */
+    private fun navigate(action: (WebView) -> Unit): Boolean {
+        val wv = webView ?: return false
+        val latch = CountDownLatch(1)
+        val ref = AtomicReference(false)
+        onMain {
+            try {
+                action(wv)
+                ref.set(true)
+            } catch (_: Throwable) {
+                ref.set(false)
+            }
+            latch.countDown()
+        }
+        if (!latch.await(DEFAULT_EVAL_TIMEOUT_MS, TimeUnit.MILLISECONDS)) return false
+        return ref.get()
+    }
+
     /** Runs [js] on the main thread and returns the callback value, or null on failure. */
     private fun evaluateJs(js: String, timeoutMs: Long): String? {
         val wv = webView ?: ensureWebView() ?: return null
@@ -190,6 +389,9 @@ class HeadlessWebViewManager(private val appContext: Context) {
     private companion object {
         const val DEFAULT_EVAL_TIMEOUT_MS = 5_000L
         const val POLL_INTERVAL_MS = 150L
+        const val SCREENSHOT_DIR = "browser_screenshots"
+        const val DEFAULT_VIEWPORT_WIDTH = 1366
+        const val DEFAULT_VIEWPORT_HEIGHT = 768
     }
 }
 

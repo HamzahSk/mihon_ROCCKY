@@ -213,6 +213,11 @@ class RhinoScriptEngine(
         val browserBridge = environment.browser
         if (browserBridge != null) {
             ScriptableObject.putProperty(scope, "RoCatPage", RoCatPageBridge(cx, scope, browserBridge))
+            // Tahap 25: inject the general-purpose `RoCatBrowser` polyfill (a
+            // Playwright-like Browser/Page/Locator API) on top of the low-level
+            // `RoCatPage` primitives. Present only when the browser bridge exists, so
+            // plain executions see `typeof RoCatBrowser === "undefined"`.
+            cx.evaluateString(scope, RO_CAT_BROWSER_WRAPPER_JS, "RoCatBrowser.js", 1, null)
         }
 
         // Tahap 22.1: auto-inject the universal core wrapper (`RoCat`) before user code.

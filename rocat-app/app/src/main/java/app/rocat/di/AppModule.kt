@@ -20,8 +20,8 @@ import app.rocat.domain.script.UpsertScript
 import app.rocat.i18n.I18nProvider
 import app.rocat.media.MediaDownloader
 import app.rocat.settings.SettingsRepository
-import app.rocat.scripting.AppScriptBrowserBridge
 import app.rocat.scripting.HeadlessWebViewManager
+import app.rocat.scripting.RoCatBrowserBridge
 import app.rocat.scripting.api.ScriptBrowserBridge
 import app.rocat.storage.StorageManager
 import app.rocat.ui.import.ImportScriptViewModel
@@ -58,12 +58,13 @@ override fun registerInjectables(registrar: Registrar) {
         val scriptManager = ScriptManager(networkHelper)
         registrar.addSingleton(scriptManager)
 
-        // Tahap 23: headless WebView backing the script global `RoCatPage` (dual-mode
-        // scraping engine). Registered against the ScriptBrowserBridge interface so
-        // ScriptCanvasViewModel can resolve it via Injekt and hand it to the engine.
+        // Tahap 23/25: headless WebView backing the script globals `RoCatPage` (low-level)
+        // and `RoCatBrowser` (general-purpose Playwright-like polyfill, Tahap 25).
+        // Registered against the ScriptBrowserBridge interface so ScriptCanvasViewModel
+        // can resolve it via Injekt and hand it to the engine.
         val headlessWebViewManager = HeadlessWebViewManager(app)
         registrar.addSingleton(headlessWebViewManager)
-        registrar.addSingleton<ScriptBrowserBridge>(AppScriptBrowserBridge(headlessWebViewManager))
+        registrar.addSingleton<ScriptBrowserBridge>(RoCatBrowserBridge(headlessWebViewManager))
 
         val scriptsDir = java.io.File(app.filesDir, "scripts")
         val scriptRepository: ScriptRepository = ScriptRepositoryImpl(scriptsDir)

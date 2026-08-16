@@ -22,6 +22,13 @@ import org.mozilla.javascript.json.JsonParser
  *  - `RoCatPage.getHtml()`                                  -> current rendered HTML
  *  - `RoCatPage.close()`                                    -> release the hidden WebView
  *
+ *  Tahap 25 general-purpose primitives (used by the `RoCatBrowser` polyfill):
+ *  - `RoCatPage.sleep(ms)` / `waitForLoad(state, timeoutMs)` -> time control
+ *  - `RoCatPage.url()` / `title()`                           -> page info
+ *  - `RoCatPage.goBack()` / `goForward()` / `reload()` / `stop()` -> navigation
+ *  - `RoCatPage.screenshot(path, quality)`                   -> PNG capture, returns file path
+ *  - `RoCatPage.getCookies()` / `setCookie(json)` / `clearCookies()` -> cookie sync
+ *
  * Every call is delegated to the [ScriptBrowserBridge] supplied by the host app. The
  * engine executes scripts on a background thread, so the bridge blocks that thread until
  * the main-thread WebView answers (the main UI thread is never blocked).
@@ -50,6 +57,30 @@ internal class RoCatPageBridge(
         })
         put("getHtml", this, PageFn { browser.getHtml() })
         put("close", this, PageFn { browser.close() })
+
+        // --- Tahap 25: general-purpose automation commands (Playwright-like subset) ---
+        // These are the low-level primitives the high-level `RoCatBrowser` JS polyfill
+        // (RoCatBrowserWrapper.kt) is built on top of.
+        put("sleep", this, PageFn { args ->
+            browser.sleep(pageArgLong(args, 0, 0))
+        })
+        put("url", this, PageFn { browser.url() })
+        put("title", this, PageFn { browser.title() })
+        put("goBack", this, PageFn { browser.goBack() })
+        put("goForward", this, PageFn { browser.goForward() })
+        put("reload", this, PageFn { browser.reload() })
+        put("stop", this, PageFn { browser.stop() })
+        put("waitForLoad", this, PageFn { args ->
+            browser.waitForLoad(pageArgString(args, 0, "load"), pageArgLong(args, 1, ScriptBrowserBridge.DEFAULT_TIMEOUT_MS))
+        })
+        put("screenshot", this, PageFn { args ->
+            browser.screenshot(pageArgString(args, 0), pageArgInt(args, 1, 80))
+        })
+        put("getCookies", this, PageFn { browser.getCookies() })
+        put("setCookie", this, PageFn { args ->
+            browser.setCookie(pageArgString(args, 0))
+        })
+        put("clearCookies", this, PageFn { browser.clearCookies() })
     }
 
     override fun getClassName(): String = "RoCatPageBridge"
@@ -96,5 +127,16 @@ private fun pageArgLong(args: Array<out Any?>, index: Int, default: Long): Long 
         is Number -> value.toLong()
         is CharSequence -> value.toString().trim().toLongOrNull() ?: default
         else -> runCatching { Context.toNumber(value).toLong() }.getOrDefault(default)
+    }
+}
+
+/** Reads the [index]-th JS argument as an Int, or [default] when absent/undefined. */
+private fun pageArgInt(args: Array<out Any?>, index: Int, default: Int): Int {
+    val value = args.getOrNull(index) ?: return default
+    if (value === Undefined.instance) return default
+    return when (value) {
+        is Number -> value.toInt()
+        is CharSequence -> value.toString().trim().toIntOrNull() ?: default
+        else -> runCatching { Context.toNumber(value).toInt() }.getOrDefault(default)
     }
 }

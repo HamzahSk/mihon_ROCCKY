@@ -779,6 +779,32 @@ function playEpisode(payload) {
 > WebView headless memakai cookie jar yang sama dengan WebView in-app (`AndroidCookieJar`),
 > sehingga login yang dilakukan lewat tab **Browser** aplikasi otomatis dipakai scraper.
 
+### 4.6 Browser Automation General-Purpose — `RoCatBrowser` (Tahap 25)
+
+`RoCatBrowser` adalah lapisan **general-purpose** di atas `RoCatPage` yang meniru API
+**Playwright/Puppeteer** (semua sinkron, Rhino-safe):
+
+```javascript
+var browser = RoCatBrowser.launch({ headless: false });
+var page = browser.newPage();
+page.goto("https://example.com/login", { waitUntil: "domcontentloaded", timeout: 30000 });
+page.locator('input[name="username"]').fill("admin");
+page.locator('button[type="submit"]').click();
+page.waitForSelector(".dashboard", 15000);
+var shot = page.screenshot({ quality: 80 });
+var cookies = page.cookies();        // ter-sync dengan fetch() via CookieManager
+browser.close();
+```
+
+Kelas yang tersedia: `Browser` (`launch`/`newPage`/`page`/`close`), `Page` (`goto`/
+`goBack`/`goForward`/`reload`/`waitForSelector`/`waitForLoad`/`waitForTimeout`/
+`evaluate`/`content`/`url`/`title`/`screenshot`/`cookies`/`setCookie`/`clearCookies`),
+dan `Locator` (`click`/`fill`/`type`/`text`/`getAttribute`/`exists`/`waitFor`/`all`/
+`clickAll`/`scrollIntoView`/`getBoundingRect`).
+
+Dokumentasi lengkap (API reference, panduan migrasi dari Playwright, contoh, batasan)
+ada di **`DOCS_BROWSER_API.md`**.
+
 ## 5. Contoh Skrip Lengkap (Boilerplate)
 
 Contoh fiktif yang menggabungkan semua API — **versi Tahap 22/23** memakai
